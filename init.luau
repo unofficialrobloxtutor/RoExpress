@@ -1,7 +1,7 @@
 --■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 --  ◄► Title:       RoExpress
---  ◄► Version:     1.1
---  ◄► Date:        01/04/2026
+--  ◄► Version:     1.2
+--  ◄► Date:        21/05/2026
 --  ◄► Author:      DeathToTheStadium
 --  ◄► Description: Root module for RoExpress
 --■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
@@ -11,17 +11,24 @@ local RunService = game:GetService("RunService")
 local RoExpress = {}
 RoExpress.__index = RoExpress
 --► Variables    ◄--
-local IS_SERVER = RunService:IsServer()
-local REMOTE_NAME = "RoExpressRemote"
+local IS_SERVER          = RunService:IsServer()
+local REMOTE_NAME        = "RoExpressRemote"
+local UNRELIABLE_NAME    = "RoExpressUnreliable"
 
--- server creates the remote, client waits for it
-local Remote
+-- server creates both remotes, client waits for them
+local Remote;
+local UnreliableRemote;
 if IS_SERVER then
 	Remote = Instance.new("RemoteEvent")
 	Remote.Name = REMOTE_NAME
 	Remote.Parent = script
+
+	UnreliableRemote = Instance.new("UnreliableRemoteEvent")
+	UnreliableRemote.Name = UNRELIABLE_NAME
+	UnreliableRemote.Parent = script
 else
-	Remote = script:WaitForChild(REMOTE_NAME)
+	Remote           = script:WaitForChild(REMOTE_NAME)
+	UnreliableRemote = script:WaitForChild(UNRELIABLE_NAME)
 end
 
 -- load only the modules valid for this context
@@ -29,20 +36,31 @@ local Base64 = require(script.Base64)
 
 local _modules = if IS_SERVER
 	then {
-		App = require(script.App),
-		Base64 = Base64,
+		App       = require(script.App),
+		Broadcast = require(script.Broadcast),
+		Base64    = Base64,
 	}
 	else {
-		Network = require(script.Network),
-		Base64 = Base64,
+		Network  = require(script.Network),
+		Listener = require(script.Listener),
+		Base64   = Base64,
 	}
+
+-- Broadcast and Listener need the UnreliableRemote, everything else gets Remote
+local function _getRemoteForModule(moduleName: string): any
+	if moduleName == "Broadcast" or moduleName == "Listener" then
+		return UnreliableRemote
+	end
+	return Remote
+end
+
 --► Types        ◄--
 export type Type = typeof(setmetatable({}, RoExpress)) & {
 	_instances: { [string]: any },
 }
 
-type ServerModuleName = "App" | "Base64"
-type ClientModuleName = "Network" | "Base64"
+type ServerModuleName = "App" | "Broadcast" | "Base64"
+type ClientModuleName = "Network" | "Listener" | "Base64"
 type ModuleName = ServerModuleName | ClientModuleName
 --■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 --	PRIVATE
@@ -57,7 +75,7 @@ local function _getInstance(self: Type, moduleName: ModuleName): any
 	assert(m, "RoExpress: '" .. moduleName .. "' is not available in this context (" .. (IS_SERVER and "Server" or "Client") .. ")")
 
 	-- Base64 has no constructor, return it directly
-	local instance = if m.New then m.New(Remote) else m
+	local instance = if m.New then m.New(_getRemoteForModule(moduleName)) else m
 	self._instances[moduleName] = instance
 
 	return instance
