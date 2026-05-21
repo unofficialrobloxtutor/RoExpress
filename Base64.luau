@@ -1,7 +1,7 @@
 --■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 --  ◄► Title:       RoExpress.Base64
 --  ◄► Version:     1.0
---  ◄► Date:        01/04/2026
+--  ◄► Date:        05/20/2026
 --  ◄► Author:      DeathToTheStadium
 --  ◄► Description: Lightweight Base64 encoder/decoder for RoExpress
 --■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
