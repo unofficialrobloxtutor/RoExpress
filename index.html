@@ -4,7 +4,102 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RoExpress — Docs</title>
+  <title>RoExpress — Express.js-style Networking for Roblox</title>
+
+  <!-- ── SEO ── -->
+  <meta name="description"
+    content="RoExpress is a type-safe, rate-limited, Express.js-style RPC framework for Roblox. One remote, typed routes, server push, LZ77 compression, Bridge event bus, and Tamper exploit detection.">
+  <meta name="keywords"
+    content="roblox, luau, networking, remoteevent, framework, express, roexpress, roblox developer, roblox scripting, roblox module, typed routes, server push, rate limiting">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev">
+  <meta name="theme-color" content="#8b78ff">
+
+  <!-- ── OPEN GRAPH (Discord, Facebook, Slack previews) ── -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev">
+  <meta property="og:title" content="RoExpress — Express.js-style Networking for Roblox">
+  <meta property="og:description"
+    content="One remote, typed routes, server push, LZ77 compression, Bridge event bus, and Tamper exploit detection. Free and MIT licensed.">
+  <meta property="og:image" content="https://roexpress.dev/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="RoExpress">
+  <meta property="og:locale" content="en_US">
+
+  <!-- ── TWITTER / X CARD ── -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@tostadium">
+  <meta name="twitter:creator" content="@tostadium">
+  <meta name="twitter:title" content="RoExpress — Express.js-style Networking for Roblox">
+  <meta name="twitter:description"
+    content="One remote, typed routes, server push, LZ77 compression, Bridge event bus, and Tamper exploit detection. Free and MIT licensed.">
+  <meta name="twitter:image" content="https://roexpress.dev/og-image.png">
+
+  <!-- ── JSON-LD STRUCTURED DATA (Google + AI crawlers) ── -->
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "RoExpress",
+  "version": "2.0.0",
+  "description": "A type-safe, rate-limited, Express.js-style RPC framework for Roblox. Features typed route params, server push, LZ77 compression, Bridge internal event bus, and Tamper exploit detection.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Roblox",
+  "programmingLanguage": "Luau",
+  "url": "https://roexpress.dev",
+  "downloadUrl": "https://create.roblox.com/store/asset/94926286357335",
+  "codeRepository": "https://github.com/unofficialrobloxtutor/RoExpress",
+  "license": "https://opensource.org/licenses/MIT",
+  "author": {
+    "@type": "Person",
+    "name": "DeathToTheStadium",
+    "url": "https://unofficialrobloxtutor.com",
+    "sameAs": [
+      "https://github.com/unofficialrobloxtutor",
+      "https://x.com/tostadium",
+      "https://www.youtube.com/@UNOFFICIAL_ROBLOX_TUTOR",
+      "https://www.roblox.com/users/34899885/profile",
+      "https://devforum.roblox.com/u/deathtothestadium"
+    ]
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "keywords": "roblox, luau, networking, remoteevent, express, framework, typed routes, server push, rate limiting, compression",
+  "releaseNotes": "https://roexpress.dev",
+  "softwareVersion": "2.0.0",
+  "datePublished": "2026-05-19",
+  "dateModified": "2026-05-30"
+}
+</script>
+
+  <!-- ── AI DISCOVERABILITY ── -->
+  <!-- llms.txt: https://roexpress.dev/llms.txt -->
+  <meta name="ai-content-declaration"
+    content="RoExpress is a Luau networking framework for Roblox. Documentation available at https://roexpress.dev. Source at https://github.com/unofficialrobloxtutor/RoExpress. MIT licensed.">
+
+  <!-- ── GOOGLE ANALYTICS 4 ── -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RHVE45LR6D"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-RHVE45LR6D', {
+      page_title: 'RoExpress Docs',
+      page_location: window.location.href,
+    });
+    // track section views as virtual page views
+    window._gaSection = function (sectionId) {
+      gtag('event', 'page_view', {
+        page_title: 'RoExpress Docs — ' + sectionId,
+        page_location: window.location.href + '#' + sectionId,
+      });
+    };
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -3170,6 +3265,7 @@ app:<span class="fn">Post</span>(<span class="str">"queue/leave"</span>, <span c
         if (ni && !ni.classList.contains('open')) { ni.classList.add('open'); const h = ni.previousElementSibling; if (h) h.classList.add('open') }
       }
       window.scrollTo(0, 0);
+      if (window._gaSection) window._gaSection(id);
       if (window.innerWidth <= 768) {
         document.getElementById('sb').classList.remove('open');
         document.getElementById('overlay').classList.remove('open');

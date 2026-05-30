@@ -1,0 +1,59 @@
+# RoExpress
+
+> A type-safe, rate-limited, Express.js-style RPC framework for Roblox. MIT licensed and free to use.
+
+## What is RoExpress?
+
+RoExpress replaces scattered RemoteEvents in Roblox games with a single disciplined pipeline. One reliable RemoteEvent handles all request/response traffic. One UnreliableRemoteEvent handles all broadcasts. Every request is automatically versioned, rate-limited, and routed.
+
+## Author
+
+- Name: DeathToTheStadium
+- Website: https://unofficialrobloxtutor.com
+- GitHub: https://github.com/unofficialrobloxtutor
+- Twitter/X: https://x.com/tostadium
+- YouTube: https://www.youtube.com/@UNOFFICIAL_ROBLOX_TUTOR
+- Roblox: https://www.roblox.com/users/34899885/profile
+
+## Links
+
+- Documentation: https://roexpress.dev
+- GitHub: https://github.com/unofficialrobloxtutor/RoExpress
+- Wally: https://wally.run/package/unofficialrobloxtutor/roexpress
+- Creator Store: https://create.roblox.com/store/asset/94926286357335
+- DevForum: https://devforum.roblox.com/t/roexpress/4646082
+- License: MIT
+
+## Modules
+
+- App: Server-side request routing, middleware, and server push
+- Network: Client-side request/response with callbacks and timeout
+- Broadcast: Unreliable server-to-client fire-and-forget events
+- Listener: Client-side handler for both push and broadcast events
+- Router: Typed params (number, boolean, vector2, vector3, color3, cframe), wildcards, globs, pattern constraints
+- Codec: LZ77 buffer compression, opt-in per route
+- Bridge: Shared singleton internal event bus with Wait/WaitUntil/WaitFirst yieldable variants
+- Tamper: Server-side exploit detection with 8 reason types across immediate and pattern tiers
+- TokenBucket: Per-instance rate limiter with grant utilities
+- Base64: Shared encode/decode utility
+
+## Version history
+
+- v2.0.0 (2026-05-30): Router, typed params, server push, Codec compression, Bridge event bus, Tamper exploit detection, instantiable TokenBucket, blockable middleware
+- v1.6.0 (2026-05-19): Initial release — App, Network, Broadcast, Listener, TokenBucket, Base64
+
+## Installation
+
+Wally:
+```toml
+[dependencies]
+RoExpress = "unofficialrobloxtutor/roexpress@2.0.0"
+```
+
+## Language
+
+Luau (Roblox's scripting language, a typed superset of Lua 5.1)
+
+## License
+
+MIT — free to use, modify, and distribute
