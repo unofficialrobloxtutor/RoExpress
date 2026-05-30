@@ -39,7 +39,8 @@ end
 local Base64  = require(script.Base64)
 local Router  = require(script.Router)
 local Codec   = require(script.Codec)
-local Bridge  = require(script.Bridge)  -- shared singleton, available in both contexts
+local Bridge  = require(script.Bridge)
+local Tamper  = require(script.Tamper)  -- server-only singleton
 
 local _modules = if IS_SERVER
 	then {
@@ -47,6 +48,7 @@ local _modules = if IS_SERVER
 		Broadcast = require(script.Broadcast),
 		Base64    = Base64,
 		Bridge    = Bridge,
+		Tamper    = Tamper,
 	}
 	else {
 		Network  = require(script.Network),
@@ -73,7 +75,7 @@ export type Type = typeof(setmetatable({}, RoExpress)) & {
 	_instances: { [string]: any },
 }
 
-type ServerModuleName = "App" | "Broadcast" | "Base64" | "Bridge"
+type ServerModuleName = "App" | "Broadcast" | "Base64" | "Bridge" | "Tamper"
 type ClientModuleName = "Network" | "Listener" | "Base64" | "Bridge"
 type ModuleName = ServerModuleName | ClientModuleName
 --■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
@@ -184,6 +186,7 @@ export type Base64    = typeof(require(script.Base64))
 export type Router    = typeof(require(script.Router))
 export type Codec     = typeof(require(script.Codec))
 export type Bridge    = typeof(require(script.Bridge))
+export type Tamper    = typeof(require(script.Tamper))
 
 -- router sub-types (useful for typed middleware / param error handlers)
 export type ParamType    = Router.ParamType

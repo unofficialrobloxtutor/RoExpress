@@ -23,6 +23,7 @@ local Base64      = require(script.Parent.Base64)
 local TokenBucket = require(script.Parent.TokenBucket)
 local Router      = require(script.Parent.Router)
 local Codec       = require(script.Parent.Codec)
+local Tamper      = require(script.Parent.Tamper)
 -- Version is set once in init.luau — no more drift between App and Network
 local ROEXPRESS_VERSION = shared.ROEXPRESS_VERSION
 --► Types        ◄--
@@ -141,6 +142,10 @@ local function _handler(self: Type, Player: Player, Payload: Payload)
 		warn("RoExpress.App: Version mismatch from", Player.Name, "got", Payload.version, "expected", ROEXPRESS_VERSION)
 		local res = _buildResponse(self.Remote, Player, Payload.requestId or "", Payload.method or "GET")
 		res:Status(400):Error("Client version mismatch")
+		Tamper.Signal("version_mismatch", Player, {
+			route    = Payload.route,
+			evidence = { got = Payload.version, expected = ROEXPRESS_VERSION },
+		})
 		return
 	end
 
@@ -148,12 +153,14 @@ local function _handler(self: Type, Player: Player, Payload: Payload)
 	if not self.TokenBucket:Consume(Player, 1) then
 		local res = _buildResponse(self.Remote, Player, Payload.requestId or "", Payload.method or "GET")
 		res:Status(429):Error("Too many requests")
+		Tamper.Signal("rate_limited", Player, { route = Payload.route })
 		return
 	end
 
 	-- validate payload structure
 	if not _validatePayload(Payload) then
 		warn("RoExpress.App: Invalid payload from", Player.Name)
+		Tamper.Signal("malformed", Player, { evidence = Payload })
 		return
 	end
 
@@ -183,6 +190,10 @@ local function _handler(self: Type, Player: Player, Payload: Payload)
 	if not match then
 		local res = _buildResponse(self.Remote, Player, Payload.requestId, Payload.method, false)
 		res:Status(404):Error("No handler for route '" .. Payload.route .. "'")
+		Tamper.Signal("unknown_route", Player, {
+			route    = Payload.route,
+			evidence = { method = Payload.method },
+		})
 		return
 	end
 
@@ -197,6 +208,10 @@ local function _handler(self: Type, Player: Player, Payload: Payload)
 				"Param '" .. typeFail.name .. "' expected type " .. typeFail.expectedType
 			)
 		end
+		Tamper.Signal("param_fail", Player, {
+			route    = Payload.route,
+			evidence = { param = typeFail.name, expected = typeFail.expectedType },
+		})
 		return
 	end
 
