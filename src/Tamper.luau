@@ -51,13 +51,13 @@ export type Severity = "immediate" | "pattern"
 
 export type Reason =
 	"VERSION_SPOOF"     |  -- client sent a mismatched ROEXPRESS_VERSION
-	"MALFORMED_PAYLOAD" |  -- payload failed structure validation
-	"INVALID_PARAM"     |  -- typed param coercion failed
-	"UNKNOWN_ROUTE"     |  -- route does not exist on the server
-	"RATE_FLOOD"        |  -- repeated rate-limit hits in a short window
-	"ROUTE_SCAN"        |  -- many distinct unknown routes fired
-	"PARAM_FLOOD"       |  -- repeated param failures on the same route
-	"MANUAL"               -- developer called Tamper.Strike() directly
+"MALFORMED_PAYLOAD" |  -- payload failed structure validation
+"INVALID_PARAM"     |  -- typed param coercion failed
+"UNKNOWN_ROUTE"     |  -- route does not exist on the server
+"RATE_FLOOD"        |  -- repeated rate-limit hits in a short window
+"ROUTE_SCAN"        |  -- many distinct unknown routes fired
+"PARAM_FLOOD"       |  -- repeated param failures on the same route
+"MANUAL"               -- developer called Tamper.Strike() directly
 
 export type Report = {
 	player    : Player,
@@ -81,9 +81,9 @@ export type PlayerRecord = {
 }
 
 --► State        ◄--
-Tamper._records    : { [number]: PlayerRecord } = {}
-Tamper._handler    : ((report: Report) -> ())? = nil
-Tamper._autoKick   : { enabled: boolean, threshold: number, reason: string } = {
+Tamper._records   = {}
+Tamper._handler   = nil
+Tamper._autoKick  = {
 	enabled   = false,
 	threshold = 10,
 	reason    = "Exploiting detected",
@@ -367,7 +367,7 @@ function Tamper.SetThresholds(config: {
 	rateFloodCount   : number?,
 	routeScanCount   : number?,
 	paramFloodCount  : number?,
-})
+	})
 	if config.rateFloodWindow  then RATE_FLOOD_WINDOW     = config.rateFloodWindow  end
 	if config.rateFloodCount   then RATE_FLOOD_THRESHOLD  = config.rateFloodCount   end
 	if config.routeScanCount   then ROUTE_SCAN_THRESHOLD  = config.routeScanCount   end

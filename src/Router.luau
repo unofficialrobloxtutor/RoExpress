@@ -267,17 +267,13 @@ end
 local function _match(
 	incomingParts : { string },
 	segments      : { Segment }
-): ({ [string]: any }, { any })?
-
+)
 	local params   : { [string]: any } = {}
 	local captures : { any }           = {}
-
 	local si = 1  -- segment index
 	local pi = 1  -- incoming part index
-
 	while si <= #segments do
 		local seg = segments[si]
-
 		if seg.kind == "glob" then
 			-- ** consumes all remaining parts
 			local consumed = {}
@@ -291,21 +287,15 @@ local function _match(
 			if si <= #segments then return nil end
 			break
 		end
-
 		-- all non-glob segments need a corresponding incoming part
 		if pi > #incomingParts then return nil end
-
 		local raw = incomingParts[pi]
-
 		if seg.kind == "literal" then
 			if raw ~= seg.literal then return nil end
-
 		elseif seg.kind == "wildcard" then
 			table.insert(captures, raw)
-
 		elseif seg.kind == "param" then
 			params[seg.name] = raw
-
 		elseif seg.kind == "typed" then
 			local coerce = _coercers[seg.paramType]
 			local ok, value = coerce(raw)
@@ -316,11 +306,10 @@ local function _match(
 				params[seg.name] = raw
 				params["__typeFail_" .. seg.name] = seg.paramType
 			end
-
 		elseif seg.kind == "constrained" then
 			-- pattern check first
 			if not raw:match("^" .. seg.pattern .. "$") then
-				return nil  -- constraint failed → no match (try next route)
+				return nil  -- constraint failed, try next route
 			end
 			if seg.paramType then
 				local coerce = _coercers[seg.paramType]
@@ -335,14 +324,11 @@ local function _match(
 				params[seg.name] = raw
 			end
 		end
-
 		si += 1
 		pi += 1
 	end
-
 	-- all incoming parts must be consumed (unless glob was last)
 	if pi <= #incomingParts then return nil end
-
 	return params, captures
 end
 
