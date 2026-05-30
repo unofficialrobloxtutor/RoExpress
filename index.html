@@ -218,6 +218,7 @@ pre code{background:none;border:none;padding:0;font-size:12.5px;color:var(--text
     <div class="ni open">
       <a class="nl" href="#" data-s="app"       onclick="show('app');return false">App</a>
       <a class="nl" href="#" data-s="broadcast" onclick="show('broadcast');return false">Broadcast</a>
+      <a class="nl" href="#" data-s="tamper"    onclick="show('tamper');return false">Tamper <span class="nb">NEW</span></a>
     </div>
   </div>
 
@@ -767,7 +768,113 @@ Base64.<span class="fn">DecodeTable</span>(<span class="str">"eyJ4IjoxfQ=="</spa
 <span class="kw">type</span> <span class="tp">MatchResult</span> = RoExpress.<span class="tp">MatchResult</span></code></pre>
 </section>
 
-<!-- ══════════════ EXAMPLES ══════════════ -->
+<!-- ══════════════ TAMPER ══════════════ -->
+<section class="doc" id="s-tamper">
+  <div class="eyebrow">Server API</div>
+  <h1>Tamper <span class="pill p-new">NEW</span></h1>
+  <p class="lead">Exploit detection and tamper reporting. Passively hooks into App's request pipeline and surfaces suspicious activity as structured reports. Server-only singleton.</p>
+
+  <div class="cl tip"><strong>Tamper is passive.</strong> It receives signals from App automatically — you don't wrap or replace anything. Just require it, subscribe, and optionally enable auto-kick.</div>
+
+  <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> tamper = <span class="fn">RoExpress</span>(<span class="str">"Tamper"</span>)
+
+<span class="cm">-- subscribe to all detection events</span>
+tamper.<span class="fn">On</span>(<span class="kw">function</span>(report)
+    <span class="fn">print</span>(report.player.Name, report.reason, report.severity, report.strikes)
+<span class="kw">end</span>)
+
+<span class="cm">-- optional: auto-kick at 10 strikes</span>
+tamper.<span class="fn">AutoKick</span>(<span class="num">10</span>, <span class="str">"Exploiting detected"</span>)</code></pre>
+
+  <h2>Detection tiers</h2>
+  <table class="tbl">
+    <tr><th>Reason</th><th>Tier</th><th>Trigger</th></tr>
+    <tr><td><code>VERSION_SPOOF</code></td><td><span class="pill p-new">immediate</span></td><td>Client version doesn't match server</td></tr>
+    <tr><td><code>MALFORMED_PAYLOAD</code></td><td><span class="pill p-new">immediate</span></td><td>Payload fails structure validation</td></tr>
+    <tr><td><code>INVALID_PARAM</code></td><td><span class="pill p-new">immediate</span></td><td>Typed param coercion fails</td></tr>
+    <tr><td><code>UNKNOWN_ROUTE</code></td><td><span class="pill p-new">immediate</span></td><td>Route does not exist on the server</td></tr>
+    <tr><td><code>RATE_FLOOD</code></td><td><span class="pill p-push">pattern</span></td><td>Repeated 429s within a short window</td></tr>
+    <tr><td><code>ROUTE_SCAN</code></td><td><span class="pill p-push">pattern</span></td><td>Many distinct unknown routes fired</td></tr>
+    <tr><td><code>PARAM_FLOOD</code></td><td><span class="pill p-push">pattern</span></td><td>Repeated param failures on same route</td></tr>
+    <tr><td><code>MANUAL</code></td><td><span class="pill p-new">immediate</span></td><td>Developer called <code>tamper.Strike()</code> directly</td></tr>
+  </table>
+
+  <h2>Report object</h2>
+  <table class="tbl">
+    <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+    <tr><td><code>report.player</code></td><td>Player</td><td>The player who triggered the detection</td></tr>
+    <tr><td><code>report.reason</code></td><td>Reason</td><td>Named reason string (see table above)</td></tr>
+    <tr><td><code>report.severity</code></td><td>"immediate" | "pattern"</td><td>Detection tier</td></tr>
+    <tr><td><code>report.route</code></td><td>string?</td><td>Route involved, if applicable</td></tr>
+    <tr><td><code>report.evidence</code></td><td>any?</td><td>Raw context — payload, values, counts</td></tr>
+    <tr><td><code>report.strikes</code></td><td>number</td><td>Total accumulated strikes for this player</td></tr>
+    <tr><td><code>report.firstSeen</code></td><td>number</td><td>tick() of first strike</td></tr>
+    <tr><td><code>report.lastSeen</code></td><td>number</td><td>tick() of this strike</td></tr>
+  </table>
+
+  <h2>Manual strikes</h2>
+  <p>Use <code>tamper.Strike()</code> inside your own route handlers for business-logic violations Tamper can't detect generically — negative currency, impossible positions, out-of-range values.</p>
+  <pre><button class="cb" onclick="cp(this)">copy</button><code>app:<span class="fn">Post</span>(<span class="str">"shop/buy"</span>, <span class="kw">function</span>(Player, Payload, req, res)
+    <span class="kw">if</span> req.data.amount < <span class="num">0</span> <span class="kw">then</span>
+        tamper.<span class="fn">Strike</span>(Player, <span class="str">"Negative purchase amount"</span>, <span class="str">"shop/buy"</span>, req.data)
+        res:<span class="fn">Status</span>(<span class="num">400</span>):<span class="fn">Error</span>(<span class="str">"Invalid amount"</span>)
+        <span class="kw">return</span>
+    <span class="kw">end</span>
+<span class="kw">end</span>)</code></pre>
+
+  <h2>Full API</h2>
+  <div class="sig">tamper.<span class="fn">On</span>(handler: (report) → ())</div>
+  <p>Register the detection handler. One handler supported — calling again replaces the previous.</p>
+
+  <div class="sig">tamper.<span class="fn">AutoKick</span>(threshold: number, reason?: string)</div>
+  <p>Enable auto-kick when a player reaches the strike threshold. Fires after the handler so you can log first.</p>
+
+  <div class="sig">tamper.<span class="fn">Strike</span>(player, reason?, route?, evidence?)</div>
+  <p>Manually issue an immediate strike from your own validation logic.</p>
+
+  <div class="sig">tamper.<span class="fn">GetReport</span>(player) → PlayerRecord?</div>
+  <p>Returns the full accumulated record for a player, or nil if no strikes on record.</p>
+
+  <div class="sig">tamper.<span class="fn">GetStrikes</span>(player) → number</div>
+  <p>Returns the current strike count. Returns 0 if no record exists.</p>
+
+  <div class="sig">tamper.<span class="fn">ClearStrikes</span>(player)</div>
+  <p>Reset a player's record. Useful after a false positive or manual review.</p>
+
+  <div class="sig">tamper.<span class="fn">ClearAll</span>()</div>
+  <p>Reset all player records. Useful on round transitions.</p>
+
+  <div class="sig">tamper.<span class="fn">SetThresholds</span>(config)</div>
+  <pre><button class="cb" onclick="cp(this)">copy</button><code>tamper.<span class="fn">SetThresholds</span>({
+    rateFloodWindow = <span class="num">10</span>,  <span class="cm">-- seconds before rate flood window resets</span>
+    rateFloodCount  = <span class="num">5</span>,   <span class="cm">-- 429s within window to trigger pattern strike</span>
+    routeScanCount  = <span class="num">8</span>,   <span class="cm">-- distinct unknown routes to trigger scan strike</span>
+    paramFloodCount = <span class="num">5</span>,   <span class="cm">-- repeated param fails on same route</span>
+})</code></pre>
+
+  <h2>Full example</h2>
+  <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> tamper = <span class="fn">RoExpress</span>(<span class="str">"Tamper"</span>)
+
+tamper.<span class="fn">AutoKick</span>(<span class="num">10</span>, <span class="str">"Cheating detected"</span>)
+
+tamper.<span class="fn">On</span>(<span class="kw">function</span>(report)
+    <span class="kw">if</span> report.severity == <span class="str">"immediate"</span> <span class="kw">then</span>
+        <span class="fn">warn</span>(<span class="fn">string.format</span>(
+            <span class="str">"[Tamper] %s — %s on '%s' (strike %d)"</span>,
+            report.player.Name, report.reason,
+            report.route or <span class="str">"?"</span>, report.strikes
+        ))
+    <span class="kw">elseif</span> report.severity == <span class="str">"pattern"</span> <span class="kw">then</span>
+        <span class="fn">warn</span>(<span class="fn">string.format</span>(
+            <span class="str">"[Tamper] PATTERN DETECTED — %s: %s (total strikes: %d)"</span>,
+            report.player.Name, report.reason, report.strikes
+        ))
+        <span class="cm">-- notify admins, log to external service, etc.</span>
+    <span class="kw">end</span>
+<span class="kw">end</span>)</code></pre>
+</section>
+
+
 <section class="doc" id="s-ex-killfeed">
   <div class="eyebrow">Example</div>
   <h1>Kill Feed</h1>
@@ -1142,7 +1249,7 @@ app:<span class="fn">Post</span>(<span class="str">"queue/leave"</span>, <span c
       <div style="position:absolute;left:11px;top:6px;width:15px;height:15px;border-radius:50%;background:var(--bg3);border:3px solid var(--bg);box-shadow:0 0 0 2px var(--border2)"></div>
       <div style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.08em;margin-bottom:6px">2025</div>
       <div style="font-size:17px;font-weight:500;color:var(--text);margin-bottom:10px;font-family:var(--serif)">The hardest year</div>
-      <p style="color:var(--text2);font-size:13px;line-height:1.8;margin-bottom:12px">2025 was hard. Homeless, but enrolled in school — studying engineering and welding. The framework sat on the back burner. Life had other priorities. But the ideas kept accumulating: rate limiting that actually works, typed routes, a broadcast primitive that's honest about reliability.</p>
+      <p style="color:var(--text2);font-size:13px;line-height:1.8;margin-bottom:12px">2025 was hard. Homeless, but in school — studying engineering and working toward a welding certificate. The framework sat on the back burner. Life had other priorities. But the ideas kept accumulating: rate limiting that actually works, typed routes, a broadcast primitive that's honest about reliability.</p>
       <p style="color:var(--text2);font-size:13px;line-height:1.8;margin-bottom:14px">Still showed up on the DevForum. Still talking to other developers, still part of the community. That continuity matters more than it sounds.</p>
       <a href="https://devforum.roblox.com/t/has-anyone-gone-thru-homelessness-while-being-a-roblox-developer/2915844/15" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--accent2);border:1px solid var(--border2);padding:6px 12px;border-radius:5px;text-decoration:none;transition:background var(--ease)" onmouseover="this.style.background='var(--accent-bg)'" onmouseout="this.style.background='transparent'">
         ↗ DevForum — on homelessness as a Roblox developer
