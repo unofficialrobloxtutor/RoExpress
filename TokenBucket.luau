@@ -1,6 +1,6 @@
 --■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 --  ◄► Title:       TokenBucket_Utility
---  ◄► Version:     1.0
+--  ◄► Version:     1.1
 --  ◄► Date:        18/05/2026
 --  ◄► Author:      DeathToTheStadium
 --  ◄► Description: Token bucket rate limiter for the remote pipeline.
@@ -10,144 +10,140 @@
 --                  for rewarding burst capacity after round events.
 --                  Buckets are automatically created and cleared via
 --                  PlayerAdded and PlayerRemoving.
+--
+--                  v1.1: Made properly instantiable via TokenBucket.New()
+--                  so App and Broadcast each own separate bucket state
+--                  and can never stomp each other.
 --■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 --► Services     ◄--
 local PlayerService = game:GetService("Players")
 
 --► Tables       ◄--
 local TokenBucket = {}
-local Buckets = {}
-local Settings = {
-	Max    = 10,
-	Refill = 2,
-}
---► Variables    ◄--
+TokenBucket.__index = TokenBucket
+
 --► Types        ◄--
-export type Type = typeof(TokenBucket) & {
-	Consume: (Player: Player, Cost: number)->(),
-	HasTokens: (Player: Player)->boolean,
-	HasEnoughTokens: (Player: Player, Cost: number)->boolean,
-	Refill: (Player: Player)->(),
-	Reset: (Player: Player)->(),
-	Grant: (Player: Player, Amount: number)->(),
-	GrantAll: (Amount: number)->(),
-	GrantExact: (Player: Player, Amount: number)->(),
-	GrantAllExact: (Amount: number)->(),
+export type Settings = {
+	Max    : number,
+	Refill : number,
 }
 
+export type Type = typeof(setmetatable({}, TokenBucket)) & {
+	_buckets  : { [number]: { Tokens: number, Max: number, Refill: number, LastRefill: number } },
+	_settings : Settings,
+	_playerAdded   : RBXScriptConnection,
+	_playerRemoving: RBXScriptConnection,
+}
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---	FUNCTIONS
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-
-
---► LOCAL ◄--
-local function _newbucket()
+--■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+--	PRIVATE
+--■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+local function _newBucket(settings: Settings)
 	return {
-		Tokens     = Settings.Max,
-		Max        = Settings.Max,
-		Refill     = Settings.Refill,
-		LastRefill = tick()
+		Tokens     = settings.Max,
+		Max        = settings.Max,
+		Refill     = settings.Refill,
+		LastRefill = tick(),
 	}
 end
 
-local function _refill(Bucket: {})
-	local now     = tick()
-	local elapsed = now - Bucket.LastRefill
-	Bucket.Tokens     = math.min(Bucket.Max, Bucket.Tokens + elapsed * Bucket.Refill)
-	Bucket.LastRefill = now
+local function _refill(bucket)
+	local now         = tick()
+	local elapsed     = now - bucket.LastRefill
+	bucket.Tokens     = math.min(bucket.Max, bucket.Tokens + elapsed * bucket.Refill)
+	bucket.LastRefill = now
 end
 
-local function NewPlayerBucket(Player: Player)
-	Buckets[Player.UserId] = _newbucket()
-end
+--■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+--	CONSTRUCTOR
+--■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+function TokenBucket.New(settings: Settings?): Type
+	local self      = setmetatable({}, TokenBucket) :: Type
+	self._buckets   = {}
+	self._settings  = settings or { Max = 10, Refill = 2 }
 
-local function ClearPlayerBucket (Player: Player)
-	Buckets[Player.UserId] = nil
-end
-
---► GLOBAL ◄--
-
-function TokenBucket.Consume(Player: Player, Cost: number)
-	if not Buckets[Player.UserId] then
-		Buckets[Player.UserId] = _newbucket()
+	-- seed buckets for any players already in the server (studio play-solo, etc.)
+	for _, player in ipairs(PlayerService:GetPlayers()) do
+		self._buckets[player.UserId] = _newBucket(self._settings)
 	end
 
-	local Bucket = Buckets[Player.UserId]
-	
-	_refill(Bucket)
-	
-	if Bucket.Tokens < Cost then
-		warn(`{Player.Name} is being rate limited`)
+	self._playerAdded = PlayerService.PlayerAdded:Connect(function(player)
+		self._buckets[player.UserId] = _newBucket(self._settings)
+	end)
+
+	self._playerRemoving = PlayerService.PlayerRemoving:Connect(function(player)
+		self._buckets[player.UserId] = nil
+	end)
+
+	return self
+end
+
+--■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+--	FUNCTIONS
+--■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+function TokenBucket:Consume(player: Player, cost: number): boolean
+	if not self._buckets[player.UserId] then
+		self._buckets[player.UserId] = _newBucket(self._settings)
+	end
+	local bucket = self._buckets[player.UserId]
+	_refill(bucket)
+	if bucket.Tokens < cost then
+		warn(`{player.Name} is being rate limited`)
 		return false
 	end
-	Bucket.Tokens -= Cost
+	bucket.Tokens -= cost
 	return true
 end
 
-function TokenBucket.HasTokens(Player: Player)
-	local Bucket = Buckets[Player.UserId]
-	if not Bucket then return false end
-	_refill(Bucket)
-	return Bucket.Tokens > 0
+function TokenBucket:HasTokens(player: Player): boolean
+	local bucket = self._buckets[player.UserId]
+	if not bucket then return false end
+	_refill(bucket)
+	return bucket.Tokens > 0
 end
 
-function TokenBucket.HasEnoughTokens(Player: Player, Cost: number)
-	local Bucket = Buckets[Player.UserId]
-	if not Bucket then return false end
-	_refill(Bucket)
-	return Bucket.Tokens >= Cost
+function TokenBucket:HasEnoughTokens(player: Player, cost: number): boolean
+	local bucket = self._buckets[player.UserId]
+	if not bucket then return false end
+	_refill(bucket)
+	return bucket.Tokens >= cost
 end
 
-function TokenBucket.Refill(Player: Player)
-	local Bucket = Buckets[Player.UserId]
-	if not Bucket then return end
-	_refill(Bucket)
+function TokenBucket:Grant(player: Player, amount: number)
+	local bucket = self._buckets[player.UserId]
+	if not bucket then return end
+	bucket.Tokens = math.min(bucket.Max, bucket.Tokens + amount)
 end
 
-function TokenBucket.Reset(Player: Player)
-	local Bucket = Buckets[Player.UserId]
-	if not Bucket then return end
-	Bucket.Tokens     = Bucket.Max
-	Bucket.LastRefill = tick()
-end
-
--- Adds tokens up to Max
-function TokenBucket.Grant(Player: Player, Amount: number)
-	local Bucket = Buckets[Player.UserId]
-	if not Bucket then return end
-	Bucket.Tokens = math.min(Bucket.Max, Bucket.Tokens + Amount)
-end
-
--- Adds tokens up to Max for all players
-function TokenBucket.GrantAll(Amount: number)
-	for _, Bucket in Buckets do
-		Bucket.Tokens = math.min(Bucket.Max, Bucket.Tokens + Amount)
+function TokenBucket:GrantAll(amount: number)
+	for _, bucket in self._buckets do
+		bucket.Tokens = math.min(bucket.Max, bucket.Tokens + amount)
 	end
 end
 
--- Adds tokens ignoring Max
-function TokenBucket.GrantExact(Player: Player, Amount: number)
-	local Bucket = Buckets[Player.UserId]
-	if not Bucket then return end
-	Bucket.Tokens += Amount
+function TokenBucket:GrantExact(player: Player, amount: number)
+	local bucket = self._buckets[player.UserId]
+	if not bucket then return end
+	bucket.Tokens += amount
 end
 
--- Adds tokens ignoring Max for all players
-function TokenBucket.GrantAllExact(Amount: number)
-	for _, Bucket in Buckets do
-		Bucket.Tokens += Amount
+function TokenBucket:GrantAllExact(amount: number)
+	for _, bucket in self._buckets do
+		bucket.Tokens += amount
 	end
 end
 
-function TokenBucket.Destroy()
-	table.clear(Buckets)
+function TokenBucket:Reset(player: Player)
+	local bucket = self._buckets[player.UserId]
+	if not bucket then return end
+	bucket.Tokens     = bucket.Max
+	bucket.LastRefill = tick()
 end
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---	EVENTS
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-PlayerService.PlayerAdded:Connect(NewPlayerBucket)
-PlayerService.PlayerRemoving:Connect(ClearPlayerBucket)
+function TokenBucket:Destroy()
+	self._playerAdded:Disconnect()
+	self._playerRemoving:Disconnect()
+	table.clear(self._buckets)
+end
 
 return TokenBucket

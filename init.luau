@@ -15,6 +15,10 @@ local IS_SERVER          = RunService:IsServer()
 local REMOTE_NAME        = "RoExpressRemote"
 local UNRELIABLE_NAME    = "RoExpressUnreliable"
 
+-- Single source of truth for version — both App and Network read this
+-- so they can never drift out of sync
+shared.ROEXPRESS_VERSION = "1.6"
+
 -- server creates both remotes, client waits for them
 local Remote;
 local UnreliableRemote;
@@ -32,24 +36,34 @@ else
 end
 
 -- load only the modules valid for this context
-local Base64 = require(script.Base64)
+local Base64  = require(script.Base64)
+local Router  = require(script.Router)
+local Codec   = require(script.Codec)
+local Bridge  = require(script.Bridge)  -- shared singleton, available in both contexts
 
 local _modules = if IS_SERVER
 	then {
 		App       = require(script.App),
 		Broadcast = require(script.Broadcast),
 		Base64    = Base64,
+		Bridge    = Bridge,
 	}
 	else {
 		Network  = require(script.Network),
 		Listener = require(script.Listener),
 		Base64   = Base64,
+		Bridge   = Bridge,
 	}
 
 -- Broadcast and Listener need the UnreliableRemote, everything else gets Remote
+-- Listener also gets the reliable Remote so it can receive server push events
 local function _getRemoteForModule(moduleName: string): any
-	if moduleName == "Broadcast" or moduleName == "Listener" then
+	if moduleName == "Broadcast" then
 		return UnreliableRemote
+	end
+	if moduleName == "Listener" then
+		-- Listener.New(unreliable, reliable) — pass both
+		return UnreliableRemote, Remote
 	end
 	return Remote
 end
@@ -59,8 +73,8 @@ export type Type = typeof(setmetatable({}, RoExpress)) & {
 	_instances: { [string]: any },
 }
 
-type ServerModuleName = "App" | "Broadcast" | "Base64"
-type ClientModuleName = "Network" | "Listener" | "Base64"
+type ServerModuleName = "App" | "Broadcast" | "Base64" | "Bridge"
+type ClientModuleName = "Network" | "Listener" | "Base64" | "Bridge"
 type ModuleName = ServerModuleName | ClientModuleName
 --■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 --	PRIVATE
@@ -74,8 +88,17 @@ local function _getInstance(self: Type, moduleName: ModuleName): any
 	local m = _modules[moduleName]
 	assert(m, "RoExpress: '" .. moduleName .. "' is not available in this context (" .. (IS_SERVER and "Server" or "Client") .. ")")
 
-	-- Base64 has no constructor, return it directly
-	local instance = if m.New then m.New(_getRemoteForModule(moduleName)) else m
+	-- Base64 and Bridge have no constructor — return them directly.
+	-- Listener takes two remotes — unpack accordingly.
+	local instance
+	if moduleName == "Listener" then
+		local unreliable, reliable = _getRemoteForModule(moduleName)
+		instance = m.New(unreliable, reliable)
+	elseif m.New then
+		instance = m.New(_getRemoteForModule(moduleName))
+	else
+		instance = m
+	end
 	self._instances[moduleName] = instance
 
 	return instance
@@ -145,8 +168,9 @@ export type BroadcastEnvelope = {
 }
 
 -- handler signatures
-export type RouteHandler     = (Player: Player, Payload: Payload, req: Request, res: Response) -> ()
-export type MiddlewareHandler = (Player: Player, Payload: Payload) -> ()
+export type RouteHandler      = (Player: Player, Payload: Payload, req: Request, res: Response) -> ()
+-- Middleware returns false to block the request, nil/nothing to continue
+export type MiddlewareHandler  = (Player: Player, Payload: Payload) -> (boolean?)
 export type BroadcastHandler  = (data: any) -> ()
 export type ListenerMiddleware = (event: string, data: any) -> ()
 export type NetworkCallback   = (response: NetworkResponse) -> ()
@@ -157,6 +181,14 @@ export type Network   = typeof(require(script.Network))
 export type Broadcast = typeof(require(script.Broadcast))
 export type Listener  = typeof(require(script.Listener))
 export type Base64    = typeof(require(script.Base64))
+export type Router    = typeof(require(script.Router))
+export type Codec     = typeof(require(script.Codec))
+export type Bridge    = typeof(require(script.Bridge))
+
+-- router sub-types (useful for typed middleware / param error handlers)
+export type ParamType    = Router.ParamType
+export type SegmentKind  = Router.SegmentKind
+export type MatchResult  = Router.MatchResult
 
 
 

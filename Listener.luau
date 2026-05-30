@@ -1,26 +1,37 @@
 --■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 --  ◄► Title:       RoExpress.Listener
---  ◄► Version:     1.1
---  ◄► Date:        05/20/2026
+--  ◄► Version:     2.0
+--  ◄► Date:        30/05/2026
 --  ◄► Author:      DeathToTheStadium
---  ◄► Description: Listener module for RoExpress unreliable channel
+--  ◄► Description: Listener module for RoExpress
+--
+--  v2.0 changes
+--  ────────────────────────────────────────────────────────────────
+--  • Now accepts an optional second remote (the reliable RemoteEvent)
+--    so it can receive server-push events alongside unreliable broadcasts.
+--  • Push packets carry type = "push" — filtered here, invisible to
+--    the user. On/Once/Off/middleware API is identical for both sources.
+--  • Reliable push connection is stored in _pushConnection and cleaned
+--    up in Destroy().
 --■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---► Services     ◄--
 --► Tables       ◄--
 local Module = {}
 Module.__index = Module
---► Variables    ◄--
 --► Types        ◄--
 export type Type = typeof(setmetatable({}, Module)) & {
-	Remote      : UnreliableRemoteEvent,
-	_on         : { [string]: (data: any) -> () },
-	_once       : { [string]: (data: any) -> () },
-	_middleware : { { id: string, fn: (event: string, data: any) -> () } },
-	_connection : RBXScriptConnection,
+	Remote          : UnreliableRemoteEvent,
+	_on             : { [string]: (data: any) -> () },
+	_once           : { [string]: (data: any) -> () },
+	_middleware     : { { id: string, fn: (event: string, data: any) -> () } },
+	_connection     : RBXScriptConnection,
+	_pushConnection : RBXScriptConnection?,  -- reliable remote connection (optional)
 }
 --■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 --	PRIVATE
 --■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+
+-- Shared dispatch — routes an envelope through middleware then On/Once handlers.
+-- Called by both the unreliable and reliable connections.
 local function _dispatch(self: Type, envelope: { event: string, data: any })
 	if type(envelope) ~= "table" or type(envelope.event) ~= "string" then
 		warn("RoExpress.Listener: Invalid envelope received")
@@ -57,22 +68,45 @@ local function _dispatch(self: Type, envelope: { event: string, data: any })
 		end
 	end
 end
+
 --■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 --	CONSTRUCTORS
 --■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-function Module.New(Remote: UnreliableRemoteEvent): Type
-	local self       = setmetatable({}, Module) :: Type
-	self.Remote      = Remote
-	self._on         = {}
-	self._once       = {}
-	self._middleware = {}
 
-	self._connection = self.Remote.OnClientEvent:Connect(function(envelope)
+--[[
+	New(unreliableRemote, reliableRemote?)
+
+	unreliableRemote  — the UnreliableRemoteEvent (broadcast channel)
+	reliableRemote    — optional RemoteEvent (reliable push channel)
+
+	Passing the reliable remote enables server-push events.
+	The API surface is identical regardless — On/Once/Off work for both.
+]]
+function Module.New(unreliableRemote: UnreliableRemoteEvent, reliableRemote: RemoteEvent?): Type
+	local self          = setmetatable({}, Module) :: Type
+	self.Remote         = unreliableRemote
+	self._on            = {}
+	self._once          = {}
+	self._middleware    = {}
+	self._pushConnection = nil
+
+	-- unreliable broadcast channel (existing behaviour)
+	self._connection = unreliableRemote.OnClientEvent:Connect(function(envelope)
 		_dispatch(self, envelope)
 	end)
 
+	-- reliable push channel — filter to type = "push" only so Network
+	-- responses passing through the same remote are never intercepted here
+	if reliableRemote then
+		self._pushConnection = reliableRemote.OnClientEvent:Connect(function(packet)
+			if type(packet) ~= "table" or packet.type ~= "push" then return end
+			_dispatch(self, { event = packet.event, data = packet.data })
+		end)
+	end
+
 	return self
 end
+
 --■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 --	FUNCTIONS
 --■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
@@ -105,6 +139,9 @@ end
 
 function Module:Destroy()
 	self._connection:Disconnect()
+	if self._pushConnection then
+		self._pushConnection:Disconnect()
+	end
 	table.clear(self._on)
 	table.clear(self._once)
 	table.clear(self._middleware)

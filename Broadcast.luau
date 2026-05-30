@@ -109,6 +109,8 @@ function Module.New(Remote: UnreliableRemoteEvent): Type
 	local self         = setmetatable({}, Module) :: Type
 	self.Remote        = Remote
 	self._eventBuckets = {}
+	-- Broadcast owns its own TokenBucket — independent from App's
+	self._tokenBucket  = TokenBucket.New({ Max = 10, Refill = 2 })
 
 	_startCleanup(self)
 
@@ -124,7 +126,7 @@ function Module:Emit(event: string, player: Player, data: any)
 	end
 	if not _checkDataSize(data) then return end
 	if not _consumeEventBucket(self, event) then return end
-	if not TokenBucket.HasEnoughTokens(player, 1) then
+	if not self._tokenBucket:HasEnoughTokens(player, 1) then
 		warn("RoExpress.Broadcast: Player " .. player.Name .. " token bucket empty, dropping emit")
 		return
 	end
@@ -135,7 +137,7 @@ function Module:EmitAll(event: string, data: any)
 	if not _checkDataSize(data) then return end
 	if not _consumeEventBucket(self, event) then return end
 	for _, player in ipairs(Players:GetPlayers()) do
-		if _isPlayerValid(player) and TokenBucket.HasEnoughTokens(player, 1) then
+		if _isPlayerValid(player) and self._tokenBucket:HasEnoughTokens(player, 1) then
 			self.Remote:FireClient(player, { event = event, data = data })
 		end
 	end
@@ -149,7 +151,7 @@ function Module:EmitTo(event: string, targets: { Player }, data: any)
 	if not _checkDataSize(data) then return end
 	if not _consumeEventBucket(self, event) then return end
 	for _, player in ipairs(targets) do
-		if _isPlayerValid(player) and TokenBucket.HasEnoughTokens(player, 1) then
+		if _isPlayerValid(player) and self._tokenBucket:HasEnoughTokens(player, 1) then
 			self.Remote:FireClient(player, { event = event, data = data })
 		end
 	end
@@ -158,6 +160,7 @@ end
 function Module:Destroy()
 	task.cancel(self._cleanupThread)
 	table.clear(self._eventBuckets)
+	self._tokenBucket:Destroy()
 end
 
 return Module

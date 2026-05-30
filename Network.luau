@@ -11,9 +11,11 @@ local Module = {}
 Module.__index = Module
 --► Variables    ◄--
 local Base64            = require(script.Parent.Base64)
+local Codec             = require(script.Parent.Codec)
 local _idCounter        = 0
 local TIMEOUT           = 10
-local ROEXPRESS_VERSION = "1.6"
+-- Version is set once in init.luau — matches App automatically
+local ROEXPRESS_VERSION = shared.ROEXPRESS_VERSION
 --► Types        ◄--
 export type Type = typeof(setmetatable({}, Module)) & {
 	Remote     : RemoteEvent,
@@ -73,14 +75,26 @@ local function _onResponse(self: Type, response: NetworkResponse)
 
 	self._pending[response.requestId] = nil
 
-	-- decode base64 on POST responses
-	if response.type == "response" and entry.method == "POST" and response.data then
-		local ok, decoded = pcall(Base64.DecodeTable, response.data)
-		if ok then
-			response.data = decoded
-		else
-			warn("RoExpress.Network: Failed to decode POST response")
-			response.data = nil
+	-- decode response data based on encoding flags
+	if response.type == "response" and response.data then
+		if response.compressed then
+			-- server used Codec.Compress — decompress with LZ77
+			local ok, decoded = pcall(Codec.Decompress, response.data)
+			if ok and decoded ~= nil then
+				response.data = decoded
+			else
+				warn("RoExpress.Network: Failed to decompress response for requestId", response.requestId)
+				response.data = nil
+			end
+		elseif entry.method == "POST" then
+			-- plain base64 POST response (compress not enabled for this route)
+			local ok, decoded = pcall(Base64.DecodeTable, response.data)
+			if ok then
+				response.data = decoded
+			else
+				warn("RoExpress.Network: Failed to decode POST response")
+				response.data = nil
+			end
 		end
 	end
 
@@ -129,6 +143,9 @@ function Module:Post(route: string, data: any, callback: (response: NetworkRespo
 end
 
 function Module:Cancel(requestId: string)
+	-- Note: this only stops the client from processing the response.
+	-- The server will still execute the handler and fire back into the void.
+	-- There is no mechanism to signal the server to abort mid-flight.
 	if self._pending[requestId] then
 		self._pending[requestId] = nil
 		return true
