@@ -938,12 +938,145 @@
       justify-content: center;
       flex-shrink: 0
     }
+
+    /* ── MOBILE ── */
+    #burger {
+      display: none;
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius);
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      cursor: pointer;
+      font-size: 18px;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-right: 4px
+    }
+
+    #overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .55);
+      z-index: 98;
+      -webkit-backdrop-filter: blur(2px);
+      backdrop-filter: blur(2px)
+    }
+
+    #overlay.open {
+      display: block
+    }
+
+    @media(max-width:768px) {
+      #burger {
+        display: flex
+      }
+
+      #sw {
+        max-width: none;
+        flex: 1
+      }
+
+      .hright a.badge,
+      .hright span.badge {
+        display: none
+      }
+
+      #sb {
+        transform: translateX(-100%);
+        transition: transform .22s ease;
+        z-index: 99;
+        box-shadow: 4px 0 32px rgba(0, 0, 0, .5)
+      }
+
+      #sb.open {
+        transform: translateX(0)
+      }
+
+      #ct {
+        margin-left: 0;
+        padding: 28px 18px 140px;
+        max-width: 100%
+      }
+
+      h1 {
+        font-size: 26px
+      }
+
+      .lead {
+        font-size: 13.5px
+      }
+
+      pre {
+        padding: 12px 14px;
+        font-size: 11.5px;
+        overflow-x: auto
+      }
+
+      .tbl {
+        font-size: 11.5px;
+        display: block;
+        overflow-x: auto
+      }
+
+      .tbl th,
+      .tbl td {
+        padding: 7px 8px;
+        white-space: nowrap
+      }
+
+      .cards {
+        grid-template-columns: 1fr !important
+      }
+
+      .sig {
+        padding: 9px 12px;
+        font-size: 12px
+      }
+
+      h2 {
+        margin: 32px 0 12px;
+        font-size: 15px
+      }
+
+      .pipe .ps {
+        flex-wrap: wrap;
+        gap: 6px
+      }
+
+      footer {
+        left: 0 !important;
+        padding: 12px 18px !important;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px
+      }
+
+      footer>div:last-child {
+        flex-wrap: wrap;
+        gap: 6px
+      }
+
+      .yt-card {
+        flex-direction: column;
+        text-align: center
+      }
+
+      #ct>section>div[style*="grid-template-columns:repeat(3"] {
+        grid-template-columns: 1fr 1fr !important
+      }
+    }
   </style>
 </head>
 
 <body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
 
   <header id="hdr">
+    <button id="burger" onclick="toggleSidebar()" aria-label="Toggle navigation">☰</button>
     <a class="logo" href="#" onclick="show('overview');return false">
       <div class="logo-icon">Ro</div>
       <span class="logo-name">RoExpress</span>
@@ -3037,6 +3170,10 @@ app:<span class="fn">Post</span>(<span class="str">"queue/leave"</span>, <span c
         if (ni && !ni.classList.contains('open')) { ni.classList.add('open'); const h = ni.previousElementSibling; if (h) h.classList.add('open') }
       }
       window.scrollTo(0, 0);
+      if (window.innerWidth <= 768) {
+        document.getElementById('sb').classList.remove('open');
+        document.getElementById('overlay').classList.remove('open');
+      }
     }
 
     function tn(btn) {
@@ -3048,6 +3185,13 @@ app:<span class="fn">Post</span>(<span class="str">"queue/leave"</span>, <span c
       const b = document.body, d = b.dataset.theme === 'dark';
       b.dataset.theme = d ? 'light' : 'dark';
       document.getElementById('tgl').textContent = d ? '☀' : '☽';
+    }
+
+    function toggleSidebar() {
+      const sb = document.getElementById('sb');
+      const ov = document.getElementById('overlay');
+      sb.classList.toggle('open');
+      ov.classList.toggle('open');
     }
 
     function cp(btn) {
