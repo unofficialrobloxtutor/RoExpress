@@ -6,7 +6,8 @@ realm = "shared"
 description = "Express.js-style structured networking for Roblox. One remote, typed routes, server push, compression, and exploit detection."
 license = "MIT"
 authors = ["DeathToTheStadium"]
-homepage = "https://unofficialrobloxtutor.com"
+homepage = "https://roexpress.dev"
+documentation = "https://roexpress.dev"
 repository = "https://github.com/unofficialrobloxtutor/RoExpress"
 include = [
     "wally.toml",
