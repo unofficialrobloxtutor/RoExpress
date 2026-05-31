@@ -17,7 +17,7 @@ local UNRELIABLE_NAME    = "RoExpressUnreliable"
 
 -- Version.luau is the only module that writes shared.ROEXPRESS_VERSION
 -- Require it first so the value is set before any other module reads it
-require(script.Version)
+local _Version = require(script.Version)
 
 -- server creates both remotes, client waits for them
 local Remote;
@@ -54,6 +54,7 @@ local _modules = if IS_SERVER
 		Port        = require(script.Port),
 		Stream      = require(script.Stream),
 		TypeCoercer = TypeCoercer,
+		Version     = _Version,
 	}
 	else {
 		Network     = require(script.Network),
@@ -63,6 +64,7 @@ local _modules = if IS_SERVER
 		Stream      = require(script.Stream),
 		TypeCoercer = TypeCoercer,
 		Promise     = Promise,
+		Version     = _Version,
 	}
 
 -- Broadcast and Listener need the UnreliableRemote, everything else gets Remote
@@ -83,8 +85,8 @@ export type Type = typeof(setmetatable({}, RoExpress)) & {
 	_instances: { [string]: any },
 }
 
-type ServerModuleName = "App" | "Broadcast" | "Base64" | "Bridge" | "Tamper" | "Stream" | "TypeCoercer"
-type ClientModuleName = "Network" | "Listener" | "Base64" | "Bridge" | "Stream" | "TypeCoercer" | "Promise"
+type ServerModuleName = "App" | "Broadcast" | "Base64" | "Bridge" | "Tamper" | "Stream" | "TypeCoercer" | "Version"
+type ClientModuleName = "Network" | "Listener" | "Base64" | "Bridge" | "Stream" | "TypeCoercer" | "Promise" | "Version"
 type ModuleName = ServerModuleName | ClientModuleName
 ------------------------------------------------------------------------
 --	PRIVATE
