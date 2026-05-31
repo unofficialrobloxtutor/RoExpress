@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RoExpress — Express.js-style Networking for Roblox</title>
 
+<!-- ── FAVICON (inline SVG → data URI) ── -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+
 <!-- ── SEO ── -->
 <meta name="description" content="One remote. Every request protected, routed, and rate-limited automatically. RoExpress supersedes ByteNet, Warp, and BridgeNet with typed routes, server push, 60hz binary streaming, exploit detection, and more — all in one framework.">
 <meta name="keywords" content="roblox, luau, networking, remoteevent, framework, express, roexpress, roblox developer, roblox scripting, roblox module, typed routes, server push, rate limiting">
@@ -126,7 +130,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 /* ── HEADER ── */
 #hdr{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--header-h);background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:14px}
 .logo{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--text);flex-shrink:0}
-.logo-icon{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,#8b78ff,#5b4de0);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;letter-spacing:-.5px;flex-shrink:0}
 .logo-name{font-size:14px;font-weight:500;letter-spacing:-.3px}
 .logo-ver{font-size:10px;color:var(--text3);margin-left:2px;align-self:flex-end;padding-bottom:2px}
 
@@ -269,7 +272,13 @@ pre code{background:none;border:none;padding:0;font-size:12.5px;color:var(--text
 .yt-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:30px 26px;margin:26px 0;display:flex;align-items:center;gap:22px}
 .yt-icon{width:54px;height:54px;border-radius:12px;background:#FF0000;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 
-/* ── MOBILE ── */
+/* ── BACK TO TOP ── */
+#btt{position:fixed;bottom:68px;right:22px;z-index:150;width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;box-shadow:0 4px 14px rgba(139,120,255,.4)}
+#btt.show{opacity:1;pointer-events:all}
+#btt:hover{transform:translateY(-2px)}
+
+/* ── SCROLL SPY ── */
+.nl.spy-active{color:var(--accent2)!important;border-left-color:var(--accent)!important;background:var(--accent-bg)!important}
 #burger{display:none;width:34px;height:34px;border-radius:var(--radius);background:var(--bg2);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-size:18px;align-items:center;justify-content:center;flex-shrink:0;margin-right:4px}
 #overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:98;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
 #overlay.open{display:block}
@@ -298,13 +307,24 @@ pre code{background:none;border:none;padding:0;font-size:12.5px;color:var(--text
 </head>
 <body data-theme="dark">
 <div id="overlay" onclick="toggleSidebar()"></div>
+<button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
 
 <header id="hdr">
   <button id="burger" onclick="toggleSidebar()" aria-label="Toggle navigation">☰</button>
   <a class="logo" href="#" onclick="show('overview');return false">
-    <div class="logo-icon">Ro</div>
+    <svg width="30" height="30" viewBox="80 120 148 148" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;border-radius:7px">
+      <rect x="80" y="120" width="148" height="148" rx="30" fill="#a594ff"/>
+      <rect x="104" y="158" width="100" height="9" rx="4.5" fill="#0d0d1f"/>
+      <rect x="104" y="217" width="100" height="9" rx="4.5" fill="#0d0d1f"/>
+      <rect x="104" y="158" width="9" height="68" rx="4.5" fill="#0d0d1f"/>
+      <rect x="152" y="167" width="9" height="30" rx="4.5" fill="#0d0d1f"/>
+      <circle cx="156" cy="162" r="7" fill="#0d0d1f"/>
+      <circle cx="156" cy="222" r="7" fill="#0d0d1f"/>
+      <circle cx="204" cy="162" r="7" fill="#0d0d1f"/>
+      <circle cx="204" cy="222" r="7" fill="#0d0d1f"/>
+    </svg>
     <span class="logo-name">RoExpress</span>
-    <span class="logo-ver">v2.1</span>
+    <span class="logo-ver">v2.2</span>
   </a>
   <div id="sw">
     <span class="sico">⌕</span>
@@ -312,12 +332,6 @@ pre code{background:none;border:none;padding:0;font-size:12.5px;color:var(--text
     <div id="sr"></div>
   </div>
   <div class="hright">
-    <a href="https://wally.run/package/unofficialrobloxtutor/roexpress" target="_blank" rel="noopener" class="badge" style="text-decoration:none;color:var(--text2)" title="Wally">📦 Wally</a>
-    <a href="https://unofficialrobloxtutor.com" target="_blank" rel="noopener" class="badge" style="text-decoration:none;color:var(--text2)" title="Website">🌐 Website</a>
-    <a href="https://github.com/unofficialrobloxtutor/RoExpress" target="_blank" rel="noopener" class="badge" style="text-decoration:none;color:var(--text2)" title="GitHub">GitHub</a>
-    <a href="https://devforum.roblox.com/t/roexpress/4646082" target="_blank" rel="noopener" class="badge" style="text-decoration:none;color:var(--text2)" title="DevForum">DevForum</a>
-    <a href="https://github.com/unofficialrobloxtutor/RoExpress/blob/main/LICENSE" target="_blank" rel="noopener" class="badge" style="text-decoration:none;color:var(--text2)">MIT</a>
-    <a href="https://luau.org/docs" target="_blank" rel="noopener" class="badge" style="text-decoration:none;color:var(--text2)">Luau</a>
     <button id="tgl" title="Toggle theme" onclick="toggleTheme()">☽</button>
   </div>
 </header>
@@ -430,40 +444,12 @@ pre code{background:none;border:none;padding:0;font-size:12.5px;color:var(--text
   <div class="eyebrow">Introduction</div>
   <h1>RoExpress — <em>structured networking</em> for Roblox</h1>
   <p class="lead">One remote. Every request protected, routed, and rate-limited automatically. Stop creating a new RemoteEvent for every feature in your game — RoExpress gives you a single organised pipeline with built-in exploit protection, typed routes, server push, and a 60hz binary streaming layer for FPS games. Everything your game needs to communicate safely at any scale.</p>
-  <div class="cl new"><strong>v2.1 is here.</strong> Stream, named ports, optional callbacks. Fully backwards-compatible.</div>
+  <div class="cl new"><strong>v2.2 is here.</strong> Stream, named ports, optional callbacks. Fully backwards-compatible.</div>
 
   <h2>The next big thing in Roblox networking</h2>
   <p>Every other library solves one problem. ByteNet gives you buffer serialization but nothing else. Warp gives you fast remotes but no structure. BridgeNet gave you batching but no routing, no security, no push — and then got archived. You always ended up stitching three different libraries together just to build one game.</p>
   <p>RoExpress does all of it in one place. Typed routes with seven Luau types coerced automatically. A middleware pipeline that blocks exploiters before they touch your handlers. Reliable server push with no extra setup. LZ77 buffer compression that makes large payloads 90% smaller. A 60hz binary streaming layer for FPS games that beats ByteNet on raw packet size. Named ports so a combat flood can never choke your inventory system. An internal event bus so your server modules stop depending on each other. And passive exploit detection that watches every request without you writing a single extra line.</p>
   <p style="color:var(--accent2);font-weight:500">ByteNet is abandoned. Warp is archived. RoExpress is here — actively maintained, documented, and built for games that actually ship.</p>
-
-  <div style="display:flex;flex-wrap:wrap;gap:10px;margin:24px 0 36px">
-    <a href="https://create.roblox.com/store/asset/94926286357335" target="_blank" rel="noopener"
-      style="display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#fff;font-family:var(--font);font-size:12px;font-weight:600;padding:9px 16px;border-radius:7px;text-decoration:none;transition:opacity var(--ease)"
-      onmouseover="this.style.opacity='.84'" onmouseout="this.style.opacity='1'">
-      ⬇ Get on Creator Store
-    </a>
-    <a href="https://wally.run/package/unofficialrobloxtutor/roexpress" target="_blank" rel="noopener"
-      style="display:inline-flex;align-items:center;gap:7px;background:var(--bg2);border:1px solid var(--border2);color:var(--text2);font-family:var(--font);font-size:12px;font-weight:500;padding:9px 16px;border-radius:7px;text-decoration:none;transition:background var(--ease),color var(--ease)"
-      onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='var(--bg2)';this.style.color='var(--text2)'">
-      📦 Wally
-    </a>
-    <a href="https://github.com/unofficialrobloxtutor/RoExpress" target="_blank" rel="noopener"
-      style="display:inline-flex;align-items:center;gap:7px;background:var(--bg2);border:1px solid var(--border2);color:var(--text2);font-family:var(--font);font-size:12px;font-weight:500;padding:9px 16px;border-radius:7px;text-decoration:none;transition:background var(--ease),color var(--ease)"
-      onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='var(--bg2)';this.style.color='var(--text2)'">
-      ⌥ GitHub
-    </a>
-    <a href="https://devforum.roblox.com/t/roexpress/4646082" target="_blank" rel="noopener"
-      style="display:inline-flex;align-items:center;gap:7px;background:var(--bg2);border:1px solid var(--border2);color:var(--text2);font-family:var(--font);font-size:12px;font-weight:500;padding:9px 16px;border-radius:7px;text-decoration:none;transition:background var(--ease),color var(--ease)"
-      onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='var(--bg2)';this.style.color='var(--text2)'">
-      ◈ DevForum
-    </a>
-    <a href="https://unofficialrobloxtutor.com" target="_blank" rel="noopener"
-      style="display:inline-flex;align-items:center;gap:7px;background:var(--bg2);border:1px solid var(--border2);color:var(--text2);font-family:var(--font);font-size:12px;font-weight:500;padding:9px 16px;border-radius:7px;text-decoration:none;transition:background var(--ease),color var(--ease)"
-      onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='var(--bg2)';this.style.color='var(--text2)'">
-      🌐 Website
-    </a>
-  </div>
 
   <h2>Why RoExpress?</h2>
   <p>A typical Roblox game scatters dozens of RemoteEvents with no structure, no rate limiting, and no error handling. RoExpress replaces that with one disciplined pipeline:</p>
@@ -1759,27 +1745,27 @@ ServerScriptService
   <h1>Support the Project</h1>
   <p class="lead">RoExpress is free, MIT licensed, and always will be. If it's saved you time, a donation goes a long way toward keeping development active.</p>
   <div class="cards">
-    <div class="card">
+    <div class="card" style="border-color:rgba(102,168,15,.2)">
       <div class="card-head">
-        <div class="card-icon" style="background:#00D632">
+        <div class="card-icon" style="background:#66a80f">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M20.062 5.343C19.16 4.274 17.795 3.64 16.25 3.5L16.97 1.28a.5.5 0 00-.48-.65h-2.1a.5.5 0 00-.48.36l-.76 2.56C9.44 3.75 7 6.39 7 9.75c0 2.56 1.44 4.24 4.38 5.15l2.56.8c1.68.52 2.44 1.22 2.44 2.44 0 1.56-1.28 2.62-3.12 2.62-1.52 0-2.84-.56-3.72-1.58l-1.9 1.9C8.7 22.3 10.3 23 12.18 23c.24 0 .47-.01.7-.03l-.74 2.47a.5.5 0 00.48.65h2.1a.5.5 0 00.48-.36l.77-2.6C19 22.56 21 19.98 21 16.9c0-2.6-1.42-4.38-4.5-5.36l-2.44-.78c-1.6-.5-2.38-1.2-2.38-2.38 0-1.44 1.18-2.44 2.88-2.44 1.36 0 2.54.5 3.34 1.42l2.18-2z"/></svg>
         </div>
-        <div><div class="card-ttl">Cash App</div><div class="card-sub">One-time donation</div></div>
+        <div><div class="card-ttl">Cash App</div><div class="card-sub" style="color:var(--text2)">One-time donation</div></div>
       </div>
-      <p style="font-size:12.5px;color:var(--text2);margin:0;line-height:1.6">Send any amount directly. Every dollar funds new features and docs.</p>
-      <div class="card-handle">$robloxtutor25</div>
-      <a href="https://cash.app/$robloxtutor25" target="_blank" rel="noopener" class="card-btn" style="background:#00D632;color:#000">Open Cash App →</a>
+      <p style="font-size:12.5px;color:var(--text2);margin:0;line-height:1.7">Send any amount directly. Every dollar funds new features and docs.</p>
+      <div class="card-handle" style="color:#a3c940;border-color:rgba(102,168,15,.2)">$robloxtutor25</div>
+      <a href="https://cash.app/$robloxtutor25" target="_blank" rel="noopener" class="card-btn" style="background:#66a80f;color:#fff">Open Cash App →</a>
     </div>
-    <div class="card">
+    <div class="card" style="border-color:rgba(27,107,255,.18)">
       <div class="card-head">
-        <div class="card-icon" style="background:#1B6BFF">
+        <div class="card-icon" style="background:#1558E0">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         </div>
-        <div><div class="card-ttl">Robux</div><div class="card-sub">Donate in-platform</div></div>
+        <div><div class="card-ttl">Robux</div><div class="card-sub" style="color:var(--text2)">Donate in-platform</div></div>
       </div>
-      <p style="font-size:12.5px;color:var(--text2);margin:0;line-height:1.6">Already in Roblox? Visit the profile and send Robux directly.</p>
-      <div class="card-handle">unofficialrobloxtutor</div>
-      <a href="https://www.roblox.com/users/34899885/profile" target="_blank" rel="noopener" class="card-btn" style="background:#1B6BFF;color:#fff">View Roblox Profile →</a>
+      <p style="font-size:12.5px;color:var(--text2);margin:0;line-height:1.7">Already in Roblox? Visit the profile and send Robux directly.</p>
+      <div class="card-handle" style="color:#7aabff;border-color:rgba(27,107,255,.2)">unofficialrobloxtutor</div>
+      <a href="https://www.roblox.com/users/34899885/profile" target="_blank" rel="noopener" class="card-btn" style="background:#1558E0;color:#fff">View Roblox Profile →</a>
     </div>
   </div>
   <div class="cl tip"><strong>No pressure, ever.</strong> If you can't donate, sharing the project or starring the repo helps just as much.</div>
@@ -1790,13 +1776,13 @@ ServerScriptService
       style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-decoration:none;transition:background var(--ease)"
       onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'">
       <span style="font-size:18px">▶</span>
-      <div><div style="font-size:12px;font-weight:500;color:var(--text)">YouTube</div><div style="font-size:11px;color:var(--text3)">@UNOFFICIAL_ROBLOX_TUTOR</div></div>
+      <div><div style="font-size:12px;font-weight:500;color:var(--text)">YouTube</div><div style="font-size:11px;color:var(--text2)">@UNOFFICIAL_ROBLOX_TUTOR</div></div>
     </a>
     <a href="https://x.com/tostadium" target="_blank" rel="noopener"
       style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-decoration:none;transition:background var(--ease)"
       onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'">
       <span style="font-size:18px">𝕏</span>
-      <div><div style="font-size:12px;font-weight:500;color:var(--text)">Twitter / X</div><div style="font-size:11px;color:var(--text3)">@tostadium</div></div>
+      <div><div style="font-size:12px;font-weight:500;color:var(--text)">Twitter / X</div><div style="font-size:11px;color:var(--text2)">@tostadium</div></div>
     </a>
     <a href="https://discord.gg/TszEHgEyV5" target="_blank" rel="noopener"
       style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-decoration:none;transition:background var(--ease)"
@@ -1808,19 +1794,19 @@ ServerScriptService
       style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-decoration:none;transition:background var(--ease)"
       onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'">
       <span style="font-size:18px">⌥</span>
-      <div><div style="font-size:12px;font-weight:500;color:var(--text)">GitHub</div><div style="font-size:11px;color:var(--text3)">unofficialrobloxtutor</div></div>
+      <div><div style="font-size:12px;font-weight:500;color:var(--text)">GitHub</div><div style="font-size:11px;color:var(--text2)">unofficialrobloxtutor</div></div>
     </a>
     <a href="https://www.roblox.com/users/34899885/profile" target="_blank" rel="noopener"
       style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-decoration:none;transition:background var(--ease)"
       onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'">
       <span style="font-size:18px">⬡</span>
-      <div><div style="font-size:12px;font-weight:500;color:var(--text)">Roblox</div><div style="font-size:11px;color:var(--text3)">DeathToTheStadium</div></div>
+      <div><div style="font-size:12px;font-weight:500;color:var(--text)">Roblox</div><div style="font-size:11px;color:var(--text2)">DeathToTheStadium</div></div>
     </a>
     <a href="https://unofficialrobloxtutor.com" target="_blank" rel="noopener"
       style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-decoration:none;transition:background var(--ease)"
       onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'">
       <span style="font-size:18px">🌐</span>
-      <div><div style="font-size:12px;font-weight:500;color:var(--text)">Website</div><div style="font-size:11px;color:var(--text3)">unofficialrobloxtutor.com</div></div>
+      <div><div style="font-size:12px;font-weight:500;color:var(--text)">Website</div><div style="font-size:11px;color:var(--text2)">unofficialrobloxtutor.com</div></div>
     </a>
   </div>
 </section>
@@ -2193,6 +2179,8 @@ tamper.<span class="fn">On</span>(<span class="kw">function</span>(report)
     <tr><td>Open an issue</td><td>Bug reports, feature requests, questions</td></tr>
     <tr><td>Submit a PR</td><td>Fork, make your change, open a pull request against main</td></tr>
     <tr><td>Share it</td><td>Post in Discord, DevForum, or anywhere Roblox devs hang out</td></tr>
+    <tr><td><a href="https://github.com/unofficialrobloxtutor/RoExpress/blob/main/CHANGELOG.md" target="_blank" rel="noopener">CHANGELOG.md</a></td><td>Full version history in the repo</td></tr>
+    <tr><td><a href="https://github.com/unofficialrobloxtutor/RoExpress/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING.md</a></td><td>How to contribute code, style guide, PR process</td></tr>
   </table>
 </section>
 
@@ -2648,7 +2636,7 @@ tamper.<span class="fn">On</span>(<span class="kw">function</span>(report)
 <!-- ── FOOTER ── -->
 <footer style="position:fixed;bottom:0;left:var(--sidebar-w);right:0;z-index:50;border-top:1px solid var(--border);padding:12px 68px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;background:var(--bg)">
   <div style="font-size:12px;color:var(--text3)">
-    © 2026 <span style="color:var(--text2)">DeathToTheStadium</span> · <a href="https://github.com/unofficialrobloxtutor/RoExpress/blob/main/LICENSE" target="_blank" rel="noopener" style="color:var(--text3);text-decoration:none" onmouseover="this.style.color='var(--text2)'" onmouseout="this.style.color='var(--text3)'">MIT License</a> · <a href="https://luau.org/docs" target="_blank" rel="noopener" style="color:var(--text3);text-decoration:none" onmouseover="this.style.color='var(--text2)'" onmouseout="this.style.color='var(--text3)'">Luau Docs</a> · RoExpress v2.0
+    © 2026 <span style="color:var(--text2)">DeathToTheStadium</span> · <a href="https://github.com/unofficialrobloxtutor/RoExpress/blob/main/LICENSE" target="_blank" rel="noopener" style="color:var(--text3);text-decoration:none" onmouseover="this.style.color='var(--text2)'" onmouseout="this.style.color='var(--text3)'">MIT License</a> · <a href="https://luau.org/docs" target="_blank" rel="noopener" style="color:var(--text3);text-decoration:none" onmouseover="this.style.color='var(--text2)'" onmouseout="this.style.color='var(--text3)'">Luau Docs</a> · RoExpress v2.2
   </div>
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
     <a href="https://unofficialrobloxtutor.com" target="_blank" rel="noopener" title="Website"
@@ -2784,6 +2772,30 @@ function tn(btn){
   btn.classList.toggle('open');
   btn.nextElementSibling.classList.toggle('open');
 }
+
+// ── BACK TO TOP ──
+const btt = document.getElementById('btt');
+const ct  = document.getElementById('ct');
+ct.addEventListener('scroll', () => {
+  btt.classList.toggle('show', ct.scrollTop > 300);
+});
+// also listen on window for non-overflow scroll
+window.addEventListener('scroll', () => {
+  btt.classList.toggle('show', window.scrollY > 300);
+}, { passive: true });
+
+// ── SCROLL SPY ──
+// highlight nav link for h2 headings as user scrolls
+function _updateSpy() {
+  const headings = document.querySelectorAll('.doc.active h2');
+  if (!headings.length) return;
+  const scrollY = window.scrollY + 120;
+  let current = null;
+  headings.forEach(h => { if (h.offsetTop <= scrollY) current = h; });
+  // we use the active section's nav link — no per-heading spy needed
+  // section-level spy is handled by show()
+}
+window.addEventListener('scroll', _updateSpy, { passive: true });
 
 function toggleCons(btn){
   const body = btn.nextElementSibling;
