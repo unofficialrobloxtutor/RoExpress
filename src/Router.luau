@@ -1,9 +1,9 @@
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---  ◄► Title:       RoExpress.Router
---  ◄► Version:     1.0
---  ◄► Date:        30/05/2026
---  ◄► Author:      DeathToTheStadium
---  ◄► Description: Advanced route matching engine for RoExpress.
+------------------------------------------------------------------------
+--  <> Title:       RoExpress.Router
+--  <> Version:     1.0
+--  <> Date:        30/05/2026
+--  <> Author:      DeathToTheStadium
+--  <> Description: Advanced route matching engine for RoExpress.
 --
 --  Supports typed params, wildcards, globs, and inline pattern constraints.
 --
@@ -29,7 +29,9 @@
 --  4. Plain params        :id
 --  5. Single wildcard     *
 --  6. Glob                **
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
+
+local TypeCoercer = require(script.Parent.TypeCoercer)
 
 local Router = {}
 Router.__index = Router
@@ -39,16 +41,17 @@ Router.__index = Router
 -- ─────────────────────────────────────────────────────────────────
 
 export type ParamType =
-	"string"  | "boolean" | "number" |
-"vector2" | "vector3" | "color3" | "cframe"
+	"string"  | "boolean" | "number"  | "int"     |
+	"vector2" | "vector3" | "color3"  | "cframe"  |
+	"Instance"| string    -- also accepts "Enum.TypeName"
 
 export type SegmentKind =
 	"literal"      -- exact text
-| "param"      -- :name  (plain, no type, no constraint)
-| "typed"      -- :name=type
-| "constrained"-- :name(\d+)  or  :name(\d+)=type
-| "wildcard"   -- *
-| "glob"       -- **
+	| "param"      -- :name  (plain, no type, no constraint)
+	| "typed"      -- :name=type
+	| "constrained"-- :name(\d+)  or  :name(\d+)=type
+	| "wildcard"   -- *
+	| "glob"       -- **
 
 export type Segment = {
 	kind        : SegmentKind,
@@ -79,78 +82,15 @@ export type Type = typeof(setmetatable({}, Router)) & {
 }
 
 -- ─────────────────────────────────────────────────────────────────
--- COERCERS
+-- COERCERS — delegated to TypeCoercer
 -- ─────────────────────────────────────────────────────────────────
 
 type Coercer = (raw: string) -> (boolean, any)
 
-local _coercers: { [string]: Coercer } = {
-
-	string = function(raw)
-		return true, raw
-	end,
-
-	boolean = function(raw)
-		local lo = raw:lower()
-		if lo == "true"  or lo == "1" then return true, true  end
-		if lo == "false" or lo == "0" then return true, false end
-		return false, nil
-	end,
-
-	number = function(raw)
-		local n = tonumber(raw)
-		if n then return true, n end
-		return false, nil
-	end,
-
-	-- vector2: "x,y"
-	vector2 = function(raw)
-		local x, y = raw:match("^([^,]+),([^,]+)$")
-		local nx, ny = tonumber(x), tonumber(y)
-		if nx and ny then return true, Vector2.new(nx, ny) end
-		return false, nil
-	end,
-
-	-- vector3: "x,y,z"
-	vector3 = function(raw)
-		local x, y, z = raw:match("^([^,]+),([^,]+),([^,]+)$")
-		local nx, ny, nz = tonumber(x), tonumber(y), tonumber(z)
-		if nx and ny and nz then return true, Vector3.new(nx, ny, nz) end
-		return false, nil
-	end,
-
-	-- color3: "r,g,b"  (0–255 or 0–1 floats auto-detected)
-	color3 = function(raw)
-		local r, g, b = raw:match("^([^,]+),([^,]+),([^,]+)$")
-		local nr, ng, nb = tonumber(r), tonumber(g), tonumber(b)
-		if not (nr and ng and nb) then return false, nil end
-		-- if any value > 1 treat as 0-255
-		if nr > 1 or ng > 1 or nb > 1 then
-			return true, Color3.fromRGB(nr, ng, nb)
-		end
-		return true, Color3.new(nr, ng, nb)
-	end,
-
-	-- cframe: "x,y,z,rx,ry,rz"  (position + euler angles in degrees)
-	cframe = function(raw)
-		local parts = {}
-		for v in raw:gmatch("[^,]+") do
-			table.insert(parts, tonumber(v))
-		end
-		if #parts == 3 then
-			return true, CFrame.new(parts[1], parts[2], parts[3])
-		end
-		if #parts == 6 then
-			return true, CFrame.new(parts[1], parts[2], parts[3])
-				* CFrame.Angles(
-					math.rad(parts[4]),
-					math.rad(parts[5]),
-					math.rad(parts[6])
-				)
-		end
-		return false, nil
-	end,
-}
+-- delegate all coercion to TypeCoercer
+local function _coerce(typeName: string, raw: string): (boolean, any)
+	return TypeCoercer.FromString(raw, typeName)
+end
 
 -- ─────────────────────────────────────────────────────────────────
 -- SEGMENT PARSER
@@ -192,10 +132,11 @@ local function _parseSegment(token: string): Segment
 
 	-- extract optional =type suffix
 	local paramType: ParamType? = nil
-	local typeMatch = rest:match("=(%a+)$")
+	-- support "=Enum.TypeName", "=Instance", and base types
+	local typeMatch = rest:match("=(Enum%.[%a%.]+)$") or rest:match("=(Instance)$") or rest:match("=(%a+)$")
 	if typeMatch then
 		assert(
-			_coercers[typeMatch],
+			TypeCoercer.Supports(typeMatch),
 			"RoExpress.Router: Unknown param type '" .. typeMatch .. "' in segment '" .. token .. "'"
 		)
 		paramType = typeMatch :: ParamType
@@ -267,13 +208,17 @@ end
 local function _match(
 	incomingParts : { string },
 	segments      : { Segment }
-)
+): ({ [string]: any }, { any })?
+
 	local params   : { [string]: any } = {}
 	local captures : { any }           = {}
+
 	local si = 1  -- segment index
 	local pi = 1  -- incoming part index
+
 	while si <= #segments do
 		local seg = segments[si]
+
 		if seg.kind == "glob" then
 			-- ** consumes all remaining parts
 			local consumed = {}
@@ -287,33 +232,37 @@ local function _match(
 			if si <= #segments then return nil end
 			break
 		end
+
 		-- all non-glob segments need a corresponding incoming part
 		if pi > #incomingParts then return nil end
+
 		local raw = incomingParts[pi]
+
 		if seg.kind == "literal" then
 			if raw ~= seg.literal then return nil end
+
 		elseif seg.kind == "wildcard" then
 			table.insert(captures, raw)
+
 		elseif seg.kind == "param" then
 			params[seg.name] = raw
+
 		elseif seg.kind == "typed" then
-			local coerce = _coercers[seg.paramType]
-			local ok, value = coerce(raw)
+			local ok, value = _coerce(seg.paramType, raw)
 			if ok then
 				params[seg.name] = value
 			else
-				-- fallback to string but tag the failed type so App can surface it
 				params[seg.name] = raw
 				params["__typeFail_" .. seg.name] = seg.paramType
 			end
+
 		elseif seg.kind == "constrained" then
 			-- pattern check first
 			if not raw:match("^" .. seg.pattern .. "$") then
-				return nil  -- constraint failed, try next route
+				return nil  -- constraint failed
 			end
 			if seg.paramType then
-				local coerce = _coercers[seg.paramType]
-				local ok, value = coerce(raw)
+				local ok, value = _coerce(seg.paramType, raw)
 				if ok then
 					params[seg.name] = value
 				else
@@ -324,11 +273,14 @@ local function _match(
 				params[seg.name] = raw
 			end
 		end
+
 		si += 1
 		pi += 1
 	end
+
 	-- all incoming parts must be consumed (unless glob was last)
 	if pi <= #incomingParts then return nil end
+
 	return params, captures
 end
 

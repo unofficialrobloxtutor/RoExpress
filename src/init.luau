@@ -36,28 +36,33 @@ else
 end
 
 -- load only the modules valid for this context
-local Base64  = require(script.Base64)
-local Router  = require(script.Router)
-local Codec   = require(script.Codec)
-local Bridge  = require(script.Bridge)
-local Tamper  = require(script.Tamper)  -- server-only singleton
+local Base64      = require(script.Base64)
+local Router      = require(script.Router)
+local Codec       = require(script.Codec)
+local Bridge      = require(script.Bridge)
+local Tamper      = require(script.Tamper)
+local TypeCoercer = require(script.TypeCoercer)
+local Promise     = require(script.Promise)
 
 local _modules = if IS_SERVER
 	then {
-		App       = require(script.App),
-		Broadcast = require(script.Broadcast),
-		Base64    = Base64,
-		Bridge    = Bridge,
-		Tamper    = Tamper,
-		Port      = require(script.Port),
-		Stream    = require(script.Stream),
+		App         = require(script.App),
+		Broadcast   = require(script.Broadcast),
+		Base64      = Base64,
+		Bridge      = Bridge,
+		Tamper      = Tamper,
+		Port        = require(script.Port),
+		Stream      = require(script.Stream),
+		TypeCoercer = TypeCoercer,
 	}
 	else {
-		Network  = require(script.Network),
-		Listener = require(script.Listener),
-		Base64   = Base64,
-		Bridge   = Bridge,
-		Stream   = require(script.Stream),
+		Network     = require(script.Network),
+		Listener    = require(script.Listener),
+		Base64      = Base64,
+		Bridge      = Bridge,
+		Stream      = require(script.Stream),
+		TypeCoercer = TypeCoercer,
+		Promise     = Promise,
 	}
 
 -- Broadcast and Listener need the UnreliableRemote, everything else gets Remote
@@ -78,8 +83,8 @@ export type Type = typeof(setmetatable({}, RoExpress)) & {
 	_instances: { [string]: any },
 }
 
-type ServerModuleName = "App" | "Broadcast" | "Base64" | "Bridge" | "Tamper" | "Stream"
-type ClientModuleName = "Network" | "Listener" | "Base64" | "Bridge" | "Stream"
+type ServerModuleName = "App" | "Broadcast" | "Base64" | "Bridge" | "Tamper" | "Stream" | "TypeCoercer"
+type ClientModuleName = "Network" | "Listener" | "Base64" | "Bridge" | "Stream" | "TypeCoercer" | "Promise"
 type ModuleName = ServerModuleName | ClientModuleName
 ------------------------------------------------------------------------
 --	PRIVATE

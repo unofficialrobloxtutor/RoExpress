@@ -12,6 +12,7 @@ Module.__index = Module
 -->> Variables <<--
 local Base64            = require(script.Parent.Base64)
 local Codec             = require(script.Parent.Codec)
+local Promise           = require(script.Parent.Promise)
 local _idCounter        = 0
 local TIMEOUT           = 10
 -- Version is set once in init.luau — matches App automatically
@@ -54,7 +55,7 @@ local function _timeout(self: Type, requestId: string, duration: number)
 		local entry = self._pending[requestId]
 		if entry then
 			self._pending[requestId] = nil
-			entry.callback({
+			local errResponse = {
 				version   = ROEXPRESS_VERSION,
 				type      = "error",
 				method    = entry.method,
@@ -62,7 +63,12 @@ local function _timeout(self: Type, requestId: string, duration: number)
 				status    = 408,
 				data      = nil,
 				message   = "Request timed out after " .. duration .. "s",
-			})
+			}
+			if entry.promise then
+				entry.promise:_reject(errResponse)
+			elseif entry.callback then
+				entry.callback(errResponse)
+			end
 		end
 	end)
 end
@@ -75,19 +81,17 @@ local function _onResponse(self: Type, response: NetworkResponse)
 
 	self._pending[response.requestId] = nil
 
-	-- decode response data based on encoding flags
+	-- decode response data
 	if response.type == "response" and response.data then
 		if response.compressed then
-			-- server used Codec.Compress — decompress with LZ77
 			local ok, decoded = pcall(Codec.Decompress, response.data)
 			if ok and decoded ~= nil then
 				response.data = decoded
 			else
-				warn("RoExpress.Network: Failed to decompress response for requestId", response.requestId)
+				warn("RoExpress.Network: Failed to decompress response")
 				response.data = nil
 			end
 		elseif entry.method == "POST" then
-			-- plain base64 POST response (compress not enabled for this route)
 			local ok, decoded = pcall(Base64.DecodeTable, response.data)
 			if ok then
 				response.data = decoded
@@ -98,9 +102,18 @@ local function _onResponse(self: Type, response: NetworkResponse)
 		end
 	end
 
-	local ok, err = pcall(entry.callback, response)
-	if not ok then
-		warn("RoExpress.Network: Callback error:", err)
+	-- resolve promise or call callback
+	if entry.promise then
+		if response.type == "error" then
+			entry.promise:_reject(response)
+		else
+			entry.promise:_resolve(response)
+		end
+	elseif entry.callback then
+		local ok, err = pcall(entry.callback, response)
+		if not ok then
+			warn("RoExpress.Network: Callback error:", err)
+		end
 	end
 end
 ------------------------------------------------------------------------
@@ -120,14 +133,11 @@ end
 ------------------------------------------------------------------------
 --	FUNCTIONS
 ------------------------------------------------------------------------
-local function _fire(self: Type, method: string, route: string, data: any, callback: ((response: NetworkResponse) -> ())?, timeout: number?)
+-- internal fire — shared by callback and promise paths
+local function _fire(self: Type, method: string, route: string, data: any, entry: any, timeout: number?)
 	local requestId = _generateId()
-
-	-- if no callback provided use a no-op so the pipeline still completes
-	-- cleanly and the server response doesn't go unhandled
-	local cb = callback or function() end
-
-	self._pending[requestId] = { callback = cb, method = method }
+	entry.method    = method
+	self._pending[requestId] = entry
 	_timeout(self, requestId, timeout or TIMEOUT)
 	self.Remote:FireServer({
 		version   = ROEXPRESS_VERSION,
@@ -140,19 +150,48 @@ local function _fire(self: Type, method: string, route: string, data: any, callb
 	return requestId
 end
 
+--[[
+	Get(route, data?, callback?, timeout?) -> requestId
+	Post(route, data, callback?, timeout?) -> requestId
+
+	Callback-based API. callback is optional — omit for fire-and-forget.
+]]
 function Module:Get(route: string, data: any?, callback: ((response: NetworkResponse) -> ())?, timeout: number?)
-	return _fire(self, "GET", route, data, callback, timeout)
+	return _fire(self, "GET", route, data, { callback = callback or function() end }, timeout)
 end
 
 function Module:Post(route: string, data: any, callback: ((response: NetworkResponse) -> ())?, timeout: number?)
-	return _fire(self, "POST", route, data, callback, timeout)
+	return _fire(self, "POST", route, data, { callback = callback or function() end }, timeout)
+end
+
+--[[
+	GetAsync(route, data?, timeout?) -> Promise
+	PostAsync(route, data, timeout?) -> Promise
+
+	Promise-based API. Returns a chainable Promise.
+
+	network:GetAsync("player/123")
+	    :Then(function(res) print(res.data) end)
+	    :Catch(function(err) warn(err.message) end)
+	    :Finally(function() UI:HideLoader() end)
+]]
+function Module:GetAsync(route: string, data: any?, timeout: number?)
+	local promise = Promise.New()
+	_fire(self, "GET", route, data, { promise = promise }, timeout)
+	return promise
+end
+
+function Module:PostAsync(route: string, data: any, timeout: number?)
+	local promise = Promise.New()
+	_fire(self, "POST", route, data, { promise = promise }, timeout)
+	return promise
 end
 
 function Module:Cancel(requestId: string)
-	-- Note: this only stops the client from processing the response.
-	-- The server will still execute the handler and fire back into the void.
-	-- There is no mechanism to signal the server to abort mid-flight.
-	if self._pending[requestId] then
+	-- Stops client processing. Server still executes.
+	local entry = self._pending[requestId]
+	if entry then
+		if entry.promise then entry.promise:Cancel() end
 		self._pending[requestId] = nil
 		return true
 	end
