@@ -50,12 +50,14 @@ local _modules = if IS_SERVER
 		Bridge    = Bridge,
 		Tamper    = Tamper,
 		Port      = require(script.Port),
+		Stream    = require(script.Stream),
 	}
 	else {
 		Network  = require(script.Network),
 		Listener = require(script.Listener),
 		Base64   = Base64,
 		Bridge   = Bridge,
+		Stream   = require(script.Stream),
 	}
 
 -- Broadcast and Listener need the UnreliableRemote, everything else gets Remote
@@ -76,8 +78,8 @@ export type Type = typeof(setmetatable({}, RoExpress)) & {
 	_instances: { [string]: any },
 }
 
-type ServerModuleName = "App" | "Broadcast" | "Base64" | "Bridge" | "Tamper"
-type ClientModuleName = "Network" | "Listener" | "Base64" | "Bridge"
+type ServerModuleName = "App" | "Broadcast" | "Base64" | "Bridge" | "Tamper" | "Stream"
+type ClientModuleName = "Network" | "Listener" | "Base64" | "Bridge" | "Stream"
 type ModuleName = ServerModuleName | ClientModuleName
 ------------------------------------------------------------------------
 --	PRIVATE
@@ -91,7 +93,7 @@ local function _getInstance(self: Type, moduleName: ModuleName): any
 	local m = _modules[moduleName]
 	assert(m, "RoExpress: '" .. moduleName .. "' is not available in this context (" .. (IS_SERVER and "Server" or "Client") .. ")")
 
-	-- Base64 and Bridge have no constructor — return them directly.
+	-- Base64, Bridge, Tamper and Stream have no constructor — return directly.
 	-- Listener takes two remotes — unpack accordingly.
 	local instance
 	if moduleName == "Listener" then
