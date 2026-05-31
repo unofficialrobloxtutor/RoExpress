@@ -1,9 +1,9 @@
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---  ◄► Title:       RoExpress.App
---  ◄► Version:     2.0
---  ◄► Date:        30/05/2026
---  ◄► Author:      DeathToTheStadium
---  ◄► Description: App module for RoExpress
+------------------------------------------------------------------------
+--  <> Title:       RoExpress.App
+--  <> Version:     2.0
+--  <> Date:        30/05/2026
+--  <> Author:      DeathToTheStadium
+--  <> Description: App module for RoExpress
 --
 --  v2.0 changes
 --  ────────────────────────────────────────────────────────────────
@@ -14,19 +14,20 @@
 --  • app:OnParamError() registers a typed-param failure handler
 --  • TokenBucket is now a proper instance (no shared global state)
 --  • Version pulled from shared.ROEXPRESS_VERSION (set in init.luau)
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---► Tables       ◄--
+------------------------------------------------------------------------
+-->> Tables <<--
 local Module = {}
 Module.__index = Module
---► Variables    ◄--
+-->> Variables <<--
 local Base64      = require(script.Parent.Base64)
 local TokenBucket = require(script.Parent.TokenBucket)
 local Router      = require(script.Parent.Router)
 local Codec       = require(script.Parent.Codec)
 local Tamper      = require(script.Parent.Tamper)
+local Port        = require(script.Parent.Port)
 -- Version is set once in init.luau — no more drift between App and Network
 local ROEXPRESS_VERSION = shared.ROEXPRESS_VERSION
---► Types        ◄--
+-->> Types <<--
 export type Type = typeof(setmetatable({}, Module)) & {
 	Remote       : RemoteEvent,
 	TokenBucket  : typeof(TokenBucket),
@@ -56,9 +57,9 @@ type Response = {
 	Error  : (self: Response, message: string) -> (),
 	Status : (self: Response, code: number) -> Response,
 }
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	PRIVATE
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 local function _parseQuery(route: string): (string, { [string]: string })
 	local path, queryString = route:match("^([^?]*)%??(.*)")
 	local query = {}
@@ -233,15 +234,16 @@ local function _handler(self: Type, Player: Player, Payload: Payload)
 		end
 	end
 end
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	CONSTRUCTORS
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 function Module.New(Remote: RemoteEvent): Type
 	local self       = setmetatable({}, Module) :: Type
 	self.Remote      = Remote
 	self.TokenBucket = TokenBucket.New({ Max = 10, Refill = 2 })
 	self._router     = Router.New()
 	self._middleware = {}
+	self._ports      = {}
 
 	self._connection = self.Remote.OnServerEvent:Connect(function(Player, Payload)
 		_handler(self, Player, Payload)
@@ -249,9 +251,9 @@ function Module.New(Remote: RemoteEvent): Type
 
 	return self
 end
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	FUNCTIONS
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 function Module:Use(id: string, fn: (Player: Player, Payload: Payload) -> (boolean?))
 	table.insert(self._middleware, { id = id, fn = fn })
 end
@@ -335,11 +337,52 @@ function Module:PushTo(players: { Player }, event: string, data: any)
 end
 
 --[[
-	Register a handler for typed param coercion failures.
-	If not registered, failures return a plain 400.
+	Listen(name, callback, settings?)
 
-	fn(Player, Payload, paramName, expectedType)
+	Create a named port — an isolated request pipeline with its own
+	RemoteEvent, Router, and TokenBucket. The callback receives the
+	port instance for registering routes.
+
+	Global App middleware is inherited by all ports automatically.
+	Port-local middleware can be added via port:Use().
+
+	app:Listen("combat", function(port)
+	    port:Post("gun/fire/:damage=number", handler)
+	    port:Get("player/:id=number/health", handler)
+	end)
+
+	app:Listen("inventory", function(port)
+	    port:Get("player/:id=number/items", handler)
+	end, { Max = 20, Refill = 5 })
+
+	Client connects via:
+	    local network = RoExpress("Network", "combat")
 ]]
+function Module:Listen(name: string, callback: (port: any) -> (), settings: { Max: number?, Refill: number? }?)
+	assert(type(name) == "string" and #name > 0,
+		"RoExpress.App: Listen — name must be a non-empty string")
+	assert(type(callback) == "function",
+		"RoExpress.App: Listen — callback must be a function")
+	assert(not self._ports[name],
+		"RoExpress.App: Listen — port '" .. name .. "' already registered")
+
+	local port = Port.New(name, self._middleware, settings)
+	self._ports[name] = port
+	callback(port)
+	return port
+end
+
+--[[
+	GetPort(name) -> Port?
+
+	Returns a registered port by name, or nil if not found.
+	Useful for pushing to a port outside its Listen callback.
+
+	app:GetPort("combat"):PushAll("roundEnd", data)
+]]
+function Module:GetPort(name: string)
+	return self._ports[name]
+end
 function Module:OnParamError(fn: (Player: Player, Payload: Payload, paramName: string, expectedType: string) -> ())
 	self._router:OnParamError(fn)
 end
@@ -349,6 +392,10 @@ function Module:Destroy()
 	self._router:Destroy()
 	table.clear(self._middleware)
 	self.TokenBucket:Destroy()
+	for _, port in pairs(self._ports) do
+		port:Destroy()
+	end
+	table.clear(self._ports)
 end
 
 return Module

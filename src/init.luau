@@ -1,16 +1,16 @@
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---  ◄► Title:       RoExpress
---  ◄► Version:     1.2
---  ◄► Date:        21/05/2026
---  ◄► Author:      DeathToTheStadium
---  ◄► Description: Root module for RoExpress
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---► Services     ◄--
+------------------------------------------------------------------------
+--  <> Title:       RoExpress
+--  <> Version:     1.2
+--  <> Date:        21/05/2026
+--  <> Author:      DeathToTheStadium
+--  <> Description: Root module for RoExpress
+------------------------------------------------------------------------
+-->> Services <<--
 local RunService = game:GetService("RunService")
---► Tables       ◄--
+-->> Tables <<--
 local RoExpress = {}
 RoExpress.__index = RoExpress
---► Variables    ◄--
+-->> Variables <<--
 local IS_SERVER          = RunService:IsServer()
 local REMOTE_NAME        = "RoExpressRemote"
 local UNRELIABLE_NAME    = "RoExpressUnreliable"
@@ -49,6 +49,7 @@ local _modules = if IS_SERVER
 		Base64    = Base64,
 		Bridge    = Bridge,
 		Tamper    = Tamper,
+		Port      = require(script.Port),
 	}
 	else {
 		Network  = require(script.Network),
@@ -70,7 +71,7 @@ local function _getRemoteForModule(moduleName: string): any
 	return Remote
 end
 
---► Types        ◄--
+-->> Types <<--
 export type Type = typeof(setmetatable({}, RoExpress)) & {
 	_instances: { [string]: any },
 }
@@ -78,9 +79,9 @@ export type Type = typeof(setmetatable({}, RoExpress)) & {
 type ServerModuleName = "App" | "Broadcast" | "Base64" | "Bridge" | "Tamper"
 type ClientModuleName = "Network" | "Listener" | "Base64" | "Bridge"
 type ModuleName = ServerModuleName | ClientModuleName
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	PRIVATE
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 local function _getInstance(self: Type, moduleName: ModuleName): any
 	-- return cached instance if already created
 	if self._instances[moduleName] then
@@ -105,9 +106,9 @@ local function _getInstance(self: Type, moduleName: ModuleName): any
 
 	return instance
 end
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	CONSTRUCTORS
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 local function _new(): Type
 	local self = setmetatable({}, RoExpress) :: Type
 	self._instances = {}
@@ -115,22 +116,53 @@ local function _new(): Type
 end
 
 setmetatable(RoExpress, {
-	__call = function(_, moduleName: ModuleName)
+	__call = function(_, moduleName: ModuleName, portName: string?)
 		if not RoExpress._root then
 			RoExpress._root = _new()
 		end
+
+		-- if a portName is given, client wants a Network/Listener on a named port
+		if portName and not IS_SERVER then
+			local cacheKey = moduleName .. ":" .. portName
+			if RoExpress._root._instances[cacheKey] then
+				return RoExpress._root._instances[cacheKey]
+			end
+
+			-- find the port remote in ReplicatedStorage/RoExpressPorts
+			local folder = game:GetService("ReplicatedStorage"):WaitForChild("RoExpressPorts", 10)
+			assert(folder, "RoExpress: RoExpressPorts folder not found — did you call app:Listen() on the server?")
+			local portRemote = folder:WaitForChild(portName, 10)
+			assert(portRemote, "RoExpress: Port '" .. portName .. "' not found")
+
+			local m = _modules[moduleName]
+			assert(m, "RoExpress: '" .. moduleName .. "' is not available in this context")
+
+			local instance
+			if moduleName == "Listener" then
+				-- Listener for a port: unreliable = main unreliable, reliable = port remote
+				instance = m.New(UnreliableRemote, portRemote)
+			elseif m.New then
+				instance = m.New(portRemote)
+			else
+				instance = m
+			end
+
+			RoExpress._root._instances[cacheKey] = instance
+			return instance
+		end
+
 		return _getInstance(RoExpress._root, moduleName)
 	end
 })
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	FUNCTIONS
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 RoExpress.Base64 = Base64
 
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	TYPES
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 
 -- core envelope types
 export type Payload = {
