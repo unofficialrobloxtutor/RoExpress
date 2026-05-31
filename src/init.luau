@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 --  <> Title:       RoExpress
---  <> Version:     1.2
---  <> Date:        21/05/2026
+--  <> Version:     2.2
+--  <> Date:        30/05/2026
 --  <> Author:      DeathToTheStadium
 --  <> Description: Root module for RoExpress
 ------------------------------------------------------------------------
@@ -15,9 +15,9 @@ local IS_SERVER          = RunService:IsServer()
 local REMOTE_NAME        = "RoExpressRemote"
 local UNRELIABLE_NAME    = "RoExpressUnreliable"
 
--- Single source of truth for version — both App and Network read this
--- so they can never drift out of sync
-shared.ROEXPRESS_VERSION = "1.6"
+-- Version.luau is the only module that writes shared.ROEXPRESS_VERSION
+-- Require it first so the value is set before any other module reads it
+require(script.Version)
 
 -- server creates both remotes, client waits for them
 local Remote;
