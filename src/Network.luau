@@ -1,22 +1,22 @@
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---  ◄► Title:       RoExpress.Network
---  ◄► Version:     1.2
---  ◄► Date:        01/04/2026
---  ◄► Author:      DeathToTheStadium
---  ◄► Description: Network module for RoExpress
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---► Services     ◄--
---► Tables       ◄--
+------------------------------------------------------------------------
+--  <> Title:       RoExpress.Network
+--  <> Version:     1.2
+--  <> Date:        01/04/2026
+--  <> Author:      DeathToTheStadium
+--  <> Description: Network module for RoExpress
+------------------------------------------------------------------------
+-->> Services <<--
+-->> Tables <<--
 local Module = {}
 Module.__index = Module
---► Variables    ◄--
+-->> Variables <<--
 local Base64            = require(script.Parent.Base64)
 local Codec             = require(script.Parent.Codec)
 local _idCounter        = 0
 local TIMEOUT           = 10
 -- Version is set once in init.luau — matches App automatically
 local ROEXPRESS_VERSION = shared.ROEXPRESS_VERSION
---► Types        ◄--
+-->> Types <<--
 export type Type = typeof(setmetatable({}, Module)) & {
 	Remote     : RemoteEvent,
 	_pending   : { [string]: { callback: (response: NetworkResponse) -> (), method: string } },
@@ -41,9 +41,9 @@ type NetworkResponse = {
 	data      : any?,
 	message   : string?,
 }
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	PRIVATE
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 local function _generateId(): string
 	_idCounter += 1
 	return tostring(tick()) .. "_" .. tostring(_idCounter)
@@ -103,9 +103,9 @@ local function _onResponse(self: Type, response: NetworkResponse)
 		warn("RoExpress.Network: Callback error:", err)
 	end
 end
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	CONSTRUCTORS
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 function Module.New(Remote: RemoteEvent): Type
 	local self   = setmetatable({}, Module) :: Type
 	self.Remote  = Remote
@@ -117,12 +117,17 @@ function Module.New(Remote: RemoteEvent): Type
 
 	return self
 end
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	FUNCTIONS
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-local function _fire(self: Type, method: string, route: string, data: any, callback: (response: NetworkResponse) -> (), timeout: number?)
+------------------------------------------------------------------------
+local function _fire(self: Type, method: string, route: string, data: any, callback: ((response: NetworkResponse) -> ())?, timeout: number?)
 	local requestId = _generateId()
-	self._pending[requestId] = { callback = callback, method = method }
+
+	-- if no callback provided use a no-op so the pipeline still completes
+	-- cleanly and the server response doesn't go unhandled
+	local cb = callback or function() end
+
+	self._pending[requestId] = { callback = cb, method = method }
 	_timeout(self, requestId, timeout or TIMEOUT)
 	self.Remote:FireServer({
 		version   = ROEXPRESS_VERSION,
@@ -132,14 +137,15 @@ local function _fire(self: Type, method: string, route: string, data: any, callb
 		route     = route,
 		data      = data,
 	})
+	return requestId
 end
 
-function Module:Get(route: string, data: any?, callback: (response: NetworkResponse) -> (), timeout: number?)
-	_fire(self, "GET", route, data, callback, timeout)
+function Module:Get(route: string, data: any?, callback: ((response: NetworkResponse) -> ())?, timeout: number?)
+	return _fire(self, "GET", route, data, callback, timeout)
 end
 
-function Module:Post(route: string, data: any, callback: (response: NetworkResponse) -> (), timeout: number?)
-	_fire(self, "POST", route, data, callback, timeout)
+function Module:Post(route: string, data: any, callback: ((response: NetworkResponse) -> ())?, timeout: number?)
+	return _fire(self, "POST", route, data, callback, timeout)
 end
 
 function Module:Cancel(requestId: string)
