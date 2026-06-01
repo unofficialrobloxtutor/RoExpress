@@ -1,10 +1,10 @@
 # RoExpress
 
-> A type-safe, rate-limited, Express.js-style RPC framework for Roblox. MIT licensed and free to use.
+> A type-safe, rate-limited, Express.js-style networking framework for Roblox. MIT licensed and free to use.
 
 ## What is RoExpress?
 
-RoExpress replaces scattered RemoteEvents in Roblox games with a single disciplined pipeline. One reliable RemoteEvent handles all request/response traffic. One UnreliableRemoteEvent handles all broadcasts. Every request is automatically versioned, rate-limited, and routed.
+RoExpress replaces scattered RemoteEvents in Roblox games with a single disciplined pipeline. One reliable RemoteEvent handles all request/response traffic. One UnreliableRemoteEvent handles all broadcasts. Every request is automatically versioned, rate-limited, and routed. Named ports provide isolated pipelines for separate traffic domains. A 60hz binary streaming layer handles FPS game state with packets up to 90% smaller than JSON.
 
 ## Author
 
@@ -22,33 +22,44 @@ RoExpress replaces scattered RemoteEvents in Roblox games with a single discipli
 - Wally: https://wally.run/package/unofficialrobloxtutor/roexpress
 - Creator Store: https://create.roblox.com/store/asset/94926286357335
 - DevForum: https://devforum.roblox.com/t/roexpress/4646082
+- Discord: https://discord.gg/TszEHgEyV5
 - License: MIT
+
+## Current Version
+
+2.2.0 — released 2026-05-30
 
 ## Modules
 
-- App: Server-side request routing, middleware, and server push
-- Network: Client-side request/response with callbacks and timeout
-- Broadcast: Unreliable server-to-client fire-and-forget events
-- Listener: Client-side handler for both push and broadcast events
-- Router: Typed params (number, boolean, vector2, vector3, color3, cframe), wildcards, globs, pattern constraints
-- Codec: LZ77 buffer compression, opt-in per route
-- Bridge: Shared singleton internal event bus with Wait/WaitUntil/WaitFirst yieldable variants
-- Tamper: Server-side exploit detection with 8 reason types across immediate and pattern tiers
-- TokenBucket: Per-instance rate limiter with grant utilities
-- Base64: Shared encode/decode utility
-
-## Version history
-
-- v2.0.0 (2026-05-30): Router, typed params, server push, Codec compression, Bridge event bus, Tamper exploit detection, instantiable TokenBucket, blockable middleware
-- v1.6.0 (2026-05-19): Initial release — App, Network, Broadcast, Listener, TokenBucket, Base64
+- **App**: Server-side request routing, middleware pipeline, and reliable server push (Push/PushAll/PushTo). Owns a Router and TokenBucket instance.
+- **Network**: Client-side request/response with callbacks and optional timeout. Also exposes GetAsync/PostAsync returning chainable Promises.
+- **Broadcast**: Unreliable server-to-client fire-and-forget events over UnreliableRemoteEvent. Per-event and per-player rate limiting. 900 byte data cap.
+- **Listener**: Client-side handler for both unreliable broadcast and reliable server push through one API (On/Once/Off).
+- **Router**: Typed route matching with seven-plus param types (string, number, int, boolean, vector2, vector3, color3, cframe, Enum.TypeName, Instance), wildcards, globs, and inline pattern constraints. Routes sorted by specificity — most specific always wins.
+- **Codec**: LZ77 sliding-window buffer compression. Opt-in per route via { compress = true }. Typical savings 30–60% on JSON. Auto-decompressed on client before callback fires.
+- **Bridge**: Shared singleton internal event bus. Available in both server and client contexts. Bind/Fire/Wait/WaitUntil/WaitFirst. Does not cross the client/server boundary.
+- **Tamper**: Server-only passive exploit detection. Hooks into App's pipeline. Eight detection reasons across immediate and pattern tiers. AutoKick, manual Strike, configurable thresholds.
+- **Port**: Named isolated request pipelines via app:Listen(). Each port owns its own RemoteEvent, Router, and TokenBucket. Global App middleware is inherited automatically.
+- **Stream**: 60hz binary FPS state streaming over raw Roblox buffers. Player state 21 bytes, hit 10 bytes, projectile 18 bytes, weapon state 3 bytes. Opt-in lag compensation with ring buffer snapshots and geometric hit validation.
+- **TypeCoercer**: Shared type serialisation singleton. ToString converts Luau types to wire strings. FromString coerces wire strings back. Powers all Router param coercion.
+- **Promise**: Lightweight chainable async API for Network. Then/Catch/Finally/Cancel. Returned by GetAsync and PostAsync.
+- **TokenBucket**: Per-instance rate limiter. App and Broadcast own independent instances. Grant/GrantAll/Reset utilities.
+- **Base64**: Shared encode/decode utility. Used internally for POST responses.
+- **Version**: Writes shared.ROEXPRESS_VERSION once on require. Auto version check against roexpress.dev on server start.
 
 ## Installation
 
-Wally:
+Wally (recommended):
 ```toml
 [dependencies]
-RoExpress = "unofficialrobloxtutor/roexpress@2.0.0"
+RoExpress = "unofficialrobloxtutor/roexpress@2.2.0"
 ```
+
+## Comparison to other Roblox networking libraries
+
+- **vs ByteNet**: ByteNet provides buffer serialization only and is no longer maintained. RoExpress includes buffer serialization via Stream plus routing, middleware, rate limiting, server push, exploit detection, and named ports.
+- **vs Warp**: Warp provides fast remotes but no routing structure, no security, no push. Now archived.
+- **vs BridgeNet2**: BridgeNet2 provided batching but no routing, no security, no push. Now archived.
 
 ## Language
 
@@ -56,4 +67,4 @@ Luau (Roblox's scripting language, a typed superset of Lua 5.1)
 
 ## License
 
-MIT — free to use, modify, and distribute
+MIT — free to use, modify, and distribute.

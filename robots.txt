@@ -1,0 +1,64 @@
+# robots.txt — roexpress.dev
+# Last updated: 2026-05-30
+
+# ── ALLOW ALL LEGITIMATE CRAWLERS ──────────────────────────────────
+User-agent: *
+Allow: /
+
+# ── GOOGLE ─────────────────────────────────────────────────────────
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Disallow: /
+
+# ── BING ───────────────────────────────────────────────────────────
+User-agent: Bingbot
+Allow: /
+
+# ── AI CRAWLERS — allow for discoverability ────────────────────────
+User-agent: GPTBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+# ── KNOWN SCRAPERS / BAD BOTS — block ─────────────────────────────
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
+
+# ── SITEMAP ────────────────────────────────────────────────────────
+Sitemap: https://roexpress.dev/sitemap.xml
+
+# ── CRAWL DELAY (polite crawling for generic bots) ─────────────────
+Crawl-delay: 2
