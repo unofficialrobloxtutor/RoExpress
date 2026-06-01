@@ -1,13 +1,13 @@
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---  ◄► Title:       RoExpress.Base64
---  ◄► Version:     1.0
---  ◄► Date:        05/20/2026
---  ◄► Author:      DeathToTheStadium
---  ◄► Description: Lightweight Base64 encoder/decoder for RoExpress
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
+--  <> Title:       RoExpress.Base64
+--  <> Version:     1.0
+--  <> Date:        05/20/2026
+--  <> Author:      DeathToTheStadium
+--  <> Description: Lightweight Base64 encoder/decoder for RoExpress
+------------------------------------------------------------------------
 local Base64 = {}
 
---► Variables    ◄--
+-->> Variables <<--
 local CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 local PADDING = "="
 
@@ -19,9 +19,9 @@ for i = 1, #CHARS do
 	_encodeMap[i - 1] = c
 	_decodeMap[c] = i - 1
 end
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	FUNCTIONS
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 function Base64.Encode(data: string): string
 	local result = {}
 	local padding = 0

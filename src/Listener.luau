@@ -1,9 +1,9 @@
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---  ◄► Title:       RoExpress.Listener
---  ◄► Version:     2.0
---  ◄► Date:        30/05/2026
---  ◄► Author:      DeathToTheStadium
---  ◄► Description: Listener module for RoExpress
+------------------------------------------------------------------------
+--  <> Title:       RoExpress.Listener
+--  <> Version:     2.0
+--  <> Date:        30/05/2026
+--  <> Author:      DeathToTheStadium
+--  <> Description: Listener module for RoExpress
 --
 --  v2.0 changes
 --  ────────────────────────────────────────────────────────────────
@@ -13,11 +13,11 @@
 --    the user. On/Once/Off/middleware API is identical for both sources.
 --  • Reliable push connection is stored in _pushConnection and cleaned
 --    up in Destroy().
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---► Tables       ◄--
+------------------------------------------------------------------------
+-->> Tables <<--
 local Module = {}
 Module.__index = Module
---► Types        ◄--
+-->> Types <<--
 export type Type = typeof(setmetatable({}, Module)) & {
 	Remote          : UnreliableRemoteEvent,
 	_on             : { [string]: (data: any) -> () },
@@ -26,9 +26,9 @@ export type Type = typeof(setmetatable({}, Module)) & {
 	_connection     : RBXScriptConnection,
 	_pushConnection : RBXScriptConnection?,  -- reliable remote connection (optional)
 }
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	PRIVATE
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 
 -- Shared dispatch — routes an envelope through middleware then On/Once handlers.
 -- Called by both the unreliable and reliable connections.
@@ -69,9 +69,9 @@ local function _dispatch(self: Type, envelope: { event: string, data: any })
 	end
 end
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	CONSTRUCTORS
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 
 --[[
 	New(unreliableRemote, reliableRemote?)
@@ -107,9 +107,9 @@ function Module.New(unreliableRemote: UnreliableRemoteEvent, reliableRemote: Rem
 	return self
 end
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	FUNCTIONS
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 function Module:Use(id: string, fn: (event: string, data: any) -> ())
 	table.insert(self._middleware, { id = id, fn = fn })
 end

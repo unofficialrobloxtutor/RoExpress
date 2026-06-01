@@ -1,9 +1,9 @@
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---  ◄► Title:       TokenBucket_Utility
---  ◄► Version:     1.1
---  ◄► Date:        18/05/2026
---  ◄► Author:      DeathToTheStadium
---  ◄► Description: Token bucket rate limiter for the remote pipeline.
+------------------------------------------------------------------------
+--  <> Title:       RoExpress.TokenBucket
+--  <> Version:     1.1
+--  <> Date:        18/05/2026
+--  <> Author:      DeathToTheStadium
+--  <> Description: Token bucket rate limiter for the remote pipeline.
 --                  Each player is assigned a bucket on join that refills
 --                  at a fixed rate. Requests cost tokens — if the bucket
 --                  is empty the request is denied. Exposes grant utilities
@@ -14,15 +14,15 @@
 --                  v1.1: Made properly instantiable via TokenBucket.New()
 --                  so App and Broadcast each own separate bucket state
 --                  and can never stomp each other.
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---► Services     ◄--
+------------------------------------------------------------------------
+-->> Services <<--
 local PlayerService = game:GetService("Players")
 
---► Tables       ◄--
+-->> Tables <<--
 local TokenBucket = {}
 TokenBucket.__index = TokenBucket
 
---► Types        ◄--
+-->> Types <<--
 export type Settings = {
 	Max    : number,
 	Refill : number,
@@ -35,9 +35,9 @@ export type Type = typeof(setmetatable({}, TokenBucket)) & {
 	_playerRemoving: RBXScriptConnection,
 }
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	PRIVATE
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 local function _newBucket(settings: Settings)
 	return {
 		Tokens     = settings.Max,
@@ -54,9 +54,9 @@ local function _refill(bucket)
 	bucket.LastRefill = now
 end
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	CONSTRUCTOR
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 function TokenBucket.New(settings: Settings?): Type
 	local self      = setmetatable({}, TokenBucket) :: Type
 	self._buckets   = {}
@@ -78,9 +78,9 @@ function TokenBucket.New(settings: Settings?): Type
 	return self
 end
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	FUNCTIONS
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 function TokenBucket:Consume(player: Player, cost: number): boolean
 	if not self._buckets[player.UserId] then
 		self._buckets[player.UserId] = _newBucket(self._settings)

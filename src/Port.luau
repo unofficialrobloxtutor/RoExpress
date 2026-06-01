@@ -1,4 +1,4 @@
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --  <> Title:       RoExpress.Port
 --  <> Version:     1.0
 --  <> Date:        30/05/2026
@@ -18,7 +18,7 @@
 --  The client connects to a named port via:
 --    RoExpress("Network", "portName")
 --    RoExpress("Listener", "portName")
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 -->> Services <<--
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players           = game:GetService("Players")
@@ -33,9 +33,9 @@ local Codec       = require(script.Parent.Codec)
 local Tamper      = require(script.Parent.Tamper)
 local ROEXPRESS_VERSION = shared.ROEXPRESS_VERSION
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --  TYPES
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 export type BucketSettings = {
     Max    : number?,
     Refill : number?,
@@ -50,9 +50,9 @@ export type Type = typeof(setmetatable({}, Port)) & {
     _connection  : RBXScriptConnection,
 }
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --  PRIVATE
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 local function _parseQuery(route: string)
     local path, queryString = route:match("^([^?]*)%??(.*)")
     local query = {}
@@ -229,9 +229,9 @@ local function _handler(self: Type, Player, Payload)
     end
 end
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --  CONSTRUCTOR (called by App:Listen)
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 function Port.New(name: string, appMiddleware: { any }, settings: BucketSettings?)
     -- create or reuse the RemoteEvent for this port
     local folder = ReplicatedStorage:FindFirstChild("RoExpressPorts")
@@ -263,9 +263,9 @@ function Port.New(name: string, appMiddleware: { any }, settings: BucketSettings
     return self
 end
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --  PUBLIC API
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 
 -- Port-local middleware (runs after inherited app middleware)
 function Port:Use(id: string, fn)

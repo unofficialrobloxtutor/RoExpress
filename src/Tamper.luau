@@ -1,9 +1,9 @@
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---  ◄► Title:       RoExpress.Tamper
---  ◄► Version:     1.0
---  ◄► Date:        30/05/2026
---  ◄► Author:      DeathToTheStadium
---  ◄► Description: Exploit detection and tamper reporting for RoExpress.
+------------------------------------------------------------------------
+--  <> Title:       RoExpress.Tamper
+--  <> Version:     1.0
+--  <> Date:        30/05/2026
+--  <> Author:      DeathToTheStadium
+--  <> Description: Exploit detection and tamper reporting for RoExpress.
 --
 --  Tamper hooks into App's request pipeline and surfaces suspicious
 --  activity as structured reports. Developers subscribe to detection
@@ -37,16 +37,16 @@
 --  ────────────────────────────────────────────────────────────────
 --  Like Bridge, Tamper has no New() — requiring it IS the
 --  constructor. RoExpress("Tamper") always returns the same table.
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 
---► Services     ◄--
+-->> Services <<--
 local Players = game:GetService("Players")
 
---► Tables       ◄--
+-->> Tables <<--
 local Tamper = {}
 Tamper.__index = Tamper
 
---► Types        ◄--
+-->> Types <<--
 export type Severity = "immediate" | "pattern"
 
 export type Reason =
@@ -95,9 +95,9 @@ local RATE_FLOOD_THRESHOLD = 5    -- 429s within window = pattern strike
 local ROUTE_SCAN_THRESHOLD = 8    -- distinct unknown routes = pattern strike
 local PARAM_FLOOD_THRESHOLD= 5    -- repeated param fails on same route = pattern strike
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	PRIVATE
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 
 local function _getOrCreate(player: Player): PlayerRecord
 	local uid = player.UserId
@@ -150,9 +150,9 @@ local function _addStrike(player: Player, reason: Reason, severity: Severity, ro
 	_fire(report)
 end
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	INTERNAL SIGNALS (called by App pipeline hooks)
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 
 --[[
 	Signal(event, player, context)
@@ -237,9 +237,9 @@ function Tamper.Signal(event: string, player: Player, context: { route: string?,
 	end
 end
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	PUBLIC API
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 
 --[[
 	On(handler)
@@ -385,9 +385,9 @@ function Tamper.Destroy()
 	Tamper._autoKick = { enabled = false, threshold = 10, reason = "Exploiting detected" }
 end
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	PLAYER CLEANUP
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 Players.PlayerRemoving:Connect(function(player)
 	Tamper._records[player.UserId] = nil
 end)

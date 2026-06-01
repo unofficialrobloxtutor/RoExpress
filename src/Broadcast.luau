@@ -1,31 +1,31 @@
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---  ◄► Title:       RoExpress.Broadcast
---  ◄► Version:     1.1
---  ◄► Date:        01/04/2026
---  ◄► Author:      DeathToTheStadium
---  ◄► Description: Broadcast module for RoExpress unreliable channel
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---► Services     ◄--
+------------------------------------------------------------------------
+--  <> Title:       RoExpress.Broadcast
+--  <> Version:     1.1
+--  <> Date:        01/04/2026
+--  <> Author:      DeathToTheStadium
+--  <> Description: Broadcast module for RoExpress unreliable channel
+------------------------------------------------------------------------
+-->> Services <<--
 local Players = game:GetService("Players")
---► Tables       ◄--
+-->> Tables <<--
 local Module = {}
 Module.__index = Module
---► Variables    ◄--
+-->> Variables <<--
 local TokenBucket  = require(script.Parent.TokenBucket)
 local MAX_EVENTS   = 64
 local EVENT_MAX    = 20
 local EVENT_REFILL = 10
 local DATA_CAP     = 900
 local BUCKET_TTL   = 30
---► Types        ◄--
+-->> Types <<--
 export type Type = typeof(setmetatable({}, Module)) & {
 	Remote         : UnreliableRemoteEvent,
 	_eventBuckets  : { [string]: { Tokens: number, Max: number, Refill: number, LastRefill: number, LastUsed: number } },
 	_cleanupThread : thread,
 }
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	PRIVATE
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 local function _tableSize(t: {}): number
 	local count = 0
 	for _ in pairs(t) do
@@ -102,9 +102,9 @@ local function _startCleanup(self: Type)
 		end
 	end)
 end
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	CONSTRUCTORS
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 function Module.New(Remote: UnreliableRemoteEvent): Type
 	local self         = setmetatable({}, Module) :: Type
 	self.Remote        = Remote
@@ -116,9 +116,9 @@ function Module.New(Remote: UnreliableRemoteEvent): Type
 
 	return self
 end
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	FUNCTIONS
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 function Module:Emit(event: string, player: Player, data: any)
 	if not _isPlayerValid(player) then
 		warn("RoExpress.Broadcast: Invalid player in Emit")

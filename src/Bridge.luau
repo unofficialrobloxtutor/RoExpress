@@ -1,9 +1,9 @@
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---  ◄► Title:       RoExpress.Bridge
---  ◄► Version:     1.1
---  ◄► Date:        30/05/2026
---  ◄► Author:      DeathToTheStadium
---  ◄► Description: Shared internal event bus for RoExpress.
+------------------------------------------------------------------------
+--  <> Title:       RoExpress.Bridge
+--  <> Version:     1.1
+--  <> Date:        30/05/2026
+--  <> Author:      DeathToTheStadium
+--  <> Description: Shared internal event bus for RoExpress.
 --
 --  Bridge is a structured replacement for raw BindableEvents.
 --  It runs in both server and client contexts as a shared singleton —
@@ -58,13 +58,13 @@
 --  Bridge has no New() constructor — requiring this module IS the
 --  constructor. RoExpress("Bridge") always returns the same table
 --  within a given Luau VM context.
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 
---► Tables       ◄--
+-->> Tables <<--
 local Bridge = {}
 Bridge.__index = Bridge
 
---► Types        ◄--
+-->> Types <<--
 export type Handler   = (data: any) -> ()
 export type Predicate = (data: any) -> boolean
 export type Channel   = { handlers: { Handler } }
@@ -72,15 +72,15 @@ export type Type      = typeof(Bridge) & {
 	_channels : { [string]: Channel },
 }
 
---► State        ◄--
+-->> State <<--
 Bridge._channels = {}
 
 -- Default timeout for all Wait variants when none is specified
 local DEFAULT_TIMEOUT = 10
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	PRIVATE
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 
 local function _getOrCreate(name: string): Channel
 	if not Bridge._channels[name] then
@@ -103,9 +103,9 @@ local function _removeHandler(name: string, handler: Handler)
 	end
 end
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	FUNCTIONS
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 
 --[[
 	Bind(name, handler)
@@ -210,9 +210,9 @@ function Bridge.Has(name: string): boolean
 	return channel ~= nil and #channel.handlers > 0
 end
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	YIELDABLE VARIANTS
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 
 --[[
 	Wait(name, timeout?) → data | nil
@@ -380,9 +380,9 @@ function Bridge.WaitFirst(names: { string }, timeout: number?): (string?, any?)
 	return coroutine.yield()
 end
 
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 --	DESTROY
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 
 --[[
 	Destroy()

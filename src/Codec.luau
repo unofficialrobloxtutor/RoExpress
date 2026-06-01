@@ -1,9 +1,9 @@
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
---  ◄► Title:       RoExpress.Codec
---  ◄► Version:     1.0
---  ◄► Date:        30/05/2026
---  ◄► Author:      DeathToTheStadium
---  ◄► Description: Buffer-based payload compression for RoExpress.
+------------------------------------------------------------------------
+--  <> Title:       RoExpress.Codec
+--  <> Version:     1.0
+--  <> Date:        30/05/2026
+--  <> Author:      DeathToTheStadium
+--  <> Description: Buffer-based payload compression for RoExpress.
 --
 --  ALGORITHM — LZ77 sliding window
 --  ────────────────────────────────────────────────────────────────
@@ -40,7 +40,7 @@
 --  Roblox payload sizes (<50kb) this is fast enough to run server-
 --  side per request without frame budget concerns. If you're pushing
 --  very large tables (leaderboards, maps) measure before enabling.
---■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+------------------------------------------------------------------------
 
 local HttpService = game:GetService("HttpService")
 local Base64      = require(script.Parent.Base64)
