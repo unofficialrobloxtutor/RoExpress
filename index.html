@@ -63,7 +63,7 @@
     "name": "DeathToTheStadium",
     "url": "https://unofficialrobloxtutor.com",
     "sameAs": [
-      "https://github.com/unofficialrobloxtutor",
+      "https://github.com/unofficialrobloxtutor/RoExpress",
       "https://x.com/tostadium",
       "https://www.youtube.com/@UNOFFICIAL_ROBLOX_TUTOR",
       "https://www.roblox.com/users/34899885/profile",
@@ -2095,7 +2095,8 @@ Codec.<span class="fn">IsCompressed</span>(str)    <span class="cm">-- → boole
 
         <div class="cl tip"><strong>Bridge is not a network primitive.</strong> It doesn't cross the client/server
           boundary. Use <code>app:Push</code> and <code>broadcast:Emit</code> for that. Bridge is for decoupling modules
-          <em>within</em> the same context.</div>
+          <em>within</em> the same context.
+        </div>
 
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> bridge = <span class="fn">RoExpress</span>(<span class="str">"Bridge"</span>)  <span class="cm">-- same instance everywhere in this context</span></code></pre>
 
@@ -2168,7 +2169,8 @@ bridge.<span class="fn">Fire</span>(<span class="str">"playerDataLoaded"</span>,
 
         <div class="cl warn"><strong>Destroy does not resume yielded coroutines.</strong> Any coroutine
           mid-<code>Wait</code> when <code>bridge.Destroy()</code> is called will stay yielded permanently. Call
-          <code>Destroy</code> only on full shutdown or test teardown.</div>
+          <code>Destroy</code> only on full shutdown or test teardown.
+        </div>
       </section>
 
       <!-- ══════════════ PORT ══════════════ -->
@@ -2236,7 +2238,8 @@ combatPush:<span class="fn">On</span>(<span class="str">"roundEnd"</span>, <span
         <h2>Port API</h2>
         <p>Ports expose the same API as App — <code>Get</code>, <code>Post</code>, <code>Use</code>, <code>Unuse</code>,
           <code>Push</code>, <code>PushAll</code>, <code>PushTo</code>, <code>OnParamError</code>. Port-local middleware
-          runs after inherited App middleware.</p>
+          runs after inherited App middleware.
+        </p>
 
         <h2>Infrastructure</h2>
         <table class="tbl">
@@ -3272,7 +3275,7 @@ bridge.<span class="fn">Bind</span>(<span class="str">"player.saved"</span>, <sp
               <div style="font-size:11px;color:var(--text3)">Community Server</div>
             </div>
           </a>
-          <a href="https://github.com/unofficialrobloxtutor" target="_blank" rel="noopener"
+          <a href="https://github.com/unofficialrobloxtutor/RoExpress" target="_blank" rel="noopener"
             style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-decoration:none;transition:background var(--ease)"
             onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'">
             <span style="font-size:18px">⌥</span>
@@ -3380,7 +3383,7 @@ bridge.<span class="fn">Bind</span>(<span class="str">"player.saved"</span>, <sp
               <div style="font-size:11px;color:var(--text3)">Community Server</div>
             </div>
           </a>
-          <a href="https://github.com/unofficialrobloxtutor" target="_blank" rel="noopener"
+          <a href="https://github.com/unofficialrobloxtutor/RoExpress" target="_blank" rel="noopener"
             style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-decoration:none;transition:background var(--ease)"
             onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'">
             <span style="font-size:18px">⌥</span>
@@ -3416,7 +3419,8 @@ bridge.<span class="fn">Bind</span>(<span class="str">"player.saved"</span>, <sp
         <h1>Promise Guide</h1>
         <p class="lead">RoExpress ships a built-in Promise implementation for Network requests. Use
           <code>GetAsync</code> and <code>PostAsync</code> instead of <code>Get</code> and <code>Post</code> when you
-          prefer chainable async code over callbacks.</p>
+          prefer chainable async code over callbacks.
+        </p>
 
         <h2>Basic usage</h2>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> network = <span class="fn">RoExpress</span>(<span class="str">"Network"</span>)
@@ -4043,7 +4047,8 @@ tamper.<span class="fn">On</span>(<span class="kw">function</span>(report)
             <ul class="te-changes">
               <li>v1.6 TokenBucket was a static table initialized at require-time. App and Broadcast shared it.
                 <code>App:Destroy()</code> wiped Broadcast's buckets too. Two App instances would fight over the same
-                state.</li>
+                state.
+              </li>
               <li>Rewritten as <code>TokenBucket.New(settings)</code>. Each App and Broadcast instance owns its own
                 bucket table and its own PlayerAdded/PlayerRemoving connections.</li>
               <li><strong>Additional fix:</strong> Buckets are now seeded for players already in the server on
@@ -4125,7 +4130,8 @@ tamper.<span class="fn">On</span>(<span class="kw">function</span>(report)
                 Ports solve this with complete pipeline isolation.</li>
               <li><code>app:Listen(name, callback, settings)</code> mirrors Node's
                 <code>server.listen(port, callback)</code> — instantly familiar. Each port gets its own RemoteEvent in
-                <code>ReplicatedStorage/RoExpressPorts</code>.</li>
+                <code>ReplicatedStorage/RoExpressPorts</code>.
+              </li>
               <li><strong>Global middleware inheritance:</strong> App middleware runs on all ports automatically.
                 Port-local middleware runs after. You write auth once, it protects everything.</li>
               <li><strong>Rejected:</strong> Route groups — syntactic convenience without isolation. Ports solve the
@@ -4599,7 +4605,7 @@ tamper.<span class="fn">On</span>(<span class="kw">function</span>(report)
         onmouseout="this.style.color='var(--text3)';this.style.background='transparent'">
         🌐 Website
       </a>
-      <a href="https://github.com/unofficialrobloxtutor" target="_blank" rel="noopener" title="GitHub"
+      <a href="https://github.com/unofficialrobloxtutor/RoExpress" target="_blank" rel="noopener" title="GitHub"
         style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);text-decoration:none;padding:5px 10px;border-radius:5px;border:1px solid var(--border);transition:color var(--ease),background var(--ease)"
         onmouseover="this.style.color='var(--text)';this.style.background='var(--bg2)'"
         onmouseout="this.style.color='var(--text3)';this.style.background='transparent'">
