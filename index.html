@@ -1278,6 +1278,12 @@
               style="background:#4ade9a;color:#0a2a1a">v2.1</span></a>
           <a class="nl" href="#" data-s="stream" onclick="show('stream');return false">Stream <span class="nb"
               style="background:#4ade9a;color:#0a2a1a">v2.1</span></a>
+          <a class="nl" href="#" data-s="guide-typecoercer" onclick="show('guide-typecoercer');return false">TypeCoercer <span class="nb"
+              style="background:#38bdf8;color:#0c1a2e">v2.2</span></a>
+          <a class="nl" href="#" data-s="guide-promise" onclick="show('guide-promise');return false">Promise <span class="nb"
+              style="background:#38bdf8;color:#0c1a2e">v2.2</span></a>
+          <a class="nl" href="#" data-s="benchmark" onclick="show('benchmark');return false">Benchmark <span class="nb"
+              style="background:#38bdf8;color:#0c1a2e">v2.2</span></a>
         </div>
       </div>
 
@@ -1342,6 +1348,7 @@
           <a class="nl" href="#" data-s="story" onclick="show('story');return false">The Story ✦</a>
           <a class="nl" href="#" data-s="updates" onclick="show('updates');return false">Updates <span
               class="nb nb-green">LOG</span></a>
+          <a class="nl" href="#" data-s="research" onclick="show('research');return false">Research Papers</a>
         </div>
       </div>
 
@@ -4686,6 +4693,25 @@ tamper.<span class="fn">On</span>(<span class="kw">function</span>(report)
 
           <div class="te">
             <div class="te-dot"></div>
+            <div class="te-ver">v2.2 <span class="te-date">30 May 2026</span></div>
+            <div class="te-title">TypeCoercer, Promise, Version module, new param types</div>
+            <ul class="te-changes">
+              <li><strong>TypeCoercer module</strong> — shared type serialisation singleton in both contexts</li>
+              <li>TypeCoercer.ToString / FromString / RegisterInstanceRoot</li>
+              <li><strong>Promise module</strong> — chainable async API for Network</li>
+              <li>network:GetAsync and network:PostAsync return a chainable Promise</li>
+              <li>promise:Then, :Catch, :Finally, :Cancel</li>
+              <li><strong>Version module</strong> — single writer of shared.ROEXPRESS_VERSION</li>
+              <li>Auto silent version check on server start — pings roexpress.dev then GitHub fallback</li>
+              <li>Version.Check() — manual check with formatted output</li>
+              <li><strong>New Router param types</strong> via TypeCoercer: int, Enum.TypeName, Instance, cframe quaternion</li>
+              <li>Router delegates all coercion to TypeCoercer — single source of truth</li>
+              <li>network:Get and network:Post return requestId for cancellation</li>
+            </ul>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
             <div class="te-ver">v2.1 <span class="te-date">30 May 2026</span></div>
             <div class="te-title">Stream, Ports, optional Network callbacks</div>
             <ul class="te-changes">
@@ -4758,6 +4784,96 @@ tamper.<span class="fn">On</span>(<span class="kw">function</span>(report)
               <li>Broadcast per-event and per-player rate limiting</li>
               <li>64-event cap and 30s TTL on idle broadcast buckets</li>
             </ul>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ══════════════ RESEARCH PAPERS ══════════════ -->
+      <section class="doc" id="s-research">
+        <div class="eyebrow">Reference</div>
+        <h1>Research Papers</h1>
+        <p class="lead">The academic foundations behind RoExpress's core techniques — compression, lag compensation, rate limiting, and game networking.</p>
+
+        <div style="display:flex;flex-direction:column;gap:16px;margin-top:8px">
+
+          <div style="border:1px solid var(--border);border-radius:8px;padding:20px 24px">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.07em">Data Compression · 1977</div>
+            <div style="font-size:15px;font-weight:600;color:var(--text1);margin-bottom:4px;line-height:1.4">A Universal Algorithm for Sequential Data Compression</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Jacob Ziv &amp; Abraham Lempel — <em>IEEE Transactions on Information Theory</em>, 23(3), 337–343</div>
+            <p style="font-size:13px;color:var(--text2);line-height:1.75;margin:0 0 16px">The original LZ77 paper. Defines the sliding-window dictionary compression algorithm that underpins RoExpress's Codec module — every route marked <code>{ compress = true }</code> runs a direct implementation of this scheme. The algorithm finds repeated byte sequences within a look-back window and replaces them with length-offset pairs, achieving up to 90% size reduction on structured JSON payloads.</p>
+            <a href="https://ieeexplore.ieee.org/document/1055714" target="_blank" rel="noopener"
+              style="display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:9px 18px;border-radius:6px;background:var(--accent);color:#fff;text-decoration:none;letter-spacing:.01em"
+              onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">↗ Read on IEEE</a>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--accent);color:#fff">Codec</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text3)">LZ77</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text3)">Sliding window</span>
+            </div>
+          </div>
+
+          <div style="border:1px solid var(--border);border-radius:8px;padding:20px 24px">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.07em">Game Networking · 2001</div>
+            <div style="font-size:15px;font-weight:600;color:var(--text1);margin-bottom:4px;line-height:1.4">Latency Compensating Methods in Client/Server In-game Protocol Design and Optimization</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Yahn W. Bernier — <em>Valve Software</em>, Game Developers Conference 2001</div>
+            <p style="font-size:13px;color:var(--text2);line-height:1.75;margin:0 0 16px">The canonical reference for server-side lag compensation in multiplayer games. Introduces the ring-buffer snapshot model — the server stores a rolling history of world state and rewinds to a player's perceived moment-in-time before validating hit registration. RoExpress's Stream module implements this directly: <code>stream.EnableLagCompensation()</code> maintains a configurable ring buffer of player states and applies geometric validation against the rewound snapshot.</p>
+            <a href="https://developer.valvesoftware.com/wiki/Latency_Compensating_Methods_in_Client/Server_In-game_Protocol_Design_and_Optimization" target="_blank" rel="noopener"
+              style="display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:9px 18px;border-radius:6px;background:var(--accent);color:#fff;text-decoration:none;letter-spacing:.01em"
+              onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">↗ Read on Valve Dev Wiki</a>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#4ade9a;color:#0a2a1a">Stream</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text3)">Lag compensation</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text3)">Ring buffer</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text3)">Hit validation</span>
+            </div>
+          </div>
+
+          <div style="border:1px solid var(--border);border-radius:8px;padding:20px 24px">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.07em">Game Networking · 2010</div>
+            <div style="font-size:15px;font-weight:600;color:var(--text1);margin-bottom:4px;line-height:1.4">What Every Programmer Needs to Know About Game Networking</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Glenn Fiedler — <em>Gaffer on Games</em></div>
+            <p style="font-size:13px;color:var(--text2);line-height:1.75;margin:0 0 16px">A thorough breakdown of the client-server and peer-to-peer networking models used in real-time games — covering snapshot interpolation, client-side prediction, and the trade-offs between reliable and unreliable transports. Directly informs RoExpress's two-remote architecture (reliable remote for push and requests, unreliable remote for high-frequency state streaming) and the decision to expose StreamState as unreliable while keeping StreamEvent reliable.</p>
+            <a href="https://gafferongames.com/post/what_every_programmer_needs_to_know_about_game_networking/" target="_blank" rel="noopener"
+              style="display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:9px 18px;border-radius:6px;background:var(--accent);color:#fff;text-decoration:none;letter-spacing:.01em"
+              onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">↗ Read on Gaffer on Games</a>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#4ade9a;color:#0a2a1a">Stream</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--accent);color:#fff">App</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text3)">Reliable vs unreliable</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text3)">Snapshot interpolation</span>
+            </div>
+          </div>
+
+          <div style="border:1px solid var(--border);border-radius:8px;padding:20px 24px">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.07em">Rate Limiting · 1999</div>
+            <div style="font-size:15px;font-weight:600;color:var(--text1);margin-bottom:4px;line-height:1.4">RFC 2697 — A Single Rate Three Color Marker</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:12px">J. Heinanen &amp; R. Guerin — <em>IETF</em>, September 1999</div>
+            <p style="font-size:13px;color:var(--text2);line-height:1.75;margin:0 0 16px">The IETF specification that formalises the token bucket algorithm — the mechanism behind RoExpress's TokenBucket module. Tokens accumulate at a fixed rate up to a burst ceiling; each request consumes one token and is dropped when the bucket is empty. RoExpress extends the base model with per-player isolation, configurable refill intervals, and the Grant utility for predictable pre-allocation at join time.</p>
+            <a href="https://www.rfc-editor.org/rfc/rfc2697" target="_blank" rel="noopener"
+              style="display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:9px 18px;border-radius:6px;background:var(--accent);color:#fff;text-decoration:none;letter-spacing:.01em"
+              onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">↗ Read on IETF</a>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text3)">TokenBucket</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text3)">Rate limiting</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text3)">Token bucket algorithm</span>
+            </div>
+          </div>
+
+          <div style="border:1px solid var(--border);border-radius:8px;padding:20px 24px">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.07em">REST &amp; URL Design · 2000</div>
+            <div style="font-size:15px;font-weight:600;color:var(--text1);margin-bottom:4px;line-height:1.4">Architectural Styles and the Design of Network-based Software Architectures</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Roy T. Fielding — <em>Doctoral Dissertation</em>, University of California, Irvine, 2000</div>
+            <p style="font-size:13px;color:var(--text2);line-height:1.75;margin:0 0 16px">The dissertation that defined REST and, by extension, the URL routing conventions Express.js is built on. Chapter 5 introduces Representational State Transfer — hierarchical resource paths, uniform method semantics (GET, POST), and stateless request-response — the exact pattern RoExpress brings to Roblox. Every typed route param (<code>:id=number</code>), wildcard, and middleware chain in RoExpress descends directly from the resource-oriented URL model formalised here.</p>
+            <a href="https://ics.uci.edu/~fielding/pubs/dissertation/top.htm" target="_blank" rel="noopener"
+              style="display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:9px 18px;border-radius:6px;background:var(--accent);color:#fff;text-decoration:none;letter-spacing:.01em"
+              onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">↗ Read Fielding's Dissertation</a>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--accent);color:#fff">Router</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--accent);color:#fff">App</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text3)">REST</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text3)">URL design</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text3)">Express.js</span>
+            </div>
           </div>
 
         </div>
@@ -4869,6 +4985,7 @@ tamper.<span class="fn">On</span>(<span class="kw">function</span>(report)
       { s: 'consensus', t: 'ref', n: 'Design Consensus', x: 'design decisions rationale tradeoffs rejected why one remote middleware blocking tokenbucket singleton router bridge stream tamper codec port promise deferred' },
       { s: 'story', t: 'origin', n: 'The Story', x: 'history origin devforum 2021 2023 2024 2025 2026 timeline deathtothestadium homeless engineering welding router v1 v2' },
       { s: 'updates', t: 'ref', n: 'Updates / Changelog', x: 'v2 v1.6 history release notes changelog bridge push router codec tokenbucket' },
+      { s: 'research', t: 'ref', n: 'Research Papers', x: 'lz77 compression ziv lempel lag compensation bernier valve token bucket rfc 2697 game networking fiedler gaffer academic paper foundation codec stream rate limiting rest url routing fielding dissertation express expressjs' },
     ];
 
     const si = document.getElementById('si'), sr = document.getElementById('sr');
