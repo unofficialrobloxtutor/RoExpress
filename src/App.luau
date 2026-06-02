@@ -358,7 +358,7 @@ end
 	Client connects via:
 	    local network = RoExpress("Network", "combat")
 ]]
-function Module:Listen(name: string, callback: (port: any) -> (), settings: { Max: number?, Refill: number? }?)
+function Module:Listen(name: string, callback: (port: Port.Type) -> (), settings: { Max: number?, Refill: number? }?): Port.Type
 	assert(type(name) == "string" and #name > 0,
 		"RoExpress.App: Listen — name must be a non-empty string")
 	assert(type(callback) == "function",
@@ -380,7 +380,7 @@ end
 
 	app:GetPort("combat"):PushAll("roundEnd", data)
 ]]
-function Module:GetPort(name: string)
+function Module:GetPort(name: string): Port.Type?
 	return self._ports[name]
 end
 function Module:OnParamError(fn: (Player: Player, Payload: Payload, paramName: string, expectedType: string) -> ())

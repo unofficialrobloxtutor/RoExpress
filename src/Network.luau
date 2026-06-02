@@ -151,44 +151,67 @@ local function _fire(self: Type, method: string, route: string, data: any, entry
 end
 
 --[[
-	Get(route, data?, callback?, timeout?) -> requestId
-	Post(route, data, callback?, timeout?) -> requestId
+	Get(route, data?, callback?, timeout?) -> requestId  [non-blocking]
+	Get(route, data?, nil,      timeout?) -> requestId, response  [blocking]
 
-	Callback-based API. callback is optional — omit for fire-and-forget.
+	Post(route, data, callback?, timeout?) -> requestId  [non-blocking]
+	Post(route, data, nil,       timeout?) -> requestId, response  [blocking]
+
+	Callback-based API.
+	- With callback: fires immediately, response delivered via callback, returns requestId.
+	- Without callback: yields the current thread until the response arrives,
+	  then returns both requestId and the response object.
 ]]
-function Module:Get(route: string, data: any?, callback: ((response: NetworkResponse) -> ())?, timeout: number?)
-	return _fire(self, "GET", route, data, { callback = callback or function() end }, timeout)
+function Module:Get(route: string, data: any?, callback: ((response: NetworkResponse) -> ())?, timeout: number?): (string, NetworkResponse?)
+	if callback ~= nil then
+		return _fire(self, "GET", route, data, { callback = callback }, timeout)
+	end
+	local thread = coroutine.running()
+	local requestId = _fire(self, "GET", route, data, {
+		callback = function(response) task.spawn(thread, response) end,
+	}, timeout)
+	return requestId, coroutine.yield()
 end
 
-function Module:Post(route: string, data: any, callback: ((response: NetworkResponse) -> ())?, timeout: number?)
-	return _fire(self, "POST", route, data, { callback = callback or function() end }, timeout)
+function Module:Post(route: string, data: any, callback: ((response: NetworkResponse) -> ())?, timeout: number?): (string, NetworkResponse?)
+	if callback ~= nil then
+		return _fire(self, "POST", route, data, { callback = callback }, timeout)
+	end
+	local thread = coroutine.running()
+	local requestId = _fire(self, "POST", route, data, {
+		callback = function(response) task.spawn(thread, response) end,
+	}, timeout)
+	return requestId, coroutine.yield()
 end
 
 --[[
-	GetAsync(route, data?, timeout?) -> Promise
-	PostAsync(route, data, timeout?) -> Promise
+	GetAsync(route, data?, timeout?) -> requestId, Promise
+	PostAsync(route, data, timeout?) -> requestId, Promise
 
-	Promise-based API. Returns a chainable Promise.
+	Promise-based API. Returns both the requestId (for cancellation) and a chainable Promise.
 
-	network:GetAsync("player/123")
+	local id, promise = network:GetAsync("player/123")
+	promise
 	    :Then(function(res) print(res.data) end)
 	    :Catch(function(err) warn(err.message) end)
 	    :Finally(function() UI:HideLoader() end)
+
+	-- cancel from another thread:
+	network:Cancel(id)
 ]]
-function Module:GetAsync(route: string, data: any?, timeout: number?)
+function Module:GetAsync(route: string, data: any?, timeout: number?): (string, Promise.Type)
 	local promise = Promise.New()
-	_fire(self, "GET", route, data, { promise = promise }, timeout)
-	return promise
+	local requestId = _fire(self, "GET", route, data, { promise = promise }, timeout)
+	return requestId, promise
 end
 
-function Module:PostAsync(route: string, data: any, timeout: number?)
+function Module:PostAsync(route: string, data: any, timeout: number?): (string, Promise.Type)
 	local promise = Promise.New()
-	_fire(self, "POST", route, data, { promise = promise }, timeout)
-	return promise
+	local requestId = _fire(self, "POST", route, data, { promise = promise }, timeout)
+	return requestId, promise
 end
 
-function Module:Cancel(requestId: string)
-	-- Stops client processing. Server still executes.
+function Module:Cancel(requestId: string): boolean
 	local entry = self._pending[requestId]
 	if entry then
 		if entry.promise then entry.promise:Cancel() end
@@ -198,7 +221,7 @@ function Module:Cancel(requestId: string)
 	return false
 end
 
-function Module:Destroy()
+function Module:Destroy(): ()
 	self._connection:Disconnect()
 	table.clear(self._pending)
 end

@@ -1259,6 +1259,7 @@
         <div class="ni open">
           <a class="nl" href="#" data-s="network" onclick="show('network');return false">Network</a>
           <a class="nl" href="#" data-s="listener" onclick="show('listener');return false">Listener</a>
+          <a class="nl" href="#" data-s="benchmark" onclick="show('benchmark');return false">Benchmark</a>
         </div>
       </div>
 
@@ -1336,6 +1337,7 @@
       <div class="ns">
         <button class="nsh open" onclick="tn(this)">Reference <span class="chv">▶</span></button>
         <div class="ni open">
+          <a class="nl" href="#" data-s="comparison" onclick="show('comparison');return false">Comparison</a>
           <a class="nl" href="#" data-s="consensus" onclick="show('consensus');return false">Design Consensus</a>
           <a class="nl" href="#" data-s="story" onclick="show('story');return false">The Story ✦</a>
           <a class="nl" href="#" data-s="updates" onclick="show('updates');return false">Updates <span
@@ -1814,12 +1816,16 @@ listener:<span class="fn">On</span>(<span class="str">"roundEnd"</span>, <span c
       <section class="doc" id="s-network">
         <div class="eyebrow">Client API</div>
         <h1>Network</h1>
-        <p class="lead">Fires requests to the server and resolves responses via callbacks. Client-only.</p>
+        <p class="lead">Fires requests to the server and resolves responses via callbacks or blocking yields. Client-only.</p>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> network = <span class="fn">RoExpress</span>(<span class="str">"Network"</span>)</code></pre>
         <div class="sig"><span class="pill p-get">GET</span> network:<span class="fn">Get</span>(route, data?,
-          callback?, timeout?)</div>
+          callback, timeout?) → requestId &nbsp;<em class="ret-note">non-blocking</em></div>
+        <div class="sig"><span class="pill p-get">GET</span> network:<span class="fn">Get</span>(route, data?,
+          nil, timeout?) → requestId, response &nbsp;<em class="ret-note">blocking</em></div>
         <div class="sig"><span class="pill p-post">POST</span> network:<span class="fn">Post</span>(route, data,
-          callback?, timeout?)</div>
+          callback, timeout?) → requestId &nbsp;<em class="ret-note">non-blocking</em></div>
+        <div class="sig"><span class="pill p-post">POST</span> network:<span class="fn">Post</span>(route, data,
+          nil, timeout?) → requestId, response &nbsp;<em class="ret-note">blocking</em></div>
         <table class="tbl">
           <tr>
             <th>Parameter</th>
@@ -1839,7 +1845,7 @@ listener:<span class="fn">On</span>(<span class="str">"roundEnd"</span>, <span c
           <tr>
             <td><code>callback</code></td>
             <td>NetworkCallback?</td>
-            <td>Called with NetworkResponse on resolution. Optional — omit for fire-and-forget.</td>
+            <td>Called with NetworkResponse on resolution. If omitted, the call yields the current thread and returns <code>requestId, response</code> directly.</td>
           </tr>
           <tr>
             <td><code>timeout</code></td>
@@ -1847,16 +1853,17 @@ listener:<span class="fn">On</span>(<span class="str">"roundEnd"</span>, <span c
             <td>Seconds before 408. Default: 10</td>
           </tr>
         </table>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- with callback</span>
-network:<span class="fn">Get</span>(<span class="str">"player/123"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res)
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- with callback (non-blocking) — returns requestId</span>
+<span class="kw">local</span> id = network:<span class="fn">Get</span>(<span class="str">"player/123"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res)
     <span class="fn">print</span>(res.data)
 <span class="kw">end</span>)
 
-<span class="cm">-- fire and forget — no callback needed</span>
-network:<span class="fn">Post</span>(<span class="str">"stats/save"</span>, data)
+<span class="cm">-- no callback (blocking) — yields until response arrives</span>
+<span class="kw">local</span> id, res = network:<span class="fn">Post</span>(<span class="str">"stats/save"</span>, data)
+<span class="fn">print</span>(res.status, res.data)
 
-<span class="cm">-- fire and forget with timeout override, returns requestId</span>
-<span class="kw">local</span> id = network:<span class="fn">Post</span>(<span class="str">"stats/save"</span>, data, <span class="kw">nil</span>, <span class="num">5</span>)
+<span class="cm">-- blocking with timeout override + cancel from another thread</span>
+<span class="kw">local</span> id, res = network:<span class="fn">Post</span>(<span class="str">"stats/save"</span>, data, <span class="kw">nil</span>, <span class="num">5</span>)
 network:<span class="fn">Cancel</span>(id)  <span class="cm">-- cancel if needed</span></code></pre>
         <h2>NetworkResponse</h2>
         <table class="tbl">
@@ -1909,6 +1916,92 @@ listener:<span class="fn">On</span>(<span class="str">"roundEnd"</span>, <span c
 listener:<span class="fn">On</span>(<span class="str">"killPing"</span>, <span class="kw">function</span>(data)   <span class="cm">-- unreliable broadcast</span>
     HUD:<span class="fn">FlashKill</span>()
 <span class="kw">end</span>)</code></pre>
+      </section>
+
+      <!-- ══════════════ BENCHMARK ══════════════ -->
+      <section class="doc" id="s-benchmark">
+        <div class="eyebrow">Client API</div>
+        <h1>Benchmark</h1>
+        <p class="lead">Fires real requests through your existing <code>Network</code> instance and measures
+          round-trip latency. All timing is wall-clock — it covers serialisation, network transit, server handler
+          execution, and deserialisation. Client-only.</p>
+
+        <div class="cl info"><strong>Benchmark shares your Network connection.</strong> Pass the instance you
+          already have — it does not open a second remote.</div>
+
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> network   = <span class="fn">RoExpress</span>(<span class="str">"Network"</span>)
+<span class="kw">local</span> Benchmark = <span class="fn">require</span>(game.ReplicatedStorage.RoExpress.Benchmark)
+
+<span class="kw">local</span> bench = Benchmark.<span class="fn">New</span>(network)</code></pre>
+
+        <h2>Run</h2>
+        <div class="sig">bench:<span class="fn">Run</span>(route, config?) → Results</div>
+        <p>Fires <code>iterations</code> sequential requests and returns a statistics table. A warmup pass runs
+          first and is discarded so JIT and connection overhead don't skew the numbers.</p>
+        <table class="tbl">
+          <tr><th>Config field</th><th>Type</th><th>Default</th><th>Description</th></tr>
+          <tr><td><code>method</code></td><td>"GET" | "POST"</td><td>"GET"</td><td>HTTP method</td></tr>
+          <tr><td><code>data</code></td><td>any?</td><td>nil</td><td>Request payload</td></tr>
+          <tr><td><code>iterations</code></td><td>number?</td><td>20</td><td>Measured requests</td></tr>
+          <tr><td><code>warmup</code></td><td>number?</td><td>3</td><td>Discarded warm-up requests</td></tr>
+          <tr><td><code>interval</code></td><td>number?</td><td>0</td><td>Seconds between requests</td></tr>
+          <tr><td><code>timeout</code></td><td>number?</td><td>10</td><td>Per-request timeout (seconds)</td></tr>
+          <tr><td><code>label</code></td><td>string?</td><td>route</td><td>Display name in Print output</td></tr>
+        </table>
+
+        <h2>Results</h2>
+        <table class="tbl">
+          <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+          <tr><td><code>min</code></td><td>number</td><td>Fastest request (ms)</td></tr>
+          <tr><td><code>avg</code></td><td>number</td><td>Mean RTT (ms)</td></tr>
+          <tr><td><code>median</code></td><td>number</td><td>p50 (ms)</td></tr>
+          <tr><td><code>p95</code></td><td>number</td><td>95th percentile (ms)</td></tr>
+          <tr><td><code>p99</code></td><td>number</td><td>99th percentile (ms)</td></tr>
+          <tr><td><code>max</code></td><td>number</td><td>Slowest request (ms)</td></tr>
+          <tr><td><code>errors</code></td><td>number</td><td>Failed request count</td></tr>
+          <tr><td><code>errorCodes</code></td><td>{ [number]: number }</td><td>Error count per status code</td></tr>
+          <tr><td><code>throughput</code></td><td>number</td><td>Requests per second (wall-clock)</td></tr>
+          <tr><td><code>total</code></td><td>number</td><td>Total wall time for all iterations (ms)</td></tr>
+        </table>
+
+        <h2>Print</h2>
+        <div class="sig">bench:<span class="fn">Print</span>(results)</div>
+        <p>Writes a formatted summary to the Studio output window.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">── player/123   GET × 20  (warmup: 3) ───────────────</span>
+<span class="cm">   min          4.21 ms</span>
+<span class="cm">   avg          6.83 ms</span>
+<span class="cm">   median       6.10 ms</span>
+<span class="cm">   p95         12.44 ms</span>
+<span class="cm">   p99         18.07 ms</span>
+<span class="cm">   max         18.71 ms</span>
+<span class="cm">   ─────────────────────────────────────────────────────</span>
+<span class="cm">   errors       0 / 20</span>
+<span class="cm">   throughput   8.3 req/s</span>
+<span class="cm">──────────────────────────────────────────────────────</span></code></pre>
+
+        <h2>RunAndPrint</h2>
+        <div class="sig">bench:<span class="fn">RunAndPrint</span>(route, config?) → Results</div>
+        <p>Runs and prints in one call. Returns the Results table so you can store it for
+          <code>Compare</code>.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>bench:<span class="fn">RunAndPrint</span>(<span class="str">"player/123"</span>, { method = <span class="str">"GET"</span>, iterations = <span class="num">30</span> })</code></pre>
+
+        <h2>Compare</h2>
+        <div class="sig">bench:<span class="fn">Compare</span>({ results, ... })</div>
+        <p>Prints multiple Results side-by-side — useful for comparing routes, methods, or payload sizes.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>bench:<span class="fn">Compare</span>({
+    bench:<span class="fn">Run</span>(<span class="str">"player/123"</span>,   { label = <span class="str">"GET player"</span> }),
+    bench:<span class="fn">Run</span>(<span class="str">"stats/save"</span>,   { method = <span class="str">"POST"</span>, label = <span class="str">"POST stats"</span> }),
+    bench:<span class="fn">Run</span>(<span class="str">"leaderboard"</span>, { label = <span class="str">"GET board"</span> }),
+})</code></pre>
+
+        <div class="cl tip"><strong>Rate limiting.</strong> The default TokenBucket allows 10 tokens at 2/s refill.
+          With <code>interval = 0</code> and high iteration counts you will see 429 errors in
+          <code>results.errorCodes</code>. Set <code>interval = 0.5</code> to stay under the default limit, or
+          configure the server bucket to be more permissive during profiling.</div>
+
+        <div class="sig">bench:<span class="fn">Destroy</span>()</div>
+        <p>Drops the internal reference. Does not destroy the <code>Network</code> instance — the caller owns
+          it.</p>
       </section>
 
       <!-- ══════════════ ROUTER ══════════════ -->
@@ -2588,20 +2681,29 @@ Base64.<span class="fn">DecodeTable</span>(<span class="str">"eyJ4IjoxfQ=="</spa
 <span class="kw">type</span> <span class="tp">BroadcastEnvelope</span> = RoExpress.<span class="tp">BroadcastEnvelope</span>
 
 <span class="cm">-- handlers</span>
-<span class="kw">type</span> <span class="tp">RouteHandler</span>      = RoExpress.<span class="tp">RouteHandler</span>
-<span class="kw">type</span> <span class="tp">MiddlewareHandler</span> = RoExpress.<span class="tp">MiddlewareHandler</span>  <span class="cm">-- returns boolean?</span>
-<span class="kw">type</span> <span class="tp">BroadcastHandler</span>  = RoExpress.<span class="tp">BroadcastHandler</span>
-<span class="kw">type</span> <span class="tp">NetworkCallback</span>   = RoExpress.<span class="tp">NetworkCallback</span>
+<span class="kw">type</span> <span class="tp">RouteHandler</span>       = RoExpress.<span class="tp">RouteHandler</span>
+<span class="kw">type</span> <span class="tp">MiddlewareHandler</span>  = RoExpress.<span class="tp">MiddlewareHandler</span>  <span class="cm">-- (Player, Payload) -> boolean?</span>
+<span class="kw">type</span> <span class="tp">BroadcastHandler</span>   = RoExpress.<span class="tp">BroadcastHandler</span>
+<span class="kw">type</span> <span class="tp">ListenerMiddleware</span> = RoExpress.<span class="tp">ListenerMiddleware</span>  <span class="cm">-- (event, data) -> ()</span>
+<span class="kw">type</span> <span class="tp">NetworkCallback</span>    = RoExpress.<span class="tp">NetworkCallback</span>
 
-<span class="cm">-- modules</span>
-<span class="kw">type</span> <span class="tp">App</span>       = RoExpress.<span class="tp">App</span>
-<span class="kw">type</span> <span class="tp">Network</span>   = RoExpress.<span class="tp">Network</span>
-<span class="kw">type</span> <span class="tp">Broadcast</span> = RoExpress.<span class="tp">Broadcast</span>
-<span class="kw">type</span> <span class="tp">Listener</span>  = RoExpress.<span class="tp">Listener</span>
-<span class="kw">type</span> <span class="tp">Router</span>    = RoExpress.<span class="tp">Router</span>
-<span class="kw">type</span> <span class="tp">Codec</span>     = RoExpress.<span class="tp">Codec</span>
-<span class="kw">type</span> <span class="tp">Bridge</span>    = RoExpress.<span class="tp">Bridge</span>
-<span class="kw">type</span> <span class="tp">Tamper</span>    = RoExpress.<span class="tp">Tamper</span>
+<span class="cm">-- modules (server)</span>
+<span class="kw">type</span> <span class="tp">App</span>         = RoExpress.<span class="tp">App</span>
+<span class="kw">type</span> <span class="tp">Broadcast</span>   = RoExpress.<span class="tp">Broadcast</span>
+<span class="kw">type</span> <span class="tp">Port</span>        = RoExpress.<span class="tp">Port</span>
+<span class="kw">type</span> <span class="tp">Stream</span>      = RoExpress.<span class="tp">Stream</span>
+<span class="kw">type</span> <span class="tp">Tamper</span>      = RoExpress.<span class="tp">Tamper</span>
+<span class="kw">type</span> <span class="tp">TokenBucket</span> = RoExpress.<span class="tp">TokenBucket</span>
+
+<span class="cm">-- modules (client)</span>
+<span class="kw">type</span> <span class="tp">Network</span>  = RoExpress.<span class="tp">Network</span>
+<span class="kw">type</span> <span class="tp">Listener</span> = RoExpress.<span class="tp">Listener</span>
+<span class="kw">type</span> <span class="tp">Promise</span>  = RoExpress.<span class="tp">Promise</span>
+
+<span class="cm">-- modules (shared)</span>
+<span class="kw">type</span> <span class="tp">Bridge</span> = RoExpress.<span class="tp">Bridge</span>
+<span class="kw">type</span> <span class="tp">Router</span> = RoExpress.<span class="tp">Router</span>
+<span class="kw">type</span> <span class="tp">Codec</span>  = RoExpress.<span class="tp">Codec</span>
 
 <span class="cm">-- bridge sub-types</span>
 <span class="kw">type</span> <span class="tp">BridgeHandler</span>   = Bridge.<span class="tp">Handler</span>
@@ -3425,7 +3527,9 @@ bridge.<span class="fn">Bind</span>(<span class="str">"player.saved"</span>, <sp
         <h2>Basic usage</h2>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> network = <span class="fn">RoExpress</span>(<span class="str">"Network"</span>)
 
-network:<span class="fn">GetAsync</span>(<span class="str">"player/123"</span>)
+<span class="cm">-- GetAsync returns requestId AND a chainable Promise</span>
+<span class="kw">local</span> id, promise = network:<span class="fn">GetAsync</span>(<span class="str">"player/123"</span>)
+promise
     :<span class="fn">Then</span>(<span class="kw">function</span>(res)
         <span class="fn">print</span>(res.data.coins)
     <span class="kw">end</span>)
@@ -3439,7 +3543,8 @@ network:<span class="fn">GetAsync</span>(<span class="str">"player/123"</span>)
         <h2>Chaining Then handlers</h2>
         <p>Returning a value from a <code>Then</code> handler passes it to the next <code>Then</code>. This lets you
           transform data through the chain cleanly.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code>network:<span class="fn">GetAsync</span>(<span class="str">"leaderboard/top"</span>)
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> _, promise = network:<span class="fn">GetAsync</span>(<span class="str">"leaderboard/top"</span>)
+promise
     :<span class="fn">Then</span>(<span class="kw">function</span>(res)
         <span class="kw">return</span> res.data.entries  <span class="cm">-- pass entries to next Then</span>
     <span class="kw">end</span>)
@@ -3455,7 +3560,8 @@ network:<span class="fn">GetAsync</span>(<span class="str">"player/123"</span>)
         <h2>Error handling</h2>
         <p>If a <code>Then</code> handler throws, the chain falls through to <code>Catch</code>. You never need to wrap
           Then handlers in pcall.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code>network:<span class="fn">PostAsync</span>(<span class="str">"stats/save"</span>, data)
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> _, promise = network:<span class="fn">PostAsync</span>(<span class="str">"stats/save"</span>, data)
+promise
     :<span class="fn">Then</span>(<span class="kw">function</span>(res)
         <span class="kw">if</span> res.data.saved <span class="kw">then</span>
             <span class="fn">error</span>(<span class="str">"intentional error"</span>)  <span class="cm">-- falls through to Catch</span>
@@ -3466,10 +3572,14 @@ network:<span class="fn">GetAsync</span>(<span class="str">"player/123"</span>)
     <span class="kw">end</span>)</code></pre>
 
         <h2>Cancellation</h2>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> promise = network:<span class="fn">GetAsync</span>(<span class="str">"feed/all"</span>)
-    :<span class="fn">Then</span>(<span class="kw">function</span>(res) UI:<span class="fn">LoadFeed</span>(res.data) <span class="kw">end</span>)
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- GetAsync returns requestId so you can cancel by id or via the promise</span>
+<span class="kw">local</span> id, promise = network:<span class="fn">GetAsync</span>(<span class="str">"feed/all"</span>)
+promise:<span class="fn">Then</span>(<span class="kw">function</span>(res) UI:<span class="fn">LoadFeed</span>(res.data) <span class="kw">end</span>)
 
-<span class="cm">-- cancel before it resolves if the player left the screen</span>
+<span class="cm">-- cancel by request id (from any thread)</span>
+network:<span class="fn">Cancel</span>(id)
+
+<span class="cm">-- or cancel via the promise directly</span>
 promise:<span class="fn">Cancel</span>()</code></pre>
 
         <h2>State checks</h2>
@@ -3488,7 +3598,7 @@ promise:<span class="fn">IsRejected</span>()  <span class="cm">-- true after err
             <td>You need to chain transformations</td>
           </tr>
           <tr>
-            <td>Fire and forget</td>
+            <td>Blocking yield — you need <code>requestId</code> and response inline</td>
             <td>You want clean error separation</td>
           </tr>
           <tr>
@@ -3979,6 +4089,75 @@ tamper.<span class="fn">On</span>(<span class="kw">function</span>(report)
             </a>
           </div>
         </div>
+      </section>
+
+      <!-- ══════════════ COMPARISON ══════════════ -->
+      <section class="doc" id="s-comparison">
+        <div class="eyebrow">Reference</div>
+        <h1>Library Comparison</h1>
+        <p class="lead">A factual comparison of the main Roblox networking libraries. Feature claims are sourced
+          from each library's official README or documentation.</p>
+
+        <div class="cl info"><strong>Red and Knit are archived.</strong> Red was archived December 2025, Knit in
+          July 2024. Neither is maintained. New projects should not depend on them.</div>
+
+        <h2>At a glance</h2>
+        <table class="tbl">
+          <tr>
+            <th></th>
+            <th>RoExpress</th>
+            <th>BridgeNet2</th>
+            <th>ByteNet</th>
+            <th>Zap</th>
+          </tr>
+          <tr><td>Maintained</td><td>✓</td><td>✓</td><td>✓</td><td>✓ (rewrite)</td></tr>
+          <tr><td>Pure Luau / no build step</td><td>✓</td><td>✓</td><td>✓</td><td>✗ Rust CLI</td></tr>
+          <tr><td>Zero dependencies</td><td>✓</td><td>✓</td><td>✓</td><td>✗</td></tr>
+          <tr><td>Wally</td><td>✓</td><td>✓</td><td>✓</td><td>✗</td></tr>
+          <tr><td>Single remote</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+          <tr><td>Request / response</td><td>✓</td><td>✗</td><td>✗</td><td>✓</td></tr>
+          <tr><td>Typed route params</td><td>✓</td><td>✗</td><td>✗</td><td>✗</td></tr>
+          <tr><td>Route middleware</td><td>✓</td><td>✗</td><td>✗</td><td>✗</td></tr>
+          <tr><td>Named ports</td><td>✓</td><td>✗</td><td>✗</td><td>✗</td></tr>
+          <tr><td>Server push</td><td>✓</td><td>✓</td><td>✗</td><td>✓</td></tr>
+          <tr><td>LZ77 compression</td><td>✓</td><td>✗</td><td>✗</td><td>✗</td></tr>
+          <tr><td>Binary protocol</td><td>✗</td><td>✗</td><td>✓</td><td>✓</td></tr>
+          <tr><td>Rate limiting</td><td>✓</td><td>✗</td><td>✗</td><td>✗</td></tr>
+          <tr><td>Exploit detection</td><td>✓</td><td>✗</td><td>✗</td><td>✗</td></tr>
+          <tr><td>Promise API</td><td>✓</td><td>✗</td><td>✗</td><td>✗</td></tr>
+          <tr><td>FPS streaming</td><td>✓</td><td>✗</td><td>✗</td><td>✗</td></tr>
+          <tr><td>Benchmarking</td><td>✓</td><td>✗</td><td>✗</td><td>✗</td></tr>
+        </table>
+
+        <h2>Where RoExpress wins</h2>
+        <p><strong>Application-layer structure.</strong> RoExpress is the only library in this space that brings
+          Express.js-style routing to Roblox — typed path params (<code>:id=number</code>), wildcards, globs,
+          middleware chains, and named ports. Server code is organised, auditable, and testable in a way that
+          event-based libraries cannot match.</p>
+        <p><strong>Security first.</strong> Built-in rate limiting, payload validation, version mismatch
+          detection, and the Tamper module are part of the framework — not afterthoughts.</p>
+        <p><strong>Complete client API.</strong> Callback, blocking yield, and Promise patterns. Cancellation by
+          request ID. No other library in this group offers all three.</p>
+        <p><strong>No build step.</strong> Pure Luau, zero external dependencies, one Wally line.</p>
+
+        <h2>Where others win</h2>
+        <p><strong>Raw byte performance.</strong> ByteNet and Zap serialise into <code>buffer</code> objects
+          which are faster and smaller than Luau table serialisation. If you are sending thousands of small
+          fixed-schema packets per second, ByteNet or Zap will outperform RoExpress at the transport layer.</p>
+        <p><strong>Code-generated types.</strong> Zap generates Luau bindings from a schema file, giving
+          compile-time type guarantees. It requires a Rust CLI and a build step, but the type safety is stronger
+          than anything you can express purely in Luau.</p>
+        <p><strong>Simplest possible API.</strong> BridgeNet2's <code>Fire</code> / <code>Connect</code> surface
+          is familiar to anyone who has used vanilla RemoteEvents and has almost no learning curve.</p>
+
+        <h2>When to use which</h2>
+        <table class="tbl">
+          <tr><th>Situation</th><th>Recommended</th></tr>
+          <tr><td>Structured server API — typed routes, middleware, security</td><td><strong>RoExpress</strong></td></tr>
+          <tr><td>High-frequency fixed-schema data (combat state, physics)</td><td><strong>ByteNet</strong></td></tr>
+          <tr><td>Guaranteed typed bindings from a build pipeline</td><td><strong>Zap</strong></td></tr>
+          <tr><td>Minimal migration from vanilla RemoteEvents</td><td><strong>BridgeNet2</strong></td></tr>
+        </table>
       </section>
 
       <!-- ══════════════ CONSENSUS ══════════════ -->
@@ -4655,6 +4834,7 @@ tamper.<span class="fn">On</span>(<span class="kw">function</span>(report)
       { s: 'tamper', t: 'api', n: 'Tamper', x: 'exploit detection tamper strike autokick version spoof malformed payload rate flood route scan param flood manual report severity immediate pattern threshold' },
       { s: 'network', t: 'api', n: 'Network', x: 'get post cancel timeout networkresponse callback client' },
       { s: 'listener', t: 'api', n: 'Listener', x: 'on once off use unuse destroy push broadcast dual channel reliable unreliable' },
+      { s: 'benchmark', t: 'api', n: 'Benchmark', x: 'run print compare rtt latency min max avg median p95 p99 throughput warmup iterations interval errors profiling performance client' },
       { s: 'router', t: 'new', n: 'Router', x: 'typed param wildcard glob constraint number boolean vector2 vector3 color3 cframe priority captures' },
       { s: 'push', t: 'new', n: 'Server Push', x: 'push pushall pushto reliable server client one way guaranteed delivery' },
       { s: 'codec', t: 'new', n: 'Codec / Compression', x: 'lz77 buffer compress decompress iscompressed magic header large payload' },
@@ -4685,6 +4865,7 @@ tamper.<span class="fn">On</span>(<span class="kw">function</span>(report)
       { s: 'community-github', t: 'community', n: 'GitHub', x: 'github open source star fork pull request contribute issue MIT' },
       { s: 'community-twitter', t: 'community', n: 'Twitter / X', x: 'twitter x tostadium follow updates announcements' },
       { s: 'community-website', t: 'community', n: 'Website', x: 'website unofficialrobloxtutor portfolio projects contact' },
+      { s: 'comparison', t: 'ref', n: 'Comparison', x: 'bridgenet2 bytenet zap red knit comparison vs alternative competitor library benchmark performance binary protocol middleware typed routes rate limiting exploit detection' },
       { s: 'consensus', t: 'ref', n: 'Design Consensus', x: 'design decisions rationale tradeoffs rejected why one remote middleware blocking tokenbucket singleton router bridge stream tamper codec port promise deferred' },
       { s: 'story', t: 'origin', n: 'The Story', x: 'history origin devforum 2021 2023 2024 2025 2026 timeline deathtothestadium homeless engineering welding router v1 v2' },
       { s: 'updates', t: 'ref', n: 'Updates / Changelog', x: 'v2 v1.6 history release notes changelog bridge push router codec tokenbucket' },

@@ -117,7 +117,7 @@ end
     Called internally by Network when the server responds successfully.
     Triggers the Then chain.
 ]]
-function Promise:_resolve(response: any)
+function Promise:_resolve(response: any): ()
     if self._cancelled or self._state ~= "pending" then return end
     self._state = "resolved"
     self._value = response
@@ -129,7 +129,7 @@ end
     Called internally by Network when the server responds with an error
     or the request times out. Triggers the Catch chain.
 ]]
-function Promise:_reject(response: any)
+function Promise:_reject(response: any): ()
     if self._cancelled or self._state ~= "pending" then return end
     self._state = "rejected"
     self._value = response
@@ -156,7 +156,7 @@ end
             UI:SetCoins(coins)
         end)
 ]]
-function Promise:Then(fn: (value: any) -> any)
+function Promise:Then(fn: (value: any) -> any): Type
     assert(type(fn) == "function", "Promise:Then — handler must be a function")
 
     if self._state == "resolved" then
@@ -181,7 +181,7 @@ end
             warn("Failed:", err.status, err.message)
         end)
 ]]
-function Promise:Catch(fn: (err: any) -> any)
+function Promise:Catch(fn: (err: any) -> any): Type
     assert(type(fn) == "function", "Promise:Catch — handler must be a function")
 
     if self._state == "rejected" then
@@ -204,7 +204,7 @@ end
         :Catch(function(err) UI:ShowError(err.message) end)
         :Finally(function() UI:HideLoader() end)
 ]]
-function Promise:Finally(fn: () -> ())
+function Promise:Finally(fn: () -> ()): Type
     assert(type(fn) == "function", "Promise:Finally — handler must be a function")
 
     if self._state ~= "pending" then
@@ -222,7 +222,7 @@ end
     the handlers will not fire. Note: the server still executes — only
     the client-side resolution is cancelled.
 ]]
-function Promise:Cancel()
+function Promise:Cancel(): ()
     self._cancelled = true
     self._state     = "rejected"
     table.clear(self._thenCbs)

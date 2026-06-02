@@ -41,13 +41,40 @@ export type BucketSettings = {
     Refill : number?,
 }
 
+type Payload = {
+    version   : string,
+    type      : "request" | "response" | "error",
+    method    : "GET" | "POST",
+    requestId : string,
+    route     : string,
+    data      : any,
+}
+
+type Request = {
+    params   : { [string]: any },
+    captures : { any },
+    query    : { [string]: string },
+    data     : any,
+    port     : string,
+}
+
+type Response = {
+    Send   : (self: Response, data: any) -> (),
+    Error  : (self: Response, message: string) -> (),
+    Status : (self: Response, code: number) -> Response,
+}
+
+type MiddlewareFn = (Player: Player, Payload: Payload) -> (boolean?)
+type RouteHandler = (Player: Player, Payload: Payload, req: Request, res: Response) -> ()
+
 export type Type = typeof(setmetatable({}, Port)) & {
-    Name         : string,
-    Remote       : RemoteEvent,
-    TokenBucket  : any,
-    _router      : any,
-    _middleware  : { any },   -- reference to parent App middleware
-    _connection  : RBXScriptConnection,
+    Name             : string,
+    Remote           : RemoteEvent,
+    TokenBucket      : TokenBucket.Type,
+    _router          : Router.Type,
+    _middleware      : { { id: string, fn: MiddlewareFn } },
+    _localMiddleware : { { id: string, fn: MiddlewareFn } },
+    _connection      : RBXScriptConnection,
 }
 
 ------------------------------------------------------------------------
@@ -232,7 +259,7 @@ end
 ------------------------------------------------------------------------
 --  CONSTRUCTOR (called by App:Listen)
 ------------------------------------------------------------------------
-function Port.New(name: string, appMiddleware: { any }, settings: BucketSettings?)
+function Port.New(name: string, appMiddleware: { { id: string, fn: MiddlewareFn } }, settings: BucketSettings?): Type
     -- create or reuse the RemoteEvent for this port
     local folder = ReplicatedStorage:FindFirstChild("RoExpressPorts")
         or Instance.new("Folder", ReplicatedStorage)
@@ -268,11 +295,11 @@ end
 ------------------------------------------------------------------------
 
 -- Port-local middleware (runs after inherited app middleware)
-function Port:Use(id: string, fn)
+function Port:Use(id: string, fn: MiddlewareFn): ()
     table.insert(self._localMiddleware, { id = id, fn = fn })
 end
 
-function Port:Unuse(id: string)
+function Port:Unuse(id: string): ()
     for i, entry in ipairs(self._localMiddleware) do
         if entry.id == id then
             table.remove(self._localMiddleware, i)
@@ -282,19 +309,19 @@ function Port:Unuse(id: string)
     warn("RoExpress.Port[" .. self.Name .. "]: No local middleware '" .. id .. "'")
 end
 
-function Port:Get(route: string, handler, options)
+function Port:Get(route: string, handler: RouteHandler, options: { compress: boolean? }?): ()
     self._router:Add("GET", route, handler, options)
 end
 
-function Port:Post(route: string, handler, options)
+function Port:Post(route: string, handler: RouteHandler, options: { compress: boolean? }?): ()
     self._router:Add("POST", route, handler, options)
 end
 
-function Port:OnParamError(fn)
+function Port:OnParamError(fn: (Player: Player, Payload: Payload, paramName: string, expectedType: string) -> ()): ()
     self._router:OnParamError(fn)
 end
 
-function Port:Push(player: Player, event: string, data: any)
+function Port:Push(player: Player, event: string, data: any): ()
     if player == nil or player.Parent == nil then
         warn("RoExpress.Port[" .. self.Name .. "]: Push called with invalid player")
         return
@@ -302,7 +329,7 @@ function Port:Push(player: Player, event: string, data: any)
     self.Remote:FireClient(player, { type = "push", event = event, data = data })
 end
 
-function Port:PushAll(event: string, data: any)
+function Port:PushAll(event: string, data: any): ()
     for _, player in ipairs(Players:GetPlayers()) do
         if player.Parent ~= nil then
             self.Remote:FireClient(player, { type = "push", event = event, data = data })
@@ -310,7 +337,7 @@ function Port:PushAll(event: string, data: any)
     end
 end
 
-function Port:PushTo(players: { Player }, event: string, data: any)
+function Port:PushTo(players: { Player }, event: string, data: any): ()
     if not players or #players == 0 then
         warn("RoExpress.Port[" .. self.Name .. "]: PushTo called with empty player list")
         return
@@ -322,7 +349,7 @@ function Port:PushTo(players: { Player }, event: string, data: any)
     end
 end
 
-function Port:Destroy()
+function Port:Destroy(): ()
     self._connection:Disconnect()
     self._router:Destroy()
     table.clear(self._localMiddleware)
