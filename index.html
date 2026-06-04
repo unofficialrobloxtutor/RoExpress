@@ -1377,8 +1377,7 @@
           that beats ByteNet on raw packet size. Named ports so a combat flood can never choke your inventory system. An
           internal event bus so your server modules stop depending on each other. And passive exploit detection that
           watches every request without you writing a single extra line.</p>
-        <p style="color:var(--accent2);font-weight:500">ByteNet is abandoned. Warp is archived. RoExpress is here —
-          actively maintained, documented, and built for games that actually ship.</p>
+        <p style="color:var(--accent2);font-weight:500">RoExpress is here as a modern alternative, actively maintained, documented, and built for games that actually ship.</p>
 
         <h2>Why RoExpress?</h2>
         <p>A typical Roblox game scatters dozens of RemoteEvents with no structure, no rate limiting, and no error
@@ -4345,6 +4344,48 @@ tamper.<span class="fn">On</span>(<span class="kw">function</span>(report)
 
           <div class="te">
             <div class="te-dot"></div>
+            <div class="te-ver">TypeCoercer as a shared singleton</div>
+            <div class="te-title">v2.2 — one source of truth for all type logic</div>
+            <ul class="te-changes">
+              <li>v2.0 Router maintained its own coercion table — seven types, each with its own parse branch.
+                v2.2 introduced three new types (int, Enum, Instance) that require Roblox runtime services.
+                Putting those inside Router would give Router a service dependency, violating its design as pure
+                table manipulation.</li>
+              <li>TypeCoercer was extracted as a shared singleton. Router calls
+                <code>TypeCoercer.FromString(raw, typeName)</code> for every param. Router no longer knows about
+                types — it only knows about routes.</li>
+              <li><strong>Why a singleton?</strong> Like Bridge, the value is that any module can call it without
+                exchanging references. A factory would require passing instances to both Router and any custom
+                code that needs coercion.</li>
+              <li><strong>RegisterInstanceRoot is explicit:</strong> Instance coercion searches registered roots
+                only — not the entire DataModel. Searching the whole tree would be unsafe and non-deterministic.
+                Roots must be registered before the first request that uses Instance params.</li>
+            </ul>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">Version module replaces shared global</div>
+            <div class="te-title">v2.2 — closing the footgun that was always known</div>
+            <ul class="te-changes">
+              <li><code>shared.ROEXPRESS_VERSION</code> was written in <code>init.luau</code> since v2.0. It
+                worked but was a footgun — any module could overwrite it. It was listed as known tech debt in
+                the deferred decisions section.</li>
+              <li>Version.luau is now the sole writer. <code>init.luau</code> requires Version first so the value
+                is set before any other module reads it. App and Network read the constant through the shared
+                table — they never write it.</li>
+              <li><strong>Auto version check on server start:</strong> Version pings roexpress.dev on startup
+                and falls back to GitHub if unreachable. This is silent by default — no output unless the version
+                is behind. <code>Version.Check()</code> provides a manual trigger for scripts that want explicit
+                output.</li>
+              <li><strong>Why not a ModuleScript constant?</strong> The version must be readable from both server
+                and client contexts without requiring the Version module on the client. The shared table solves
+                this without cross-context requires.</li>
+            </ul>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
             <div class="te-ver">Promise alongside callbacks</div>
             <div class="te-title">v2.2 — async API without replacing existing patterns</div>
             <ul class="te-changes">
@@ -4364,8 +4405,6 @@ tamper.<span class="fn">On</span>(<span class="kw">function</span>(report)
             <div class="te-ver">Decisions deferred</div>
             <div class="te-title">Deliberately not built yet</div>
             <ul class="te-changes">
-              <li><strong>shared.ROEXPRESS_VERSION:</strong> Should be a Version.luau module. Using Roblox's shared
-                global works but is a footgun — any module can overwrite it. Known tech debt.</li>
               <li><strong>Retry logic:</strong> Safe for GET, dangerous for POST without server-side idempotency.
                 Deferred until a clean design for POST retry (deduplification tokens) is worked out.</li>
               <li><strong>HTTP outbound:</strong> HttpService wrapper for external API calls — webhooks, Discord bots,
@@ -4508,6 +4547,81 @@ tamper.<span class="fn">On</span>(<span class="kw">function</span>(report)
                 single unknown route is suspicious. Eight distinct unknown routes is a scanner. Both warrant different
                 responses — the immediate strike alerts on the first hit, the pattern strike escalates if the behavior
                 continues.</p>
+            </div>
+          </div>
+
+          <div class="cons-mod">
+            <button onclick="toggleCons(this)"
+              style="width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:var(--font);font-size:13px;color:var(--text);text-align:left">
+              <span><span style="color:var(--accent2);margin-right:10px">TypeCoercer</span> shared type serialisation</span>
+              <span class="cons-chv" style="color:var(--text3);font-size:10px;transition:transform .2s">▶</span>
+            </button>
+            <div class="cons-body"
+              style="display:none;background:var(--code-bg);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);padding:16px">
+              <p style="color:var(--text2);font-size:12.5px;line-height:1.8;margin-bottom:10px"><strong
+                  style="color:var(--text)">Enum coercion uses pcall to guard against invalid type names.</strong>
+                <code>Enum[typeName]</code> throws if the name isn't a valid EnumType. Wrapping in pcall lets TypeCoercer
+                return nil cleanly rather than crashing the request pipeline — the Router then fires OnParamError and
+                sends a 400 instead of a 500.</p>
+              <p style="color:var(--text2);font-size:12.5px;line-height:1.8;margin-bottom:10px"><strong
+                  style="color:var(--text)">Instance root search is linear, not indexed.</strong> Registered roots are
+                iterated and each calls <code>:FindFirstChild(value, true)</code>. At typical root counts (1–3), this is
+                negligible. Indexing would complicate Destroy cleanup and isn't worth it until route counts warrant it.
+              </p>
+              <p style="color:var(--text2);font-size:12.5px;line-height:1.8"><strong style="color:var(--text)">int
+                  rejects decimals strictly.</strong> <code>tonumber</code> accepts "3.7" — TypeCoercer's int branch
+                checks <code>math.floor(n) == n</code> after parsing. This matters for game IDs, player counts, and any
+                domain where a float is semantically wrong even if parseable.</p>
+            </div>
+          </div>
+
+          <div class="cons-mod">
+            <button onclick="toggleCons(this)"
+              style="width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:var(--font);font-size:13px;color:var(--text);text-align:left">
+              <span><span style="color:var(--accent2);margin-right:10px">Promise</span> chainable async Network API</span>
+              <span class="cons-chv" style="color:var(--text3);font-size:10px;transition:transform .2s">▶</span>
+            </button>
+            <div class="cons-body"
+              style="display:none;background:var(--code-bg);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);padding:16px">
+              <p style="color:var(--text2);font-size:12.5px;line-height:1.8;margin-bottom:10px"><strong
+                  style="color:var(--text)">Then handlers run in a new coroutine.</strong> If a Then callback yields or
+                errors, it doesn't block the Promise chain or crash the caller. Each handler is wrapped in
+                <code>task.spawn</code> so the chain is non-blocking by default — consistent with how Roblox async APIs
+                behave.</p>
+              <p style="color:var(--text2);font-size:12.5px;line-height:1.8;margin-bottom:10px"><strong
+                  style="color:var(--text)">Cancel disconnects the pending callback, not the remote request.</strong>
+                Roblox has no mechanism to abort an in-flight RemoteEvent. Cancel marks the Promise as cancelled so the
+                callback is never invoked when the response arrives — but the server still processes the request. This
+                matches how <code>network:Cancel</code> worked for callbacks.</p>
+              <p style="color:var(--text2);font-size:12.5px;line-height:1.8"><strong style="color:var(--text)">Finally
+                  always fires regardless of resolve or reject.</strong> This mirrors JS Promise semantics. It does not
+                receive a value — it exists for cleanup (hiding a loading spinner, releasing a lock) that must happen
+                whether the request succeeded or failed.</p>
+            </div>
+          </div>
+
+          <div class="cons-mod">
+            <button onclick="toggleCons(this)"
+              style="width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:var(--font);font-size:13px;color:var(--text);text-align:left">
+              <span><span style="color:var(--accent2);margin-right:10px">Benchmark</span> network profiling</span>
+              <span class="cons-chv" style="color:var(--text3);font-size:10px;transition:transform .2s">▶</span>
+            </button>
+            <div class="cons-body"
+              style="display:none;background:var(--code-bg);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);padding:16px">
+              <p style="color:var(--text2);font-size:12.5px;line-height:1.8;margin-bottom:10px"><strong
+                  style="color:var(--text)">Benchmark reuses the caller's Network instance.</strong> It doesn't create
+                its own remote or connection — it fires requests through the existing Network so results reflect real
+                pipeline overhead, including rate limiting and middleware, not a synthetic bypass. A benchmark that skips
+                the pipeline is measuring the wrong thing.</p>
+              <p style="color:var(--text2);font-size:12.5px;line-height:1.8;margin-bottom:10px"><strong
+                  style="color:var(--text)">Warmup iterations are discarded.</strong> The first N requests in any
+                benchmark hit cold caches — Luau JIT, Roblox replication buffers, and the token bucket seeding. Warmup
+                runs let those settle before measurements start, preventing artificially high latency in the reported
+                results.</p>
+              <p style="color:var(--text2);font-size:12.5px;line-height:1.8"><strong
+                  style="color:var(--text)">p95 and p99 matter more than average.</strong>
+                Average RTT looks healthy even when 5% of requests are slow — which is exactly what players notice.
+                Benchmark surfaces p95 and p99 alongside min/max/avg so outliers aren't hidden behind a mean.</p>
             </div>
           </div>
 
@@ -5089,6 +5203,13 @@ tamper.<span class="fn">On</span>(<span class="kw">function</span>(report)
         setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('ok') }, 1800);
       });
     }
+
+    // ── CHECKMARK COLORS ──
+    document.querySelectorAll('.tbl td').forEach(td => {
+      td.innerHTML = td.innerHTML
+        .replace(/✓/g, '<span style="color:#4ade80;font-weight:600">✓</span>')
+        .replace(/✗/g, '<span style="color:#f87171">✗</span>');
+    });
   </script>
 </body>
 
