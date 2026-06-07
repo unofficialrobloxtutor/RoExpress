@@ -232,4 +232,3 @@ return setmetatable(Version, {
     __tostring = function() return VERSION end,
     __index    = function(_, k) if k == "version" then return VERSION end end,
 })
-EOF

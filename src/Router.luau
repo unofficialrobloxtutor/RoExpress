@@ -208,7 +208,7 @@ end
 local function _match(
 	incomingParts : { string },
 	segments      : { Segment }
-): ({ [string]: any }, { any })?
+): ({ [string]: any }, { any })
 
 	local params   : { [string]: any } = {}
 	local captures : { any }           = {}

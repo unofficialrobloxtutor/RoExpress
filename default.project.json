@@ -1,12 +1,6 @@
 {
   "name": "RoExpress",
   "tree": {
-    "$className": "DataModel",
-    "ReplicatedStorage": {
-      "$className": "ReplicatedStorage",
-      "RoExpress": {
-        "$path": "src"
-      }
-    }
+    "$path": "src"
   }
 }
