@@ -49,7 +49,7 @@
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "RoExpress",
-  "version": "2.0.0",
+  "version": "2.2.3",
   "description": "A type-safe, rate-limited, Express.js-style RPC framework for Roblox. Features typed route params, server push, LZ77 compression, Bridge internal event bus, and Tamper exploit detection.",
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "Roblox",
@@ -77,7 +77,7 @@
   },
   "keywords": "roblox, luau, networking, remoteevent, express, framework, typed routes, server push, rate limiting, compression",
   "releaseNotes": "https://roexpress.dev",
-  "softwareVersion": "2.0.0",
+  "softwareVersion": "2.2.3",
   "datePublished": "2026-05-19",
   "dateModified": "2026-05-30"
 }
@@ -1241,6 +1241,7 @@
           <a class="nl" href="#" data-s="installation" onclick="show('installation');return false">Installation</a>
           <a class="nl" href="#" data-s="quickstart" onclick="show('quickstart');return false">Quick Start</a>
           <a class="nl" href="#" data-s="pipeline" onclick="show('pipeline');return false">Request Pipeline</a>
+          <a class="nl" href="#" data-s="roadmap" onclick="show('roadmap');return false">Roadmap <span class="nb" style="background:#b45309;color:#fef3c7">2.3+</span></a>
         </div>
       </div>
 
@@ -1480,6 +1481,120 @@
         </table>
       </section>
 
+      <!-- ══════════════ ROADMAP ══════════════ -->
+      <section class="doc" id="s-roadmap">
+        <div class="eyebrow">Getting Started</div>
+        <h1>Roadmap</h1>
+        <p class="lead">What's being built next for RoExpress — ordered by priority, nearest at the top. Each item links to the relevant section of the docs so you can see what's changing.</p>
+
+        <div class="cl warn">
+          <strong>Status key</strong> &nbsp;—&nbsp;
+          <span style="color:var(--accent)">●</span> <strong>Next up</strong> — in active development &nbsp;&nbsp;
+          <span style="color:var(--amber)">●</span> <strong>Planned</strong> — scoped and sequenced &nbsp;&nbsp;
+          <span style="color:var(--text3)">●</span> <strong>Future</strong> — on the horizon
+        </div>
+
+        <div class="timeline">
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">Automatic Retry <span class="nb">NEXT</span></div>
+            <div class="te-title">Failed requests handle themselves gracefully without developer intervention</div>
+            <ul class="te-changes">
+              <li>Exponential backoff on network errors and timeouts — 1s → 2s → 4s</li>
+              <li>Configurable max attempts globally at construction or overridden per request</li>
+              <li>Transparent to the caller — promises and callbacks resolve normally on retry success</li>
+              <li>Affects the <a class="rm-link" href="#" onclick="show('network');return false">Network</a> request/response path</li>
+            </ul>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">Compact Handler Arguments <span class="nb">NEXT</span></div>
+            <div class="te-title">Handler signatures slim from four arguments down to two — no migration required</div>
+            <ul class="te-changes">
+              <li>Current: <code>app:Get("/route", function(Player, Payload, req, res))</code></li>
+              <li>New compact: <code>app:Get("/route", function(req, res))</code></li>
+              <li><code>req.player</code> and <code>req.raw</code> available on the request object for cases that need them</li>
+              <li>Uses <code>debug.info</code> parameter count at dispatch — existing four-arg handlers continue working without changes</li>
+              <li>Affects <a class="rm-link" href="#" onclick="show('app');return false">App</a> and <a class="rm-link" href="#" onclick="show('port');return false">Ports</a></li>
+            </ul>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">Deflate &amp; LZH Compression <span class="nb nb-amber">PLANNED</span></div>
+            <div class="te-title">Codec upgraded from LZ77 to full Deflate — LZ77 sliding window plus Huffman entropy coding</div>
+            <ul class="te-changes">
+              <li>Huffman entropy coding stage added on top of the existing LZ77 pass — meaningfully better ratios on repetitive JSON payloads</li>
+              <li>Hash-chain match lookup replaces the O(n×w) inner loop — faster at large payload sizes</li>
+              <li>Same opt-in API — <code>{ compress = true }</code> per route, nothing else changes for existing users</li>
+              <li>Based on Huffman (1952) and Ziv &amp; Lempel (1977) — see <a class="rm-link" href="#" onclick="show('research');return false">Research Papers</a></li>
+              <li>Affects <a class="rm-link" href="#" onclick="show('codec');return false">Codec</a></li>
+            </ul>
+          </div>
+
+          <div class="te">
+            <div class="te-dot minor"></div>
+            <div class="te-ver">Stream Overhaul — Generic Channels <span class="nb nb-amber">PLANNED</span></div>
+            <div class="te-title">Stream rebuilt as typed channels rather than a hardcoded FPS singleton</div>
+            <ul class="te-changes">
+              <li>Schema-defined channels — declare field names and types, Stream handles buffer pack/unpack automatically</li>
+              <li>Works for anything: wheel rotation, physics state, weather, economy — not only shooters</li>
+              <li>Batch broadcast model retained — one buffer, one <code>FireAllClients</code> per tick regardless of record count</li>
+              <li>Delta compression built in — only records that changed since the last tick are sent</li>
+              <li>FPS-specific features (hit validation, lag compensation) promoted to a <code>Stream.Combat</code> layer built on top</li>
+              <li>Affects <a class="rm-link" href="#" onclick="show('stream');return false">Stream</a> and the <a class="rm-link" href="#" onclick="show('guide-stream');return false">FPS Stream guide</a></li>
+            </ul>
+          </div>
+
+          <div class="te">
+            <div class="te-dot minor"></div>
+            <div class="te-ver">Improved Typing <span class="nb nb-amber">PLANNED</span></div>
+            <div class="te-title">Better type exports for a cleaner intellisense experience across the whole surface</div>
+            <ul class="te-changes">
+              <li><code>NetworkResponse</code>, <code>NetworkPayload</code>, and other internal types exported from the public module surface</li>
+              <li>Typed handler callback signatures — no more <code>any</code> in route parameters</li>
+              <li>Affects the <a class="rm-link" href="#" onclick="show('types');return false">Types</a> reference</li>
+            </ul>
+          </div>
+
+          <div class="te">
+            <div class="te-dot minor"></div>
+            <div class="te-ver">YouTube Showcase — Gun Framework <span class="nb nb-dim">FUTURE</span></div>
+            <div class="te-title">Full gun framework built live on YouTube demonstrating RoExpress end to end</div>
+            <ul class="te-changes">
+              <li>Routes for shooting, reloading, and damage validation; Stream for hit reporting; Codec for match state responses</li>
+              <li>Shows the complete pipeline from client request to server validation in a single real project</li>
+              <li>Scheduled after the Stream overhaul ships so the video reflects the final API</li>
+              <li><a class="rm-link" href="#" onclick="show('youtube');return false">YouTube channel</a></li>
+            </ul>
+          </div>
+
+          <div class="te">
+            <div class="te-dot minor"></div>
+            <div class="te-ver">Documentation Rebuild <span class="nb nb-dim">FUTURE</span></div>
+            <div class="te-title">Split into separate pages per module and concept for better SEO and discoverability</div>
+            <ul class="te-changes">
+              <li>Individual pages can rank independently for specific search terms — e.g. <em>/docs/stream</em> for "Roblox state sync"</li>
+              <li>Concept pages alongside module pages: Getting Started, Compression, Lag Compensation, MVC Pattern</li>
+              <li>Scheduled last so all new APIs are finalised before the pages are written</li>
+            </ul>
+          </div>
+
+          <div class="te">
+            <div class="te-dot minor"></div>
+            <div class="te-ver">awesome-roblox Submission <span class="nb nb-dim">FUTURE</span></div>
+            <div class="te-title">Submit RoExpress to both curated Roblox resource repositories on GitHub</div>
+            <ul class="te-changes">
+              <li>awesome-roblox/awesome-roblox and elevenpassin/awesome-roblox</li>
+              <li>Scheduled after the Stream overhaul and docs rebuild ship — the listing reflects the full capability</li>
+            </ul>
+          </div>
+
+        </div>
+      </section>
+
       <!-- ══════════════ INSTALLATION ══════════════ -->
       <section class="doc" id="s-installation">
         <div class="eyebrow">Setup</div>
@@ -1511,7 +1626,7 @@
         <h2>Option A — Wally <span class="pill p-new">recommended</span></h2>
         <p>Add RoExpress to your <code>wally.toml</code> dependencies:</p>
         <pre><button class="cb" onclick="cp(this)">copy</button><code>[dependencies]
-RoExpress = <span class="str">"unofficialrobloxtutor/roexpress@2.0.0"</span></code></pre>
+RoExpress = <span class="str">"unofficialrobloxtutor/roexpress@2.2.3"</span></code></pre>
         <p>Then run:</p>
         <pre><button class="cb" onclick="cp(this)">copy</button><code>wally install</code></pre>
         <p>Wally drops it into your <code>Packages/</code> folder. Require it from there:</p>
@@ -4804,6 +4919,16 @@ tamper.<span class="fn">On</span>(<span class="kw">function</span>(report)
         <p class="lead">Full history of every change to RoExpress across all versions.</p>
 
         <div class="timeline">
+
+          <div class="te">
+            <div class="te-dot minor"></div>
+            <div class="te-ver">v2.2.3 <span class="te-date">7 Jun 2026</span></div>
+            <div class="te-title">Patch — wally.toml packaging fix (issue #6)</div>
+            <ul class="te-changes">
+              <li><strong>wally.toml</strong> — added missing <code>include</code> field; <code>init.luau</code> and <code>src/**</code> were not being packaged on publish</li>
+              <li>v2.2.1 and v2.2.2 were failed attempts at the same fix</li>
+            </ul>
+          </div>
 
           <div class="te">
             <div class="te-dot"></div>

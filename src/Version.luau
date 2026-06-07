@@ -48,6 +48,7 @@
 --
 --  HISTORY
 --  ---------------------------------------------------------------
+--  2.2.3   Patch — wally.toml packaging fix (issue #6)
 --  2.2.0   TypeCoercer, Promise, new Router types, Version module
 --  2.1.0   Stream, Port, optional Network callbacks
 --  2.0.0   Router, Push, Codec, Bridge, Tamper, TokenBucket rewrite
@@ -60,7 +61,7 @@ local RunService  = game:GetService("RunService")
 ------------------------------------------------------------------------
 --  VERSION
 ------------------------------------------------------------------------
-local VERSION = "2.2.0"
+local VERSION = "2.2.3"
 
 -- Write once to shared — assert catches any accidental double-write
 assert(

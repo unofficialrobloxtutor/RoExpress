@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.2.3] — 2026-06-07
+
+### Fixed
+- `wally.toml` — added missing `include` field (`wally.toml`, `init.luau`, `src/**`); source files were not being packaged on publish (fixes #6)
+- v2.2.1 and v2.2.2 were failed attempts at the same fix
+
+---
+
 ## [2.2.0] — 2026-05-30
 
 ### Added
