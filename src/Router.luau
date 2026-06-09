@@ -205,10 +205,7 @@ end
 	params    — named param values (coerced)
 	captures  — positional wildcard/glob captures
 ]]
-local function _match(
-	incomingParts : { string },
-	segments      : { Segment }
-): ({ [string]: any }, { any })
+local function _match(incomingParts : { string },segments      : { Segment }): ({ [string]: any }, { any })
 
 	local params   : { [string]: any } = {}
 	local captures : { any }           = {}
