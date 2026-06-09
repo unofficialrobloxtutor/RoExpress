@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Research Papers — RoExpress Docs</title>
+  <meta name="description" content="Academic research that informs RoExpress: Ziv-Lempel LZ77, Bernier lag compensation, Fiedler game networking, RFC 2697 token bucket, Fielding REST dissertation.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/research.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/research.html">
+  <meta property="og:title" content="Research Papers — RoExpress Docs">
+  <meta property="og:description" content="LZ77, lag compensation, token bucket, REST — the academic foundations of RoExpress.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Reference</div>
+        <h1>Research Papers</h1>
+        <p class="lead">Academic and industry papers that directly informed RoExpress design. Each entry notes which module it influenced and the specific mechanism it describes.</p>
+
+        <div class="cl info"><strong>These are real papers.</strong> Links go to the original publications. Reading them is optional — the docs explain how each mechanism works — but they're here if you want to go deeper.</div>
+
+        <hr>
+
+        <h2>Ziv &amp; Lempel, 1977 — LZ77 Compression</h2>
+        <p><em>Ziv, J., &amp; Lempel, A. (1977). A universal algorithm for sequential data compression. IEEE Transactions on Information Theory, 23(3), 337–343.</em></p>
+        <p>Defines the sliding window algorithm at the core of <a href="./codec.html">Codec</a>. The algorithm scans backwards through a history window to find the longest match, then outputs a (offset, length, literal) triple. Repeated strings in JSON payloads — repeated keys, common values — compress well with as little as a 128-byte window.</p>
+        <p><strong>Used in:</strong> <a href="./codec.html">Codec</a> — the <code>compress = true</code> route option</p>
+        <p><strong>Planned extension:</strong> Deflate (Huffman stage on top) — see <a href="./roadmap.html">Roadmap</a></p>
+
+        <hr>
+
+        <h2>Bernier, 2001 — Lag Compensation</h2>
+        <p><em>Bernier, Y. W. (2001). Latency compensating methods in client/server in-game protocol design and optimization. Proceedings of the Game Developers Conference.</em></p>
+        <p>Describes the hit validation algorithm used in <a href="./stream.html">Stream</a>. The server keeps a rolling history of player positions. When a hit claim arrives, it rewinds to the timestamp the client was at when they fired, and validates against the rewound position rather than the current one. This makes hit registration fair at 100–200 ms ping without client-side prediction.</p>
+        <p><strong>Used in:</strong> <a href="./stream.html">Stream</a> — <code>ch:Rewind(userId, timestamp)</code> in the <a href="./guide-stream.html">FPS guide</a></p>
+
+        <hr>
+
+        <h2>Fiedler, 2008–2018 — Game Networking</h2>
+        <p><em>Fiedler, G. (2008–2018). Gaffer on Games — Articles on Game Networking. gafferongames.com</em></p>
+        <p>A series of articles covering reliable UDP, snapshot interpolation, delta compression, and state synchronisation. The Stream channel model — one buffer, one fire per tick, delta-only records — directly follows the patterns Fiedler describes for snapshot-based sync. The unreliable <a href="./broadcast.html">Broadcast</a> module reflects the fire-and-forget unreliable channel pattern.</p>
+        <p><strong>Used in:</strong> <a href="./stream.html">Stream</a> — tick-rate channel design, delta records</p>
+
+        <hr>
+
+        <h2>RFC 2697, 1999 — Token Bucket Algorithm</h2>
+        <p><em>Heinanen, J., &amp; Guerin, R. (1999). A Single Rate Three Color Marker. RFC 2697, IETF.</em></p>
+        <p>Defines the token bucket rate limiter that <a href="./tokenbucket.html">TokenBucket</a> implements. Tokens accumulate at a fixed refill rate up to a maximum capacity. Each request consumes one token. Requests beyond capacity are rejected with 429. The RFC's "single rate" model maps directly — burst capacity handles legitimate traffic spikes without permanently throttling active players.</p>
+        <p><strong>Used in:</strong> <a href="./tokenbucket.html">TokenBucket</a> — all request-per-player rate limiting</p>
+
+        <hr>
+
+        <h2>Fielding, 2000 — REST Architectural Style</h2>
+        <p><em>Fielding, R. T. (2000). Architectural Styles and the Design of Network-based Software Architectures. Doctoral dissertation, UC Irvine.</em></p>
+        <p>The dissertation that defined REST. Chapter 5 ("Representational State Transfer") describes the uniform interface constraint — using a fixed set of verbs (GET, POST, PUT, DELETE) on identified resources. RoExpress brings this model to Roblox: routes are resource identifiers, HTTP verbs replace opaque event names, and status codes replace boolean success flags. The constraint that requests contain all needed state (stateless server) is relaxed — handlers have access to server-side per-player data — but the interface uniformity benefit holds.</p>
+        <p><strong>Used in:</strong> <a href="./app.html">App</a>, <a href="./network.html">Network</a>, <a href="./port.html">Port</a> — the entire HTTP-style routing model</p>
+
+        <hr>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./codec.html">Codec</a> — LZ77 implementation &nbsp;·&nbsp;
+          <a href="./stream.html">Stream</a> — lag compensation implementation &nbsp;·&nbsp;
+          <a href="./tokenbucket.html">TokenBucket</a> — rate limiter &nbsp;·&nbsp;
+          <a href="./design-consensus.html">Design Decisions</a> — how these papers shaped specific choices &nbsp;·&nbsp;
+          <a href="./roadmap.html">Roadmap</a> — Deflate (Huffman + LZ77) planned
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

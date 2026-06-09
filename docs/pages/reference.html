@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reference — RoExpress Docs</title>
+  <meta name="description" content="RoExpress reference documentation: exported types, request pipeline, changelog, status codes, and API overview.">
+  <meta name="keywords" content="roblox, luau, roexpress, reference, types, pipeline, changelog, status codes, api">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/reference/">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/reference/">
+  <meta property="og:title" content="Reference — RoExpress Docs">
+  <meta property="og:description" content="API reference overview: exported types, pipeline, changelog, status codes.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Reference</div>
+        <h1>Reference Overview</h1>
+        <p class="lead">Lookup tables, status codes, type definitions, and version history. Use these when you need to verify specific behaviour rather than learn a concept.</p>
+
+        <h2>In this section</h2>
+        <table class="tbl">
+          <thead><tr><th>Page</th><th>What's in it</th></tr></thead>
+          <tbody>
+            <tr><td><a href="./types.html">Exported Types</a></td><td>All <code>export type</code> definitions from the root module with full shapes</td></tr>
+            <tr><td><a href="./pipeline.html">Request Pipeline</a></td><td>The five stages every request passes through, with status codes</td></tr>
+            <tr><td><a href="./changelog.html">Changelog</a></td><td>Full version history: added, changed, removed, breaking changes</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Status codes quick reference</h2>
+        <table class="tbl">
+          <thead><tr><th>Code</th><th>Stage</th><th>Cause</th><th>Override?</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pill p-ok">200</span></td><td>Handler</td><td><code>res:Send()</code> or implicit</td><td>Use <code>res:Status(n):Send()</code></td></tr>
+            <tr><td><span class="pill p-warn">400</span></td><td>Router</td><td>Typed param coercion failed</td><td><code>app:OnParamError(fn)</code></td></tr>
+            <tr><td><span class="pill p-err">403</span></td><td>Middleware</td><td>Middleware returned <code>false</code></td><td>Can't override; use <code>res:Error()</code> in handler instead</td></tr>
+            <tr><td><span class="pill p-warn">404</span></td><td>Router</td><td>No matching route</td><td>No override</td></tr>
+            <tr><td><span class="pill p-warn">429</span></td><td>TokenBucket</td><td>Player's token bucket empty</td><td>Adjust <code>max</code>/<code>refill</code>/<code>cost</code></td></tr>
+            <tr><td><span class="pill p-err">500</span></td><td>Middleware / Handler</td><td>Unhandled Lua error</td><td>Wrap in <code>pcall</code></td></tr>
+          </tbody>
+        </table>
+
+        <h2>Module context matrix</h2>
+        <table class="tbl">
+          <thead><tr><th>Module</th><th>Server</th><th>Client</th></tr></thead>
+          <tbody>
+            <tr><td><a href="./app.html">App</a></td><td>✓</td><td>✗</td></tr>
+            <tr><td><a href="./broadcast.html">Broadcast</a></td><td>✓</td><td>✗</td></tr>
+            <tr><td><a href="./tamper.html">Tamper</a></td><td>✓</td><td>✗</td></tr>
+            <tr><td><a href="./port.html">Port</a></td><td>✓</td><td>✗</td></tr>
+            <tr><td><a href="./network.html">Network</a></td><td>✗</td><td>✓</td></tr>
+            <tr><td><a href="./listener.html">Listener</a></td><td>✗</td><td>✓</td></tr>
+            <tr><td><a href="./stream.html">Stream</a></td><td>✓</td><td>✓</td></tr>
+            <tr><td><a href="./router.html">Router</a></td><td>✓</td><td>✓</td></tr>
+            <tr><td><a href="./codec.html">Codec</a></td><td>✓</td><td>✓</td></tr>
+            <tr><td><a href="./bridge.html">Bridge</a></td><td>✓</td><td>✓</td></tr>
+            <tr><td><a href="./tokenbucket.html">TokenBucket</a></td><td>✓</td><td>✓</td></tr>
+            <tr><td><a href="./base64.html">Base64</a></td><td>✓</td><td>✓</td></tr>
+          </tbody>
+        </table>
+
+        <h2>See also</h2>
+        <p>
+          <a href="../guides/">Guides</a> — how-to walkthroughs &nbsp;·&nbsp;
+          <a href="../examples/">Examples</a> — full working projects &nbsp;·&nbsp;
+          <a href="./community.html">Community</a> — support
+        </p>
+
+      </section>
+    </main>
+  </div>
+</body>
+</html>

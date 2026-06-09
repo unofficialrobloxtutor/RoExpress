@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Friend Zone Example — RoExpress Docs</title>
+  <meta name="description" content="RoExpress Friend Zone / Proximity example: server zone detection loop pushes enter/exit events reliably. Client fetches nearby players on demand.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/ex-friendzone.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/ex-friendzone.html">
+  <meta property="og:title" content="Friend Zone Example — RoExpress Docs">
+  <meta property="og:description" content="Zone detection loop with push enter/exit, client fetch for nearby players.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Example</div>
+        <h1>Friend Zone / Proximity</h1>
+        <p class="lead">Server zone detection loop pushes enter/exit events reliably. Client fetches nearby players on demand.</p>
+
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> zones <span class="op">=</span> { spawn = { center<span class="op">=</span>Vector3.<span class="fn">new</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>), radius<span class="op">=</span><span class="num">30</span> } }
+<span class="kw">local</span> playerZone <span class="op">=</span> {}
+
+app:<span class="fn">Get</span>(<span class="str">"zone/:name/players"</span>, <span class="kw">function</span>(Player, Payload, req, res)
+    <span class="kw">if not</span> zones[req.params.name] <span class="kw">then</span> res:<span class="fn">Status</span>(<span class="num">404</span>):<span class="fn">Error</span>(<span class="str">"Unknown zone"</span>); <span class="kw">return end</span>
+    <span class="kw">local</span> inside <span class="op">=</span> {}
+    <span class="kw">for</span> uid, z <span class="kw">in</span> <span class="fn">pairs</span>(playerZone) <span class="kw">do</span>
+        <span class="kw">if</span> z <span class="op">==</span> req.params.name <span class="kw">then</span> <span class="fn">table.insert</span>(inside, game.Players:<span class="fn">GetPlayerByUserId</span>(uid).Name) <span class="kw">end</span>
+    <span class="kw">end</span>
+    res:<span class="fn">Send</span>({ players = inside })
+<span class="kw">end</span>)
+
+task.<span class="fn">spawn</span>(<span class="kw">function</span>()
+    <span class="kw">while true</span> <span class="kw">do</span>
+        task.<span class="fn">wait</span>(<span class="num">2</span>)
+        <span class="kw">for</span> _, player <span class="kw">in</span> <span class="fn">ipairs</span>(game.Players:<span class="fn">GetPlayers</span>()) <span class="kw">do</span>
+            <span class="kw">local</span> char <span class="op">=</span> player.Character; <span class="kw">if not</span> char <span class="kw">then continue end</span>
+            <span class="kw">local</span> pos  <span class="op">=</span> char:<span class="fn">GetPivot</span>().Position
+            <span class="kw">local</span> prev <span class="op">=</span> playerZone[player.UserId]; <span class="kw">local</span> curr <span class="op">=</span> <span class="kw">nil</span>
+            <span class="kw">for</span> name, zone <span class="kw">in</span> <span class="fn">pairs</span>(zones) <span class="kw">do</span>
+                <span class="kw">if</span> (pos <span class="op">-</span> zone.center).Magnitude <span class="op">&lt;=</span> zone.radius <span class="kw">then</span> curr <span class="op">=</span> name; <span class="kw">break end</span>
+            <span class="kw">end</span>
+            <span class="kw">if</span> curr ~<span class="op">=</span> prev <span class="kw">then</span>
+                playerZone[player.UserId] <span class="op">=</span> curr
+                <span class="kw">if</span>     curr <span class="kw">then</span> app:<span class="fn">Push</span>(player, <span class="str">"zone.enter"</span>, { zone<span class="op">=</span>curr })
+                <span class="kw">elseif</span> prev <span class="kw">then</span> app:<span class="fn">Push</span>(player, <span class="str">"zone.exit"</span>,  { zone<span class="op">=</span>prev }) <span class="kw">end</span>
+            <span class="kw">end</span>
+        <span class="kw">end</span>
+    <span class="kw">end</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./app.html">App</a> — push per player &nbsp;·&nbsp;
+          <a href="./push.html">Server Push</a> &nbsp;·&nbsp;
+          <a href="./router.html">Router</a> — named string param &nbsp;·&nbsp;
+          <a href="./listener.html">Listener</a> — client-side zone events
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

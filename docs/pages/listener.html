@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Listener — RoExpress Docs</title>
+  <meta name="description" content="RoExpress Listener module: client-side event listener for Broadcast unreliable events and App server push. On, Once, Off, Use, Unuse middleware.">
+  <meta name="keywords" content="roblox, luau, roexpress, listener, client, on, once, off, broadcast, push, reliable, unreliable">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/listener/">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/listener/">
+  <meta property="og:title" content="Listener — RoExpress Docs">
+  <meta property="og:description" content="Client-side listener for Broadcast unreliable events and App reliable server push.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Client API</div>
+        <h1>Listener</h1>
+        <p class="lead">Receives both <a href="./broadcast.html">Broadcast</a> unreliable events and <a href="./app.html">App Push</a> reliable events on the client. A single <code>listener:On()</code> call handles both channels automatically.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> listener <span class="op">=</span> RoExpress(<span class="str">"Listener"</span>)</code></pre>
+
+        <h2>Subscribing</h2>
+        <div class="sig">listener:<span class="fn">On</span>(event, callback) → id</div>
+        <div class="sig">listener:<span class="fn">Once</span>(event, callback) → id</div>
+        <table class="tbl">
+          <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>event</code></td><td>string</td><td>Event name — matches what was passed to <code>Emit</code> or <code>Push</code> on the server</td></tr>
+            <tr><td><code>callback</code></td><td><code>(data: any) → ()</code></td><td>Called every time the event arrives (<code>On</code>) or only the first time (<code>Once</code>)</td></tr>
+          </tbody>
+        </table>
+        <p>Both return a subscription id that can be passed to <code>listener:Off(id)</code>.</p>
+
+        <h2>Unsubscribing</h2>
+        <div class="sig">listener:<span class="fn">Off</span>(id)</div>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> id <span class="op">=</span> listener:<span class="fn">On</span>(<span class="str">"roundEnd"</span>, <span class="kw">function</span>(data)
+    <span class="fn">print</span>(<span class="str">"Winner:"</span>, data.winner)
+<span class="kw">end</span>)
+
+<span class="cm">-- Remove when no longer needed</span>
+listener:<span class="fn">Off</span>(id)</code></pre>
+
+        <h2>Middleware</h2>
+        <div class="sig">listener:<span class="fn">Use</span>(id, fn) &nbsp;·&nbsp; listener:<span class="fn">Unuse</span>(id)</div>
+        <p>Client-side middleware runs before every event callback. Return <code>false</code> to suppress the event.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>listener:<span class="fn">Use</span>(<span class="str">"log"</span>, <span class="kw">function</span>(event, data)
+    <span class="fn">print</span>(<span class="str">"[Listener]"</span>, event)
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Dual-channel transparency</h2>
+        <table class="tbl">
+          <thead><tr><th>Source</th><th>Channel</th><th>Guaranteed</th></tr></thead>
+          <tbody>
+            <tr><td><code>broadcast:Emit()</code></td><td>UnreliableRemoteEvent</td><td>✗</td></tr>
+            <tr><td><code>app:Push()</code></td><td>RemoteEvent</td><td>✓</td></tr>
+          </tbody>
+        </table>
+        <p>Both arrive at the same <code>listener:On(event)</code> handler. You don't need separate handlers for reliable vs unreliable events — Listener routes them automatically by source.</p>
+
+        <h2>Destroy</h2>
+        <div class="sig">listener:<span class="fn">Destroy</span>()</div>
+        <p>Removes all subscriptions and disconnects both RemoteEvent listeners.</p>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./broadcast.html">Broadcast</a> — server-side unreliable emitter &nbsp;·&nbsp;
+          <a href="./app.html">App Push</a> — server-side reliable push &nbsp;·&nbsp;
+          <a href="./network.html">Network</a> — request/response (separate from events) &nbsp;·&nbsp;
+          <a href="./examples-gun.html">Gun Example</a> — hit FX via listener &nbsp;·&nbsp;
+          <a href="./examples-streaming.html">Streaming Example</a> — position updates via listener
+        </p>
+
+      </section>
+    </main>
+  </div>
+</body>
+</html>

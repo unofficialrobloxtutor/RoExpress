@@ -1,0 +1,91 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Broadcast — RoExpress Docs</title>
+  <meta name="description" content="RoExpress Broadcast module: unreliable server-to-client fire-and-forget events. Per-player, all-players, or subset. 900-byte limit.">
+  <meta name="keywords" content="roblox, luau, roexpress, broadcast, unreliable, fire, emit, server push, event">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/broadcast/">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/broadcast/">
+  <meta property="og:title" content="Broadcast — RoExpress Docs">
+  <meta property="og:description" content="Unreliable server-to-client fire-and-forget events. 900-byte limit. Received by Listener:On().">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Server API</div>
+        <h1>Broadcast</h1>
+        <p class="lead">Server-to-client unreliable events. Use Broadcast for high-frequency updates where an occasional dropped frame is acceptable — damage numbers, movement indicators, visual effects. Use <a href="./app.html">App Push</a> for guaranteed delivery.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> broadcast <span class="op">=</span> RoExpress(<span class="str">"Broadcast"</span>)</code></pre>
+
+        <h2>API</h2>
+        <div class="sig">broadcast:<span class="fn">Emit</span>(player, event, data)</div>
+        <div class="sig">broadcast:<span class="fn">EmitAll</span>(event, data)</div>
+        <div class="sig">broadcast:<span class="fn">EmitTo</span>(players, event, data)</div>
+        <table class="tbl">
+          <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>player</code></td><td>Player</td><td>Target player for <code>Emit</code></td></tr>
+            <tr><td><code>players</code></td><td><code>{Player}</code></td><td>Target subset for <code>EmitTo</code></td></tr>
+            <tr><td><code>event</code></td><td>string</td><td>Event name — matched by <code>listener:On(event)</code></td></tr>
+            <tr><td><code>data</code></td><td>any</td><td>Payload. Serialised over UnreliableRemoteEvent. Must be ≤ 900 bytes.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Receiving on the client</h2>
+        <p>Broadcast events are received by <a href="./listener.html">Listener</a>:</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Server</span>
+broadcast:<span class="fn">EmitAll</span>(<span class="str">"hit"</span>, { dmg <span class="op">=</span> <span class="num">35</span>, pos <span class="op">=</span> hit.Position })
+
+<span class="cm">-- Client</span>
+<span class="kw">local</span> listener <span class="op">=</span> RoExpress(<span class="str">"Listener"</span>)
+listener:<span class="fn">On</span>(<span class="str">"hit"</span>, <span class="kw">function</span>(data)
+    <span class="fn">spawnDamageNumber</span>(data.pos, data.dmg)
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Reliability</h2>
+        <table class="tbl">
+          <thead><tr><th>Feature</th><th>Broadcast</th><th>App Push</th></tr></thead>
+          <tbody>
+            <tr><td>Transport</td><td>UnreliableRemoteEvent</td><td>RemoteEvent</td></tr>
+            <tr><td>Guaranteed delivery</td><td>✗</td><td>✓</td></tr>
+            <tr><td>In-order delivery</td><td>✗</td><td>✓</td></tr>
+            <tr><td>Payload limit</td><td>900 bytes</td><td>Roblox standard</td></tr>
+            <tr><td>Use case</td><td>High-frequency, lossy OK</td><td>Critical events</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Rate limiting</h2>
+        <p>Broadcast shares the global <a href="./tokenbucket.html">TokenBucket</a>. Large volumes of emits within a frame are automatically throttled. If you need per-event limits, use a <a href="./port.html">Port</a> with its own TokenBucket settings.</p>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./listener.html">Listener</a> — client-side receiver &nbsp;·&nbsp;
+          <a href="./app.html">App Push</a> — guaranteed reliable delivery &nbsp;·&nbsp;
+          <a href="./tokenbucket.html">TokenBucket</a> — rate limiting &nbsp;·&nbsp;
+          <a href="./examples-gun.html">Gun Example</a> — Broadcast for hit FX &nbsp;·&nbsp;
+          <a href="./examples-streaming.html">Streaming Example</a> — Broadcast for position fan-out
+        </p>
+
+      </section>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Commands Example — RoExpress Docs</title>
+  <meta name="description" content="RoExpress Admin Commands example: route-level auth via middleware, typed boolean and number params, push-based announcements.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/ex-admin.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/ex-admin.html">
+  <meta property="og:title" content="Admin Commands Example — RoExpress Docs">
+  <meta property="og:description" content="Route-scoped auth middleware, typed boolean/number params, push announcements.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Example</div>
+        <h1>Admin Commands</h1>
+        <p class="lead">Route-level auth via middleware, typed boolean and number params, push-based announcements.</p>
+
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> ADMINS <span class="op">=</span> { [<span class="num">123456789</span>] = <span class="kw">true</span> }
+
+app:<span class="fn">Use</span>(<span class="str">"admin-guard"</span>, <span class="kw">function</span>(Player, Payload)
+    <span class="kw">if</span> Payload.route:<span class="fn">match</span>(<span class="str">"^admin/"</span>) <span class="kw">and not</span> ADMINS[Player.UserId] <span class="kw">then</span>
+        <span class="kw">return false</span>  <span class="cm">-- 403</span>
+    <span class="kw">end</span>
+<span class="kw">end</span>)
+
+app:<span class="fn">Post</span>(<span class="str">"admin/kick/:userId=number"</span>, <span class="kw">function</span>(Player, Payload, req, res)
+    <span class="kw">local</span> target <span class="op">=</span> game.Players:<span class="fn">GetPlayerByUserId</span>(req.params.userId)
+    <span class="kw">if not</span> target <span class="kw">then</span> res:<span class="fn">Status</span>(<span class="num">404</span>):<span class="fn">Error</span>(<span class="str">"Not in server"</span>); <span class="kw">return end</span>
+    target:<span class="fn">Kick</span>(req.data <span class="kw">and</span> req.data.reason or <span class="str">"Kicked"</span>)
+    res:<span class="fn">Send</span>({ kicked = target.Name })
+<span class="kw">end</span>)
+
+app:<span class="fn">Post</span>(<span class="str">"admin/god/:userId=number/:state=boolean"</span>, <span class="kw">function</span>(Player, Payload, req, res)
+    <span class="cm">-- req.params.state is already a boolean, req.params.userId already a number</span>
+    app:<span class="fn">Push</span>(game.Players:<span class="fn">GetPlayerByUserId</span>(req.params.userId), <span class="str">"admin.god"</span>, { enabled = req.params.state })
+    res:<span class="fn">Send</span>({ ok = <span class="kw">true</span> })
+<span class="kw">end</span>)
+
+app:<span class="fn">Post</span>(<span class="str">"admin/announce"</span>, <span class="kw">function</span>(Player, Payload, req, res)
+    app:<span class="fn">PushAll</span>(<span class="str">"admin.announce"</span>, { message = req.data.message, from = Player.Name })
+    res:<span class="fn">Send</span>({ ok = <span class="kw">true</span> })
+<span class="kw">end</span>)</code></pre>
+
+        <h2>What this demonstrates</h2>
+        <table class="tbl">
+          <thead><tr><th>Pattern</th><th>Detail</th></tr></thead>
+          <tbody>
+            <tr><td>Route-scoped middleware</td><td><code>Payload.route:match("^admin/")</code> — guard only admin routes</td></tr>
+            <tr><td>Typed :number param</td><td><code>:userId=number</code> — arrives as a Lua number</td></tr>
+            <tr><td>Typed :boolean param</td><td><code>:state=boolean</code> — "true"/"false" coerced to boolean</td></tr>
+            <tr><td>Targeted push</td><td><code>app:Push(player, ...)</code> — one specific player</td></tr>
+            <tr><td>Broadcast push</td><td><code>app:PushAll("admin.announce")</code> — all players</td></tr>
+          </tbody>
+        </table>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./app.html">App</a> — middleware, push &nbsp;·&nbsp;
+          <a href="./router.html">Router</a> — typed params &nbsp;·&nbsp;
+          <a href="./guide-middleware.html">Middleware Guide</a> — route-scoped guards &nbsp;·&nbsp;
+          <a href="./guides-auth.html">Authentication Guide</a> — full auth middleware patterns
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

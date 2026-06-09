@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MVC Pattern — RoExpress Docs</title>
+  <meta name="description" content="Structure RoExpress with a Model-View-Controller pattern: PlayerModel handles data, ShopController handles routes, Bridge wires them together without coupling.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/guide-mvc.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/guide-mvc.html">
+  <meta property="og:title" content="MVC Pattern — RoExpress Docs">
+  <meta property="og:description" content="PlayerModel + ShopController + Bridge — MVC without coupling.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Guide</div>
+        <h1>MVC Pattern</h1>
+        <p class="lead">RoExpress maps onto MVC cleanly: models own data, controllers own routes, the Bridge decouples them without shared imports.</p>
+
+        <h2>Folder layout</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>ServerScriptService/
+  Server/
+    Models/
+      PlayerModel.luau
+    Controllers/
+      ShopController.luau
+    App.luau         ← creates App, wires controllers</code></pre>
+
+        <h2>PlayerModel.luau</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Players <span class="op">=</span> game:<span class="fn">GetService</span>(<span class="str">"Players"</span>)
+<span class="kw">local</span> DS      <span class="op">=</span> game:<span class="fn">GetService</span>(<span class="str">"DataStoreService"</span>):<span class="fn">GetDataStore</span>(<span class="str">"v1"</span>)
+<span class="kw">local</span> bridge  <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Bridge"</span>)
+<span class="kw">local</span> cache   <span class="op">=</span> {}
+<span class="kw">local</span> M       <span class="op">=</span> {}
+
+<span class="kw">function</span> M.<span class="fn">Get</span>(userId)     <span class="kw">return</span> cache[userId] <span class="kw">end</span>
+<span class="kw">function</span> M.<span class="fn">AddCoins</span>(userId, amount)
+    <span class="kw">local</span> d <span class="op">=</span> cache[userId]; <span class="kw">if not</span> d <span class="kw">then return end</span>
+    d.coins <span class="op">+=</span> amount
+    bridge.<span class="fn">Fire</span>(<span class="str">"player.coins.changed"</span>, { userId = userId, coins = d.coins })
+<span class="kw">end</span>
+
+Players.PlayerAdded:<span class="fn">Connect</span>(<span class="kw">function</span>(p)
+    <span class="kw">local</span> ok, d <span class="op">=</span> <span class="fn">pcall</span>(<span class="kw">function</span>() <span class="kw">return</span> DS:<span class="fn">GetAsync</span>(p.UserId) <span class="kw">end</span>)
+    cache[p.UserId] <span class="op">=</span> ok <span class="kw">and</span> d or { coins = <span class="num">0</span>, level = <span class="num">1</span> }
+    bridge.<span class="fn">Fire</span>(<span class="str">"player.loaded"</span>, p)
+<span class="kw">end</span>)
+Players.PlayerRemoving:<span class="fn">Connect</span>(<span class="kw">function</span>(p)
+    <span class="fn">pcall</span>(<span class="kw">function</span>() DS:<span class="fn">SetAsync</span>(p.UserId, cache[p.UserId]) <span class="kw">end</span>)
+    cache[p.UserId] <span class="op">=</span> <span class="kw">nil</span>
+<span class="kw">end</span>)
+
+<span class="kw">return</span> M</code></pre>
+
+        <h2>ShopController.luau</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> PlayerModel <span class="op">=</span> <span class="fn">require</span>(Models.PlayerModel)
+<span class="kw">local</span> catalogue  <span class="op">=</span> { sword = { price = <span class="num">50</span> }, shield = { price = <span class="num">75</span> } }
+<span class="kw">local</span> M <span class="op">=</span> {}
+
+<span class="kw">function</span> M.<span class="fn">Register</span>(app)
+    app:<span class="fn">Get</span>(<span class="str">"shop/catalogue"</span>, <span class="kw">function</span>(P, _, req, res)
+        res:<span class="fn">Send</span>(catalogue)
+    <span class="kw">end</span>)
+
+    app:<span class="fn">Post</span>(<span class="str">"shop/buy"</span>, <span class="kw">function</span>(Player, _, req, res)
+        <span class="kw">local</span> item <span class="op">=</span> catalogue[req.data <span class="kw">and</span> req.data.id]
+        <span class="kw">if not</span> item <span class="kw">then</span> res:<span class="fn">Status</span>(<span class="num">404</span>):<span class="fn">Error</span>(<span class="str">"Not found"</span>); <span class="kw">return end</span>
+        <span class="kw">local</span> d <span class="op">=</span> PlayerModel.<span class="fn">Get</span>(Player.UserId)
+        <span class="kw">if</span> d.coins <span class="op">&lt;</span> item.price <span class="kw">then</span> res:<span class="fn">Status</span>(<span class="num">400</span>):<span class="fn">Error</span>(<span class="str">"Insufficient"</span>); <span class="kw">return end</span>
+        PlayerModel.<span class="fn">AddCoins</span>(Player.UserId, <span class="op">-</span>item.price)
+        res:<span class="fn">Send</span>({ ok = <span class="kw">true</span>, remaining = PlayerModel.<span class="fn">Get</span>(Player.UserId).coins })
+    <span class="kw">end</span>)
+<span class="kw">end</span>
+
+<span class="kw">return</span> M</code></pre>
+
+        <h2>App.luau — wire it together</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> app            <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"App"</span>)
+<span class="kw">local</span> ShopController <span class="op">=</span> <span class="fn">require</span>(Controllers.ShopController)
+ShopController.<span class="fn">Register</span>(app)
+
+<span class="cm">-- push data once model fires loaded</span>
+<span class="kw">local</span> bridge <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Bridge"</span>)
+bridge.<span class="fn">Bind</span>(<span class="str">"player.loaded"</span>, <span class="kw">function</span>(player)
+    app:<span class="fn">Push</span>(player, <span class="str">"player.data"</span>, PlayerModel.<span class="fn">Get</span>(player.UserId))
+<span class="kw">end</span>)</code></pre>
+
+        <div class="cl tip"><strong>Decoupling rule.</strong> Controllers never import each other — only models and Bridge. This means you can add a new controller without touching any existing file.</div>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./app.html">App</a> &nbsp;·&nbsp;
+          <a href="./bridge.html">Bridge</a> — decoupling event bus &nbsp;·&nbsp;
+          <a href="./push.html">Server Push</a> &nbsp;·&nbsp;
+          <a href="./ex-playerdata.html">Player Data</a> — flat version of this pattern &nbsp;·&nbsp;
+          <a href="./ex-shop.html">Shop</a> — flat version
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

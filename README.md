@@ -3,7 +3,7 @@
 A type-safe, rate-limited, Express.js-style networking framework for Roblox.
 
 > **Author:** DeathToTheStadium
-> **Version:** 2.2.0
+> **Version:** 2.4.0
 > **License:** MIT
 > **Docs:** https://roexpress.dev
 
@@ -41,9 +41,14 @@ RoExpress
 ├── Listener       client  — broadcast + reliable push
 ├── Bridge         shared  — internal event bus
 ├── Tamper         server  — exploit detection
-├── Codec          shared  — LZ77 buffer compression
+├── Codec          shared  — LZ77 + LZH (Deflate) compression (folder)
+│   ├── LZ77               — sliding-window byte compression
+│   └── LZH                — Deflate-compatible entropy coding
 ├── Port           server  — named isolated pipelines
-├── Stream         shared  — 60hz binary FPS streaming
+├── Stream         shared  — schema-defined typed binary channels (folder)
+│   ├── Types              — 20 built-in wire types + custom extension
+│   ├── Schema             — compile-time field offsets, pack/unpack, delta
+│   └── Channel            — channel instance, rate limiting, sequence numbers
 ├── TypeCoercer    shared  — type serialisation utility
 ├── Promise        client  — chainable async Network API
 ├── TokenBucket    shared  — rate limiter (used internally)
@@ -58,7 +63,7 @@ RoExpress
 
 ```toml
 [dependencies]
-RoExpress = "unofficialrobloxtutor/roexpress@2.2.0"
+RoExpress = "unofficialrobloxtutor/roexpress@2.4.0"
 ```
 
 ```bash
@@ -117,8 +122,20 @@ app:Use("logger", function(Player, Payload)
 end)
 
 -- typed param — req.params.userId is already a Lua number
-app:Get("player/:userId=number", function(Player, Payload, req, res)
+app:Get("player/:userId=number", function(req, res)
     res:Send({ userId = req.params.userId })
+end)
+
+-- update a record — returns status only, no body
+app:Put("player/:userId=number/name", function(req, res)
+    -- update logic here
+    res:Status(200):Send(true)
+end)
+
+-- delete a record — returns status only, no body
+app:Delete("player/:userId=number", function(req, res)
+    -- delete logic here
+    res:Status(204):Send()
 end)
 
 -- compressed response — best on large tables (>2kb)
@@ -144,6 +161,16 @@ network:Get("player/123", nil, function(res)
     print(res.data.userId)
 end)
 
+-- PUT — update, expects status only back
+network:Put("player/123/name", { name = "NewName" }, function(res)
+    print(res.status) -- 200
+end)
+
+-- DELETE — remove, expects status only back
+network:Delete("player/123", nil, function(res)
+    print(res.status) -- 204
+end)
+
 -- GET with Promise
 network:GetAsync("player/123")
     :Then(function(res) print(res.data.userId) end)
@@ -167,7 +194,7 @@ end)
 | `RoExpress("Listener")` | Client only | Listener instance |
 | `RoExpress("Bridge")` | Both | Shared singleton event bus |
 | `RoExpress("Tamper")` | Server only | Exploit detection singleton |
-| `RoExpress("Stream")` | Both | 60hz binary FPS streaming singleton |
+| `RoExpress("Stream")` | Both | Schema-defined typed binary channel singleton |
 | `RoExpress("TypeCoercer")` | Both | Type serialisation utility |
 | `RoExpress("Promise")` | Client only | Promise factory |
 | `RoExpress("Base64")` | Both | Base64 utility |
@@ -189,13 +216,38 @@ local app = RoExpress("App")
 ```lua
 app:Get(route, handler, options?)
 app:Post(route, handler, options?)
+app:Put(route, handler, options?)
+app:Delete(route, handler, options?)
 ```
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `route` | `string` | Supports typed params, wildcards, globs, inline constraints |
-| `handler` | `RouteHandler` | `(Player, Payload, req, res) → ()` |
-| `options.compress` | `boolean?` | Enable LZ77 compression on the response |
+| `handler` | `function` | See handler signatures below |
+| `options.compress` | `boolean?` | Enable LZ77 compression on the response (GET/POST only) |
+
+#### Handler Signatures
+
+Two calling conventions are supported. RoExpress detects which one to use automatically based on the number of parameters.
+
+```lua
+-- Modern (recommended)
+function(req, res) end
+
+-- Legacy
+function(Player, Payload, req, res) end
+```
+
+In the modern signature `req.player` and `req.raw` are populated automatically. In the legacy signature `Player` and `Payload` are passed directly as the first two arguments.
+
+#### Method Conventions
+
+| Method | Has body? | Response | Enforced |
+|--------|-----------|----------|----------|
+| `GET` | optional | data | — |
+| `POST` | yes | encoded data (Base64 / Deflate) | — |
+| `PUT` | yes | `boolean?` / `nil` only | table body is warned + stripped |
+| `DELETE` | optional | `boolean?` / `nil` only | table body is warned + stripped |
 
 #### Route Syntax
 
@@ -220,12 +272,14 @@ app:Post(route, handler, options?)
 | `req.captures` | `{any}` | Positional wildcard/glob captures |
 | `req.query` | `{[string]: string}` | Query string params e.g. `?limit=5` |
 | `req.data` | `any` | Raw payload from client |
+| `req.player` | `Player?` | The requesting player (modern signature only) |
+| `req.raw` | `Payload?` | Full raw payload table (modern signature only) |
 
 #### res Object
 
 | Method | Description |
 |--------|-------------|
-| `res:Send(data)` | Send success response. Callable once. |
+| `res:Send(data?)` | Send success response. PUT/DELETE accept `boolean?` or `nil` only — passing a table is warned and stripped. Callable once. |
 | `res:Error(message)` | Send error response. Callable once. |
 | `res:Status(code)` | Set status code. Chainable. |
 
@@ -283,15 +337,19 @@ local network = RoExpress("Network")
 ```lua
 network:Get(route, data?, callback?, timeout?)
 network:Post(route, data, callback?, timeout?)
+network:Put(route, data, callback?, timeout?)
+network:Delete(route, data?, callback?, timeout?)
 ```
 
-Callbacks and timeout are optional. Omit the callback for fire-and-forget. Both return a `requestId`.
+Callbacks and timeout are optional. Omit the callback to block the current thread until the response arrives. All return a `requestId`.
 
 #### Promises
 
 ```lua
-network:GetAsync(route, data?, timeout?)   -- returns Promise
-network:PostAsync(route, data, timeout?)   -- returns Promise
+network:GetAsync(route, data?, timeout?)    -- returns Promise
+network:PostAsync(route, data, timeout?)    -- returns Promise
+network:PutAsync(route, data, timeout?)     -- returns Promise
+network:DeleteAsync(route, data?, timeout?) -- returns Promise
 ```
 
 ```lua
@@ -310,6 +368,7 @@ network:GetAsync("leaderboard/top")
 | `res.status` | `number` | HTTP-style status code |
 | `res.data` | `any?` | Payload — decompressed automatically if compressed |
 | `res.message` | `string?` | Error message (nil on success) |
+| `res.compressed` | `boolean?` | True if the payload was Deflate-compressed |
 
 #### Other
 
@@ -408,54 +467,159 @@ tamper.SetThresholds(config)
 ```lua
 local Codec = require(script.Parent.Codec)
 
-Codec.Compress(data)       -- any → base64 string
-Codec.Decompress(str)      -- base64 string → any
-Codec.IsCompressed(str)    -- → boolean
+Codec.Compress(data)        -- any → LZ77 base64 string  (compat alias)
+Codec.Deflate(data)         -- any → LZH (Deflate) base64 string
+Codec.Decompress(str)       -- base64 string → any  (auto-detects LZ77 vs LZH via magic bytes)
+Codec.IsCompressed(str)     -- → boolean
 ```
 
-LZ77 sliding-window compression over Roblox's native `buffer` type. Opt-in per route via `{ compress = true }`. Decompression is automatic on the client — transparent to your callback.
+Two compression algorithms over Roblox's native `buffer` type:
 
-Typical savings: 30–60% on JSON. Compression adds overhead — measure before enabling on small payloads (<500 bytes).
+| Algorithm | Method | Best for |
+|-----------|--------|----------|
+| LZ77 | `Codec.Compress` | General repetitive data |
+| LZH (Deflate) | `Codec.Deflate` | Larger payloads, better ratio |
+
+Opt-in per route via `{ compress = true }`. Decompression is automatic on the client — transparent to your callback. `Codec.Decompress` auto-detects which algorithm was used via magic bytes.
+
+Typical savings: 30–60% on JSON. Not worth enabling under ~500 bytes.
 
 ---
 
 ### Stream (Shared)
 
 ```lua
-local stream = RoExpress("Stream")
+local Stream = RoExpress.Stream
 ```
 
-60hz binary state streaming over raw Roblox buffers. No JSON, no Base64.
+Schema-defined typed binary channels over raw Roblox buffers. No JSON, no Base64. Both server and client define identical channels — no manual numbering, no ordering dependency.
 
-| Packet | Size | vs JSON |
-|--------|------|---------|
-| Player state | 21 bytes | ~90% smaller |
-| Projectile | 18 bytes | ~85% smaller |
-| Hit | 10 bytes | ~87% smaller |
-| Weapon state | 3 bytes | ~92% smaller |
+All channels are multiplexed over two shared remotes (`StreamUnreliable` / `StreamReliable`).
 
-#### Server
+#### Quick Start
 
 ```lua
-stream.EnableLagCompensation({ windowMs = 200, tickRate = 60 })
-stream.OnState(fn)           -- receive player state updates
-stream.OnHit(fn)             -- receive validated hit reports
-stream.OnProjectile(fn)
-stream.OnWeapon(fn)
-stream.Broadcast(states)     -- push all states in one buffer
-stream.BroadcastTo(players, states)
-stream.ConfirmHit(player, hit)
+-- Shared — define the same channels on server and client
+local move = Stream.Channel("playerMove", Stream.Schema({
+    { "pos",   "Vector3" },
+    { "vel",   "Vector3" },
+    { "state", { "flags", "jumping", "sprinting" } },
+}))
+
+Stream.Init()  -- call once, after all Channel() definitions
+
+-- Server: subscribe
+move:On(function(data, player)
+    print(player.Name, data.pos, data.state.jumping)
+end)
+
+-- Client: send
+move:Send({
+    pos   = hrp.Position,
+    vel   = hrp.AssemblyLinearVelocity,
+    state = { jumping = false, sprinting = true },
+})
 ```
 
-#### Client
+> **`Stream.Channel()` must be called before `Stream.Init()`.** Define all channels first, then init once.
+
+#### Channel Options
 
 ```lua
-stream.SendState(state)
-stream.SendHit(hit)
-stream.SendProjectile(proj)
-stream.SendWeapon(weapon)
-stream.OnWorld(fn)
-stream.OnHitConfirmed(fn)
+Stream.Channel(name, schema, {
+    reliable      = false,  -- true = RemoteEvent, false = UnreliableRemoteEvent (default)
+    maxRate       = 30,     -- max incoming fires/sec per player (server-side)
+    onDrop        = fn,     -- called when a packet is rate-limited
+    deltaInterval = 10,     -- force a full resync every N delta packets (default 10)
+})
+```
+
+#### Server Send API
+
+```lua
+channel:SendTo(player, data)           -- one player
+channel:SendExcept(except, data)       -- all players except one
+channel:Broadcast(data)                -- all clients (FireAllClients)
+channel:SendToList(players, data)      -- specific list
+channel:SendToDelta(player, data)      -- delta-compressed to one player
+channel:BroadcastDelta(data)           -- delta-compressed to all
+```
+
+#### Client Send API
+
+```lua
+channel:Send(data)   -- fires to server
+```
+
+#### Subscribe API (both sides)
+
+```lua
+local unsub = channel:On(function(data, sender) end)    -- persistent
+local unsub = channel:Once(function(data, sender) end)  -- fires once then removes
+unsub()  -- unsubscribe at any time
+```
+
+#### Built-in Types
+
+| Type | Wire Size | Notes |
+|------|-----------|-------|
+| `u8` / `u16` / `u32` | 1 / 2 / 4 B | Unsigned integers |
+| `i8` / `i16` / `i32` | 1 / 2 / 4 B | Signed integers |
+| `f32` / `f64` | 4 / 8 B | Floats |
+| `bool` | 1 B | |
+| `string` | 2 + len B | u16 length-prefixed — makes schema variable-size |
+| `Vector3` | 12 B | 3× f32 |
+| `Vector2` | 8 B | 2× f32 |
+| `Vector3int16` | 6 B | 3× i16 |
+| `Vector2int16` | 4 B | 2× i16 |
+| `CFrame` | 28 B | Position + quaternion (Shepperd method) |
+| `CFrameLight` | 16 B | Position + Y-yaw only (lightweight) |
+| `Color3` | 3 B | RGB u8 |
+| `Color3float` | 12 B | RGB f32 |
+| `BrickColor` | 2 B | u16 value |
+| `UDim` | 8 B | |
+| `UDim2` | 16 B | |
+| `Rect` | 16 B | |
+| `NumberRange` | 8 B | |
+| `Ray` | 24 B | Origin + Direction as Vector3 pairs |
+| `PhysicalProperties` | 20 B | All 5 fields as f32 |
+| `{ "flags", ... }` | 1 B | Up to 8 named booleans packed into one byte |
+| `{ "enum", EnumType }` | 2 B | EnumItem → u16 value |
+
+#### Delta Compression
+
+Only changed fields are sent. Requires a **fixed-size schema** (no `string` fields).
+
+```lua
+-- Fixed-size — eligible for delta
+local posSchema = Stream.Schema({
+    { "pos",   "Vector3" },
+    { "state", { "flags", "jumping", "sprinting" } },
+})
+
+-- server sends only what changed
+channel:SendToDelta(player, newData)
+channel:BroadcastDelta(newData)
+```
+
+A full packet is forced on the first send and every `deltaInterval` packets to recover from unreliable packet loss.
+
+#### Custom Types
+
+```lua
+Stream.Types.Register("hp", {
+    size  = 2,
+    write = function(buf, offset, value) buffer.writeu16(buf, offset, value) end,
+    read  = function(buf, offset) return buffer.readu16(buf, offset) end,
+})
+```
+
+#### Other
+
+```lua
+Stream.GetChannel(name)    -- returns Channel or nil
+Stream.GetChannels()       -- full registry table
+Stream.Destroy()           -- disconnect remotes and clear state (testing)
 ```
 
 ---
@@ -535,31 +699,57 @@ Client fires request
 
 ---
 
+## Typed Accessors
+
+For full Luau type inference without an explicit annotation, use the typed accessor functions instead of `RoExpress("ModuleName")`:
+
+```lua
+-- Server — inferred as App.Type
+local app = RoExpress.GetApp()
+
+-- Client — inferred as Network.Type
+local net = RoExpress.GetNetwork()
+```
+
+Both return the same cached instance as `RoExpress("App")` / `RoExpress("Network")`. The `__call` and `__index` forms still work — they just return `any`.
+
+---
+
 ## Exported Types
 
 ```lua
 local RoExpress = require(path.RoExpress)
 
-type Payload           = RoExpress.Payload
-type Request           = RoExpress.Request
-type Response          = RoExpress.Response
-type NetworkResponse   = RoExpress.NetworkResponse
+-- Envelope types (forwarded from App / Network — always in sync)
+type Payload         = RoExpress.Payload
+type Request         = RoExpress.Request
+type Response        = RoExpress.Response
+type NetworkPayload  = RoExpress.NetworkPayload
+type NetworkResponse = RoExpress.NetworkResponse
 type BroadcastEnvelope = RoExpress.BroadcastEnvelope
 
-type RouteHandler      = RoExpress.RouteHandler
-type MiddlewareHandler = RoExpress.MiddlewareHandler
-type BroadcastHandler  = RoExpress.BroadcastHandler
-type NetworkCallback   = RoExpress.NetworkCallback
+-- Handler signatures
+type RouteHandlerCompact = RoExpress.RouteHandlerCompact  -- (req, res) -> ()
+type RouteHandlerLegacy  = RoExpress.RouteHandlerLegacy   -- (Player, Payload, req, res) -> ()
+type RouteHandler        = RoExpress.RouteHandler         -- union of both
+type MiddlewareHandler   = RoExpress.MiddlewareHandler
+type BroadcastHandler    = RoExpress.BroadcastHandler
+type NetworkCallback     = RoExpress.NetworkCallback
 
-type App       = RoExpress.App
-type Network   = RoExpress.Network
-type Broadcast = RoExpress.Broadcast
-type Listener  = RoExpress.Listener
-type Router    = RoExpress.Router
-type Codec     = RoExpress.Codec
-type Bridge    = RoExpress.Bridge
-type Tamper    = RoExpress.Tamper
+-- Module instance types (App/Network/Port are the instantiated shapes after .New())
+type App         = RoExpress.App
+type Network     = RoExpress.Network
+type Port        = RoExpress.Port
+type Broadcast   = RoExpress.Broadcast
+type Listener    = RoExpress.Listener
+type Router      = RoExpress.Router
+type Codec       = RoExpress.Codec
+type Bridge      = RoExpress.Bridge
+type Tamper      = RoExpress.Tamper
+type Stream      = RoExpress.Stream
+type TokenBucket = RoExpress.TokenBucket
 
+-- Router sub-types
 type ParamType   = RoExpress.ParamType
 type SegmentKind = RoExpress.SegmentKind
 type MatchResult = RoExpress.MatchResult

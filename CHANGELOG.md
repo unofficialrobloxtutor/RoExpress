@@ -5,6 +5,75 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.4.0] — 2026-06-09
+
+### Added — Stream v3.0 (Breaking — old API fully replaced)
+
+- `Stream.Channel(name, schema, options?)` — define a typed binary channel
+- `Stream.Schema(definition)` — compile schema from ordered field definitions; computes byte offsets at construction time for fixed-size schemas
+- `Stream.Types` — 20 built-in wire types: `u8`, `u16`, `u32`, `i8`, `i16`, `i32`, `f32`, `f64`, `bool`, `string`, `Vector2`, `Vector3`, `Vector2int16`, `Vector3int16`, `CFrame` (quaternion), `CFrameLight` (pos + Y-yaw), `Color3`, `Color3float`, `BrickColor`, `UDim`, `UDim2`, `Rect`, `NumberRange`, `Ray`, `PhysicalProperties`, `flags`, `enum`
+- `Stream.Types.Register(name, typedef)` — register custom wire types
+- Server send API: `channel:SendTo`, `channel:SendExcept`, `channel:Broadcast`, `channel:SendToList`, `channel:SendToDelta`, `channel:BroadcastDelta`
+- Client send API: `channel:Send`
+- Subscribe API: `channel:On(fn)` → unsubFn, `channel:Once(fn)` → unsubFn
+- Delta compression — `SendToDelta` / `BroadcastDelta` — fixed-size schemas only; fields compared at compile-time byte offsets; changed fields packed with a bitmask header
+- Per-channel `maxRate` option + TokenBucket (server-side, client→server direction)
+- Per-channel `onDrop` callback for rate-limited packets
+- Sequence numbers on unreliable channels — stale/duplicate packets are rejected
+- `Stream.GetChannel(name)` — retrieve a channel by name
+- `Stream.GetChannels()` — full channel registry
+- `Stream.Destroy()` — disconnect remotes and reset state (useful for tests)
+- Channel IDs derived from djb2 hash of name — no ordering dependency between server and client registration calls
+- `PlayerRemoving` hook clears per-player sequence, state cache, and delta counters on disconnect
+
+### Added — Typing
+
+- `Payload`, `Request`, `Response` are now `export type` in App.luau — importable directly
+- `NetworkPayload`, `NetworkResponse` are now `export type` in Network.luau
+- Port inner types (`Payload`, `Request`, `Response`, `MiddlewareFn`, `RouteHandler`) are now `export type`
+- `export type RouteHandlerCompact` — `(req, res) -> ()` compact handler form
+- `export type RouteHandlerLegacy` — `(Player, Payload, req, res) -> ()` legacy form
+- `RoExpress.GetApp(): App.Type` — typed server accessor (full inference without annotation)
+- `RoExpress.GetNetwork(): Network.Type` — typed client accessor
+
+### Changed — Typing
+
+- `RoExpress.App`, `RoExpress.Network`, `RoExpress.Port` export types changed from `typeof(require(...))` (module table) to `require(...).Type` (instance shape after `.New()`)
+- `RoExpress.RouteHandler` is now a union of `RouteHandlerCompact | RouteHandlerLegacy`
+- All envelope types in init.luau (`Payload`, `Request`, `Response`, `NetworkResponse`) now forward from their source modules — cannot drift out of sync
+- `RoExpress.NetworkPayload` added (was missing from exported types entirely)
+- `Port.Payload.method` fixed — was missing `"PUT" | "DELETE"`
+
+### Removed — Stream v2 (Breaking)
+
+The old FPS-specific Stream singleton (`stream.OnState`, `stream.SendHit`, `stream.SendProjectile`, `stream.OnWeapon`, `stream.EnableLagCompensation`, `stream.BroadcastTo(players, states)`, etc.) has been removed. Stream is now a general-purpose schema-defined channel system. Rebuild domain-specific packets as named channels with typed schemas.
+
+---
+
+## [2.3.0] — 2026-06-09
+
+### Added
+- `app:Put(route, handler, options?)` — update semantics, status-only response
+- `app:Delete(route, handler, options?)` — remove semantics, status-only response
+- `network:Put(route, data, callback?, timeout?)` — callback and blocking forms
+- `network:Delete(route, data?, callback?, timeout?)` — callback and blocking forms
+- `network:PutAsync(route, data, timeout?)` — Promise form
+- `network:DeleteAsync(route, data?, timeout?)` — Promise form
+- Modern 2-arg handler signature `(req, res)` — detected automatically via `debug.info`
+- `req.player` and `req.raw` populated in modern-signature handlers
+- PUT/DELETE response guard — passing a table to `res:Send()` on these methods warns and strips the body, enforcing status-only responses
+
+### Changed
+- `Payload.method` and `NetworkResponse.method` unions extended to include `"PUT"` and `"DELETE"`
+- `NetworkResponse` type now declares `compressed: boolean?` (was used at runtime but missing from the type)
+- `_pending` entry type now correctly declares `callback?` and `promise?` as both optional
+- `Response.Send` typed as `data: any?` (was `data: any`)
+- `Module:Get` / `Module:Post` handler type loosened to `(...any) -> ()` to cover both calling conventions
+- `Request` type extended with `player: Player?` and `raw: Payload?`
+- `Type` export extended with `_ports: { [string]: any }`
+
+---
+
 ## [2.2.3] — 2026-06-07
 
 ### Fixed

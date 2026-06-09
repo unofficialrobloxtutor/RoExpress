@@ -1,0 +1,160 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gun Framework Example — RoExpress Docs</title>
+  <meta name="description" content="Full gun framework example using RoExpress: Port for combat, Stream for movement, Broadcast for effects, server-side hit validation, rate limiting per weapon.">
+  <meta name="keywords" content="roblox, luau, roexpress, gun, framework, example, combat, port, stream, broadcast, hit validation">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/examples/gun/">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/examples/gun/">
+  <meta property="og:title" content="Gun Framework Example — RoExpress Docs">
+  <meta property="og:description" content="Complete semi-auto rifle with Ports, Stream movement, Broadcast FX, server-side validation.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Example</div>
+        <h1>Gun Framework</h1>
+        <p class="lead">A complete semi-automatic rifle implementation. Server validates hits, <a href="./stream/">Stream</a> syncs player positions at 20 Hz, <a href="./broadcast/">Broadcast</a> fires unreliable hit FX, and the <a href="./port/">combat Port</a> rate limits to the weapon's fire rate.</p>
+
+        <div class="cl new">This example accompanies the <a href="https://www.youtube.com/@unofficialrobloxtutor" target="_blank">YouTube walkthrough</a>. The video shows how to build this from scratch.</div>
+
+        <h2>File structure</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>ServerScriptService/
+  CombatServer.luau      ← Port, hit validation, damage
+  MovementServer.luau    ← Stream subscribe, position tracking
+
+ReplicatedStorage/
+  RoExpress/             ← framework
+  Schemas/
+    Movement.luau        ← shared Stream schema
+
+StarterPlayerScripts/
+  GunClient.luau         ← shoot request, movement send
+  MovementClient.luau    ← Stream send loop
+  FXClient.luau          ← Broadcast hit effects</code></pre>
+
+        <h2>Shared: Movement schema</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- ReplicatedStorage/Schemas/Movement.luau</span>
+<span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">return</span> RoExpress.Stream:<span class="fn">Schema</span>({
+    cframe   <span class="op">=</span> <span class="str">"CFrame"</span>,    <span class="cm">-- 24 bytes with delta</span>
+    velocity <span class="op">=</span> <span class="str">"Vector3"</span>,  <span class="cm">-- 12 bytes</span>
+    health   <span class="op">=</span> <span class="str">"uint8"</span>,    <span class="cm">--  1 byte</span>
+    flags    <span class="op">=</span> <span class="str">"uint8"</span>,    <span class="cm">--  1 byte  (sprinting, crouching, reloading)</span>
+})</code></pre>
+
+        <h2>Server: CombatServer.luau</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress  <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> app        <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
+<span class="kw">local</span> broadcast  <span class="op">=</span> RoExpress(<span class="str">"Broadcast"</span>)
+<span class="kw">local</span> MAX_RANGE  <span class="op">=</span> <span class="num">300</span>
+
+<span class="kw">local function</span> <span class="fn">validateShot</span>(shooter, data)
+    <span class="kw">local</span> target <span class="op">=</span> game.Players:<span class="fn">GetPlayerByUserId</span>(data.targetId)
+    <span class="kw">if not</span> (target <span class="op">and</span> target.Character) <span class="kw">then return nil end</span>
+    <span class="kw">local</span> hrp  <span class="op">=</span> target.Character:FindFirstChild(<span class="str">"HumanoidRootPart"</span>)
+    <span class="kw">if not</span> hrp <span class="kw">then return nil end</span>
+    <span class="kw">local</span> dist <span class="op">=</span> (data.origin <span class="op">-</span> hrp.Position).Magnitude
+    <span class="kw">if</span> dist <span class="op">></span> MAX_RANGE <span class="kw">then return nil end</span>
+    <span class="kw">return</span> target, hrp.Position
+<span class="kw">end</span>
+
+app:<span class="fn">Listen</span>(<span class="str">"combat"</span>, <span class="kw">function</span>(port)
+
+    port:<span class="fn">Post</span>(<span class="str">"shoot"</span>, <span class="kw">function</span>(req, res)
+        <span class="kw">local</span> target, hitPos <span class="op">=</span> <span class="fn">validateShot</span>(req.player, req.data)
+        <span class="kw">if not</span> target <span class="kw">then</span>
+            res:<span class="fn">Send</span>({ hit <span class="op">=</span> <span class="kw">false</span> })
+            <span class="kw">return</span>
+        <span class="kw">end</span>
+        <span class="kw">local</span> hum <span class="op">=</span> target.Character:FindFirstChildOfClass(<span class="str">"Humanoid"</span>)
+        <span class="kw">if</span> hum <span class="kw">then</span>
+            hum.Health <span class="op">-=</span> <span class="num">25</span>
+            broadcast:<span class="fn">EmitAll</span>(<span class="str">"hitFX"</span>, { pos <span class="op">=</span> hitPos, dmg <span class="op">=</span> <span class="num">25</span> })
+        <span class="kw">end</span>
+        res:<span class="fn">Send</span>({ hit <span class="op">=</span> <span class="kw">true</span>, damage <span class="op">=</span> <span class="num">25</span> })
+    <span class="kw">end</span>)
+
+    port:<span class="fn">Post</span>(<span class="str">"reload"</span>, <span class="kw">function</span>(req, res)
+        <span class="cm">-- server-side reload validation could go here</span>
+        res:<span class="fn">Send</span>()
+    <span class="kw">end</span>)
+
+<span class="kw">end</span>, { max <span class="op">=</span> <span class="num">10</span>, refill <span class="op">=</span> <span class="num">8</span>, cost <span class="op">=</span> <span class="num">1</span> })</code></pre>
+
+        <h2>Server: MovementServer.luau</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress    <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> MovSchema    <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.Schemas.Movement)
+<span class="kw">local</span> channel      <span class="op">=</span> RoExpress.Stream:<span class="fn">Channel</span>(<span class="str">"movement"</span>, MovSchema)
+<span class="kw">local</span> playerPos    <span class="op">=</span> {}  <span class="cm">-- { [player] = CFrame }</span>
+
+channel:<span class="fn">Subscribe</span>(<span class="kw">function</span>(player, data)
+    playerPos[player] <span class="op">=</span> data.cframe
+<span class="kw">end</span>)
+
+game.Players.PlayerRemoving:<span class="fn">Connect</span>(<span class="kw">function</span>(p)
+    playerPos[p] <span class="op">=</span> <span class="kw">nil</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Client: GunClient.luau</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress  <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> network    <span class="op">=</span> RoExpress.<span class="fn">GetNetwork</span>()
+<span class="kw">local</span> UserInput  <span class="op">=</span> game:GetService(<span class="str">"UserInputService"</span>)
+<span class="kw">local</span> ammo       <span class="op">=</span> <span class="num">30</span>
+
+UserInput.InputBegan:<span class="fn">Connect</span>(<span class="kw">function</span>(input, gp)
+    <span class="kw">if</span> gp <span class="op">or</span> input.UserInputType <span class="op">~=</span> Enum.UserInputType.MouseButton1 <span class="kw">then return end</span>
+    <span class="kw">if</span> ammo <span class="op"><=</span> <span class="num">0</span> <span class="kw">then return end</span>
+    ammo <span class="op">-=</span> <span class="num">1</span>
+
+    <span class="kw">local</span> targetId <span class="op">=</span> <span class="fn">getAimedPlayerId</span>()  <span class="cm">-- raycast logic</span>
+    network:<span class="fn">Post</span>(<span class="str">"combat/shoot"</span>, {
+        origin   <span class="op">=</span> workspace.CurrentCamera.CFrame.Position,
+        targetId <span class="op">=</span> targetId,
+    }, <span class="kw">function</span>(res)
+        <span class="kw">if</span> res.data.hit <span class="kw">then</span>
+            <span class="fn">showHitmarker</span>()
+        <span class="kw">end</span>
+    <span class="kw">end</span>)
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Client: FXClient.luau</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> listener <span class="op">=</span> RoExpress(<span class="str">"Listener"</span>)
+
+listener:<span class="fn">On</span>(<span class="str">"hitFX"</span>, <span class="kw">function</span>(data)
+    <span class="cm">-- Unreliable — a missed packet just means no particle</span>
+    <span class="fn">spawnBloodParticle</span>(data.pos)
+    <span class="fn">showDamageNumber</span>(data.pos, data.dmg)
+<span class="kw">end</span>)</code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./guides/combat/">Combat Guide</a> — explanation of the architecture &nbsp;·&nbsp;
+          <a href="./port/">Ports</a> &nbsp;·&nbsp;
+          <a href="./stream/">Stream</a> &nbsp;·&nbsp;
+          <a href="./broadcast/">Broadcast</a>
+        </p>
+
+      </section>
+    </main>
+  </div>
+</body>
+</html>

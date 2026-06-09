@@ -1,0 +1,156 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App — RoExpress Docs</title>
+  <meta name="description" content="RoExpress App module: GET/POST/PUT/DELETE routing, middleware pipeline, server push, typed params, rate limiting. Server-side only.">
+  <meta name="keywords" content="roblox, luau, roexpress, app, routing, middleware, server push, typed params, get, post, put, delete, rate limiting">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/app/">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/app/">
+  <meta property="og:title" content="App — RoExpress Docs">
+  <meta property="og:description" content="GET/POST/PUT/DELETE routing, middleware, server push. Server-side.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "RoExpress App",
+    "description": "Server-side routing, middleware, and server push for RoExpress.",
+    "url": "https://roexpress.dev/docs/app/",
+    "isPartOf": { "@type": "WebSite", "name": "RoExpress", "url": "https://roexpress.dev" }
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Server API</div>
+        <h1>App</h1>
+        <p class="lead">Handles all incoming client requests. Owns its own Router and TokenBucket instance — no shared global state.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> app <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()   <span class="cm">-- typed</span>
+<span class="cm">-- or: RoExpress("App")          -- returns any</span></code></pre>
+
+        <h2>Routing</h2>
+        <div class="sig"><span class="pill p-get">GET</span> app:<span class="fn">Get</span>(route, handler, options?)</div>
+        <div class="sig"><span class="pill p-post">POST</span> app:<span class="fn">Post</span>(route, handler, options?)</div>
+        <div class="sig"><span class="pill p-put">PUT</span> app:<span class="fn">Put</span>(route, handler, options?)</div>
+        <div class="sig"><span class="pill p-delete">DELETE</span> app:<span class="fn">Delete</span>(route, handler, options?)</div>
+        <table class="tbl">
+          <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>route</code></td><td>string</td><td>Supports typed params, wildcards, globs, inline constraints. See <a href="./router.html">Router</a>.</td></tr>
+            <tr><td><code>handler</code></td><td>function</td><td>Modern: <code>(req, res) → ()</code> &nbsp;·&nbsp; Legacy: <code>(Player, Payload, req, res) → ()</code>. Detected automatically by parameter count.</td></tr>
+            <tr><td><code>options.compress</code></td><td>boolean?</td><td>Enable LZ77 compression on the response. GET/POST only. Default false.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Handler signatures</h2>
+        <p>Two calling conventions are supported. RoExpress detects which one to use automatically via <code>debug.info</code>.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Modern (recommended) — req.player and req.raw are populated</span>
+app:<span class="fn">Get</span>(<span class="str">"player/:id=number"</span>, <span class="kw">function</span>(req, res)
+    res:<span class="fn">Send</span>({ id <span class="op">=</span> req.params.id, player <span class="op">=</span> req.player.Name })
+<span class="kw">end</span>)
+
+<span class="cm">-- Legacy — Player and Payload passed as first two args</span>
+app:<span class="fn">Get</span>(<span class="str">"player/:id=number"</span>, <span class="kw">function</span>(Player, Payload, req, res)
+    res:<span class="fn">Send</span>({ id <span class="op">=</span> req.params.id })
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Method conventions</h2>
+        <table class="tbl">
+          <thead><tr><th>Method</th><th>Has body?</th><th>Response</th><th>Enforced</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pill p-get">GET</span></td><td>optional</td><td>data</td><td>—</td></tr>
+            <tr><td><span class="pill p-post">POST</span></td><td>yes</td><td>encoded data (Base64 / Deflate)</td><td>—</td></tr>
+            <tr><td><span class="pill p-put">PUT</span></td><td>yes</td><td><code>boolean?</code> / <code>nil</code></td><td>table body warned + stripped</td></tr>
+            <tr><td><span class="pill p-delete">DELETE</span></td><td>optional</td><td><code>boolean?</code> / <code>nil</code></td><td>table body warned + stripped</td></tr>
+          </tbody>
+        </table>
+
+        <h2>req object</h2>
+        <table class="tbl">
+          <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>req.params</code></td><td><code>{[string]: any}</code></td><td>Named route params, coerced to declared type</td></tr>
+            <tr><td><code>req.captures</code></td><td><code>{any}</code></td><td>Positional wildcard / glob captures</td></tr>
+            <tr><td><code>req.query</code></td><td><code>{[string]: string}</code></td><td>Query string params e.g. <code>?limit=5</code></td></tr>
+            <tr><td><code>req.data</code></td><td><code>any</code></td><td>Raw payload from client</td></tr>
+            <tr><td><code>req.player</code></td><td><code>Player?</code></td><td>The requesting player. Populated in modern <code>(req, res)</code> handlers only.</td></tr>
+            <tr><td><code>req.raw</code></td><td><code>Payload?</code></td><td>Full raw payload table. Populated in modern handlers only.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>res object</h2>
+        <table class="tbl">
+          <thead><tr><th>Method</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>res:Send(data?)</code></td><td>Send <span class="pill p-ok">200</span> success response. PUT/DELETE accept <code>boolean?</code> or <code>nil</code> only — passing a table is warned and stripped. Callable once.</td></tr>
+            <tr><td><code>res:Error(message)</code></td><td>Send <span class="pill p-err">500</span> error response. Callable once.</td></tr>
+            <tr><td><code>res:Status(code)</code></td><td>Set HTTP-style status code. Chainable — <code>res:Status(204):Send()</code></td></tr>
+          </tbody>
+        </table>
+
+        <h2>Middleware</h2>
+        <div class="sig">app:<span class="fn">Use</span>(id, fn) &nbsp;·&nbsp; app:<span class="fn">Unuse</span>(id)</div>
+        <p>Return <code>false</code> to block with 403. Throw to send 500. Return nothing to continue. Middleware runs in registration order before every handler.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>app:<span class="fn">Use</span>(<span class="str">"auth"</span>, <span class="kw">function</span>(Player, Payload)
+    <span class="kw">if not</span> <span class="fn">isAuth</span>(Player) <span class="kw">then return false end</span>
+<span class="kw">end</span>)
+
+app:<span class="fn">Use</span>(<span class="str">"logger"</span>, <span class="kw">function</span>(Player, Payload)
+    <span class="fn">print</span>(Player.Name, Payload.method, Payload.route)
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Server push</h2>
+        <div class="sig"><span class="pill p-push">PUSH</span> app:<span class="fn">Push</span>(player, event, data)</div>
+        <div class="sig"><span class="pill p-push">PUSH</span> app:<span class="fn">PushAll</span>(event, data)</div>
+        <div class="sig"><span class="pill p-push">PUSH</span> app:<span class="fn">PushTo</span>(players, event, data)</div>
+        <p>Reliable server-to-client events over the RemoteEvent. Received by <code>listener:On(event)</code>. Guaranteed delivery — does not use the unreliable channel.</p>
+
+        <h2>Named ports</h2>
+        <div class="sig">app:<span class="fn">Listen</span>(name, callback, settings?)</div>
+        <div class="sig">app:<span class="fn">GetPort</span>(name) → Port</div>
+        <p>Create an isolated pipeline with its own RemoteEvent, Router, and TokenBucket. See <a href="./port.html">Ports</a>.</p>
+
+        <h2>Other</h2>
+        <div class="sig">app:<span class="fn">OnParamError</span>(fn)</div>
+        <p>Called when a typed route param fails coercion. If not registered, failures send 400 automatically.</p>
+        <div class="sig">app:<span class="fn">Destroy</span>()</div>
+        <p>Disconnects the remote and destroys all registered ports.</p>
+        <p><code>app.TokenBucket</code> — direct access to the rate limiter instance. See <a href="./tokenbucket.html">TokenBucket</a>.</p>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./network.html">Network</a> — client-side counterpart &nbsp;·&nbsp;
+          <a href="./router.html">Router</a> — route pattern syntax &nbsp;·&nbsp;
+          <a href="./pipeline.html">Request Pipeline</a> — how requests flow &nbsp;·&nbsp;
+          <a href="./port.html">Ports</a> — isolated sub-channels &nbsp;·&nbsp;
+          <a href="./broadcast.html">Broadcast</a> — unreliable server push &nbsp;·&nbsp;
+          <a href="./tamper.html">Tamper</a> — exploit detection &nbsp;·&nbsp;
+          <a href="./tokenbucket.html">TokenBucket</a> — rate limiting &nbsp;·&nbsp;
+          <a href="./types.html">Exported Types</a> — RouteHandler, Request, Response &nbsp;·&nbsp;
+          <a href="./guides-auth.html">Auth Guide</a> — middleware patterns &nbsp;·&nbsp;
+          <a href="./guides-combat.html">Combat Guide</a> — Port usage in practice
+        </p>
+
+      </section>
+    </main>
+  </div>
+</body>
+</html>

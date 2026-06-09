@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Changelog — RoExpress Docs</title>
+  <meta name="description" content="Full version history for RoExpress: v2.3, v2.2.3, v2.2, v2.1, v2.0, v1.6 and earlier.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/updates.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/updates.html">
+  <meta property="og:title" content="Changelog — RoExpress Docs">
+  <meta property="og:description" content="Full version history: v2.3, v2.2.3, v2.2, v2.1, v2.0, v1.6.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Reference</div>
+        <h1>Changelog</h1>
+        <p class="lead">Full version history for RoExpress. Breaking changes are marked <span class="pill p-breaking">breaking</span>.</p>
+
+        <div class="timeline">
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">v2.3 — Compact Arguments <span class="nb nb-green">current</span></div>
+            <div class="te-title">Handler signatures slim from four arguments to two</div>
+            <ul class="te-changes">
+              <li>New compact handler form: <code>function(req, res)</code> — <code>req.player</code> and <code>req.raw</code> hold the old first and second args</li>
+              <li>Detection via <code>debug.info</code> parameter count — existing four-arg handlers continue working without any changes <span class="pill p-ok">backward compat</span></li>
+              <li>Stream rebuilt as generic typed channels — <code>Stream.Channel(name, schema)</code>, <code>ch:Set</code>, <code>ch:Flush</code>, <code>ch:Rewind</code></li>
+              <li><span class="pill p-breaking">breaking</span> Stream v3 replaces the old FPS-only singleton API — see the <a href="./guide-stream.html">migration guide</a></li>
+              <li>Codec LZ77 window size increased from 128 to 512 bytes — better ratio on larger payloads, same API</li>
+              <li>TypeCoercer: added <code>UDim</code>, <code>Rect</code>, <code>UDim2</code> support</li>
+            </ul>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">v2.2.3 — Issue #6 Fix</div>
+            <div class="te-title">Listener race condition on rapid successive events patched</div>
+            <ul class="te-changes">
+              <li>Fixed: <code>listener:Once</code> could fire multiple times under rapid event delivery (GitHub issue #6)</li>
+              <li>Root cause: the disconnect handle was captured before the connection closed — now uses an atomic flag</li>
+              <li>v2.2.1 and v2.2.2 were failed patch attempts; v2.2.3 is the confirmed fix</li>
+            </ul>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">v2.2 — Server Push &amp; Tamper</div>
+            <div class="te-title">Reliable server-initiated events and built-in exploit detection</div>
+            <ul class="te-changes">
+              <li>Added <code>app:Push</code>, <code>app:PushAll</code>, <code>app:PushTo</code> — reliable server-to-client events on the existing RemoteEvent</li>
+              <li>Listener transparently separates push packets from request-response packets — no API change on the client</li>
+              <li>Added Tamper module — automatic strike tracking, configurable threshold, kick on exceed</li>
+              <li>TokenBucket: added <code>Grant</code>, <code>GrantAll</code> for rewarding active players after round events</li>
+              <li>Router: typed params now support <code>=boolean</code> and <code>=string</code> in addition to <code>=number</code></li>
+            </ul>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">v2.1 — Ports &amp; Benchmark</div>
+            <div class="te-title">Namespace isolation and round-trip latency measurement</div>
+            <ul class="te-changes">
+              <li>Added Port module — isolated App instances each on their own RemoteEvent</li>
+              <li>Added Benchmark module — fires real requests and measures min/avg/median/p95/p99/max</li>
+              <li>Broadcast: added per-event rate limiting in addition to the existing global limit</li>
+              <li>Bridge: added <code>bridge.BindOnce</code> for single-fire internal listeners</li>
+              <li>Query string parsing added to Router — <code>req.query.page</code> etc.</li>
+            </ul>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">v2.0 — Full Rewrite <span class="pill p-breaking">breaking</span></div>
+            <div class="te-title">Complete redesign — HTTP semantics, TypeCoercer, Stream, Codec, Bridge</div>
+            <ul class="te-changes">
+              <li><span class="pill p-breaking">breaking</span> All v1 APIs removed — v2 is a ground-up redesign</li>
+              <li>App: HTTP-style routing with GET/POST/PUT/DELETE, middleware, status codes</li>
+              <li>Network: client-side request with callback and query support</li>
+              <li>Listener: client-side event subscription with <code>On</code>, <code>Once</code>, <code>Off</code>, <code>Clear</code></li>
+              <li>Broadcast: unreliable UnreliableRemoteEvent channel with rate limiting</li>
+              <li>Bridge: internal server-side event bus for module decoupling</li>
+              <li>Stream: FPS position channel (later replaced in v2.3)</li>
+              <li>Codec: LZ77 compression for route-level opt-in</li>
+              <li>Router: named and typed route params, wildcard segments</li>
+              <li>TokenBucket: per-player token bucket rate limiter</li>
+              <li>TypeCoercer: serialize/deserialize Roblox types to string</li>
+            </ul>
+          </div>
+
+          <div class="te">
+            <div class="te-dot minor"></div>
+            <div class="te-ver">v1.6</div>
+            <div class="te-title">Last v1 release — simple RemoteEvent wrapper</div>
+            <ul class="te-changes">
+              <li>Single RemoteEvent with string-keyed event handlers</li>
+              <li>Per-player rate limiting (basic, no token model)</li>
+              <li>No compression, no routing, no push</li>
+              <li>Maintained for backward compat while v2 was developed</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./roadmap.html">Roadmap</a> — what's coming in v2.3+ &nbsp;·&nbsp;
+          <a href="./guides-migration.html">Migration Guide</a> — v1 → v2 upgrade steps &nbsp;·&nbsp;
+          <a href="./community-github.html">GitHub</a> — full commit history
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

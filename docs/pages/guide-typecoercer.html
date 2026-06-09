@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TypeCoercer Guide — RoExpress Docs</title>
+  <meta name="description" content="Using RoExpress TypeCoercer: round-trip serialize Roblox types to string and back. ToString, FromString, RegisterInstanceRoot, supported types.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/guide-typecoercer.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/guide-typecoercer.html">
+  <meta property="og:title" content="TypeCoercer Guide — RoExpress Docs">
+  <meta property="og:description" content="Round-trip Roblox types via ToString/FromString. All supported types listed.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Guide</div>
+        <h1>TypeCoercer</h1>
+        <p class="lead">Serialize Roblox types to string and reconstruct them. Useful when you need to send Roblox-specific values through routes or store them in DataStore.</p>
+
+        <div class="cl info"><strong>When to use this.</strong> Route payloads and DataStore only support plain Lua types. TypeCoercer lets you pass a <code>Vector3</code> or <code>CFrame</code> by encoding it as a string, then decode it back on the other side.</div>
+
+        <h2>Basic round-trip</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> TC <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress.TypeCoercer)
+
+<span class="kw">local</span> v <span class="op">=</span> Vector3.<span class="fn">new</span>(<span class="num">10</span>, <span class="num">5</span>, <span class="num">3</span>)
+<span class="kw">local</span> s <span class="op">=</span> TC.<span class="fn">ToString</span>(v)       <span class="cm">-- "Vector3|10|5|3"</span>
+<span class="kw">local</span> r <span class="op">=</span> TC.<span class="fn">FromString</span>(s)     <span class="cm">-- Vector3.new(10, 5, 3)</span>
+<span class="fn">print</span>(r <span class="op">==</span> v)                    <span class="cm">-- true</span></code></pre>
+
+        <h2>Sending a CFrame over a route</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- client: encode before sending</span>
+network:<span class="fn">Post</span>(<span class="str">"char/position"</span>, {
+    cframe = TC.<span class="fn">ToString</span>(char:<span class="fn">GetPivot</span>())
+})
+
+<span class="cm">-- server: decode in handler</span>
+app:<span class="fn">Post</span>(<span class="str">"char/position"</span>, <span class="kw">function</span>(Player, Payload, req, res)
+    <span class="kw">local</span> cf <span class="op">=</span> TC.<span class="fn">FromString</span>(req.data.cframe)
+    <span class="cm">-- cf is a CFrame</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Instances</h2>
+        <p>To serialize an Instance reference, register the root first so TypeCoercer can resolve paths.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>TC.<span class="fn">RegisterInstanceRoot</span>(game)     <span class="cm">-- server</span>
+TC.<span class="fn">RegisterInstanceRoot</span>(game)     <span class="cm">-- client</span>
+
+<span class="kw">local</span> part <span class="op">=</span> workspace:<span class="fn">FindFirstChild</span>(<span class="str">"Baseplate"</span>)
+<span class="kw">local</span> str  <span class="op">=</span> TC.<span class="fn">ToString</span>(part)    <span class="cm">-- "Instance|Workspace.Baseplate"</span>
+<span class="kw">local</span> back <span class="op">=</span> TC.<span class="fn">FromString</span>(str)   <span class="cm">-- the Baseplate Part</span></code></pre>
+
+        <h2>Supported types</h2>
+        <table class="tbl">
+          <thead><tr><th>Roblox type</th><th>Encoded prefix</th></tr></thead>
+          <tbody>
+            <tr><td>Vector3</td><td><code>Vector3|x|y|z</code></td></tr>
+            <tr><td>Vector2</td><td><code>Vector2|x|y</code></td></tr>
+            <tr><td>CFrame</td><td><code>CFrame|x|y|z|r00…r22</code></td></tr>
+            <tr><td>Color3</td><td><code>Color3|r|g|b</code></td></tr>
+            <tr><td>UDim2</td><td><code>UDim2|xs|xo|ys|yo</code></td></tr>
+            <tr><td>UDim</td><td><code>UDim|scale|offset</code></td></tr>
+            <tr><td>Rect</td><td><code>Rect|minX|minY|maxX|maxY</code></td></tr>
+            <tr><td>Instance</td><td><code>Instance|full.path</code></td></tr>
+            <tr><td>number, string, boolean</td><td>Passed through unchanged</td></tr>
+          </tbody>
+        </table>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./types.html">Types</a> — Luau type definitions &nbsp;·&nbsp;
+          <a href="./codec.html">Codec</a> — binary serialization for high-frequency data &nbsp;·&nbsp;
+          <a href="./guide-stream.html">Stream Guide</a> — typed channels that bypass this entirely
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

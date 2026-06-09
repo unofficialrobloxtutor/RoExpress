@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Library Comparison — RoExpress Docs</title>
+  <meta name="description" content="How RoExpress compares to BridgeNet2, ByteNet, and Zap on features, approach, and use cases.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/comparison.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/comparison.html">
+  <meta property="og:title" content="Library Comparison — RoExpress Docs">
+  <meta property="og:description" content="RoExpress vs BridgeNet2, ByteNet, and Zap — features, tradeoffs, use cases.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Reference</div>
+        <h1>Library Comparison</h1>
+        <p class="lead">How RoExpress stacks up against the other major Roblox networking libraries. Every library has a different philosophy — use this to pick the right tool.</p>
+
+        <div class="cl info"><strong>Honest comparison.</strong> Each library is good at what it does. The right choice depends on your game's architecture, not which has more features.</div>
+
+        <h2>Feature matrix</h2>
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>RoExpress</th>
+              <th>BridgeNet2</th>
+              <th>ByteNet</th>
+              <th>Zap</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>HTTP-style routing</td><td>✓ GET/POST/PUT/DELETE</td><td>✗</td><td>✗</td><td>✗</td></tr>
+            <tr><td>Route params</td><td>✓ <code>:id=number</code></td><td>✗</td><td>✗</td><td>✗</td></tr>
+            <tr><td>Wildcard routes</td><td>✓ <code>feed/*</code></td><td>✗</td><td>✗</td><td>✗</td></tr>
+            <tr><td>Middleware</td><td>✓ <code>app:Use()</code></td><td>✗</td><td>✗</td><td>✗</td></tr>
+            <tr><td>Rate limiting</td><td>✓ Token bucket</td><td>✗</td><td>✗</td><td>✗</td></tr>
+            <tr><td>Compression</td><td>✓ LZ77 → Deflate</td><td>✗</td><td>✗</td><td>✗</td></tr>
+            <tr><td>Server push</td><td>✓ Reliable</td><td>✓</td><td>✗</td><td>✗</td></tr>
+            <tr><td>Unreliable broadcast</td><td>✓ Broadcast module</td><td>✓</td><td>✓</td><td>✓</td></tr>
+            <tr><td>Binary serialization</td><td>✓ Codec + Stream</td><td>✗</td><td>✓</td><td>✓</td></tr>
+            <tr><td>Tick-rate channel sync</td><td>✓ Stream</td><td>✗</td><td>✓</td><td>✓</td></tr>
+            <tr><td>Lag compensation</td><td>✓ Stream.Rewind</td><td>✗</td><td>✗</td><td>✗</td></tr>
+            <tr><td>Exploit detection</td><td>✓ Tamper</td><td>✗</td><td>✗</td><td>✗</td></tr>
+            <tr><td>Internal event bus</td><td>✓ Bridge</td><td>✗</td><td>✗</td><td>✗</td></tr>
+            <tr><td>Port isolation</td><td>✓ Ports</td><td>✗</td><td>✗</td><td>✗</td></tr>
+            <tr><td>Benchmark module</td><td>✓</td><td>✗</td><td>✗</td><td>✗</td></tr>
+            <tr><td>TypeCoercer</td><td>✓</td><td>✗</td><td>✗</td><td>✗</td></tr>
+            <tr><td>Code generation</td><td>✗</td><td>✗</td><td>✗</td><td>✓</td></tr>
+            <tr><td>Schema-defined types</td><td>Partial (Stream)</td><td>✗</td><td>✓</td><td>✓</td></tr>
+            <tr><td>Single RemoteEvent</td><td>✓ (default)</td><td>✓</td><td>✗</td><td>✗</td></tr>
+          </tbody>
+        </table>
+
+        <h2>When to use RoExpress</h2>
+        <ul>
+          <li>You want the structured request/response model of an HTTP API — routes, params, middleware, status codes</li>
+          <li>You need multiple features from one package: request handling + push + rate limiting + tamper + stream</li>
+          <li>Your team is already familiar with Express.js or similar — the mental model transfers directly</li>
+          <li>You want lag compensation without building it from scratch</li>
+        </ul>
+
+        <h2>When to use others</h2>
+        <ul>
+          <li><strong>ByteNet / Zap</strong> — if you need maximum throughput via generated, statically-typed binary protocol. Both use code generation for zero-overhead packing.</li>
+          <li><strong>BridgeNet2</strong> — if you only need a thin reliable remote wrapper with minimal overhead.</li>
+          <li><strong>Roll your own</strong> — if your game has a single tight loop and the structure RoExpress adds would be overhead with no benefit.</li>
+        </ul>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./story.html">The Story</a> — why RoExpress was built &nbsp;·&nbsp;
+          <a href="./design-consensus.html">Design Decisions</a> — the reasoning behind specific choices &nbsp;·&nbsp;
+          <a href="./research.html">Research Papers</a> — academic foundations
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

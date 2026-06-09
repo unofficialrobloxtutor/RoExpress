@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ports Guide — RoExpress Docs</title>
+  <meta name="description" content="When and how to use RoExpress Ports: namespace isolation, RemoteEvent limits, structure, and when to prefer App routes instead.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/guide-ports.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/guide-ports.html">
+  <meta property="og:title" content="Ports Guide — RoExpress Docs">
+  <meta property="og:description" content="When to use Ports: namespace isolation, remote limits, structure, and tradeoffs.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Guide</div>
+        <h1>When to Use Ports</h1>
+        <p class="lead">A Port is an isolated App instance on its own dedicated RemoteEvent. Use one when you need complete namespace isolation between game systems.</p>
+
+        <h2>App routes vs Ports</h2>
+        <table class="tbl">
+          <thead><tr><th></th><th>App routes</th><th>Ports</th></tr></thead>
+          <tbody>
+            <tr><td>RemoteEvent count</td><td>1</td><td>1 per Port</td></tr>
+            <tr><td>Namespace</td><td>Shared — all routes on same remote</td><td>Isolated — each system on its own remote</td></tr>
+            <tr><td>Token bucket</td><td>Shared per App</td><td>Separate per Port</td></tr>
+            <tr><td>Middleware</td><td>Shared</td><td>Separate</td></tr>
+            <tr><td>Push/Broadcast</td><td>Same channel</td><td>Separate channel</td></tr>
+            <tr><td>Use for</td><td>Most things</td><td>Distinct systems: shop, combat, admin</td></tr>
+          </tbody>
+        </table>
+
+        <div class="cl warn"><strong>RemoteEvent limit.</strong> Roblox enforces a cap on RemoteEvents per place. Don't create a Port per route. A Port is for an entire system — combat, shop, admin — not for each individual action.</div>
+
+        <h2>Structure</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- server</span>
+<span class="kw">local</span> Port   <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Port"</span>)
+<span class="kw">local</span> combat <span class="op">=</span> Port.<span class="fn">New</span>(<span class="str">"combat"</span>)   <span class="cm">-- own RemoteEvent</span>
+<span class="kw">local</span> shop   <span class="op">=</span> Port.<span class="fn">New</span>(<span class="str">"shop"</span>)     <span class="cm">-- own RemoteEvent</span>
+
+combat:<span class="fn">Post</span>(<span class="str">"hit"</span>, hitHandler)
+combat:<span class="fn">Post</span>(<span class="str">"reload"</span>, reloadHandler)
+
+shop:<span class="fn">Get</span>(<span class="str">"catalogue"</span>, catalogueHandler)
+shop:<span class="fn">Post</span>(<span class="str">"buy"</span>, buyHandler)
+
+<span class="cm">-- client</span>
+<span class="kw">local</span> Port      <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Port"</span>)
+<span class="kw">local</span> combatNet <span class="op">=</span> Port.<span class="fn">Connect</span>(<span class="str">"combat"</span>)
+<span class="kw">local</span> shopNet   <span class="op">=</span> Port.<span class="fn">Connect</span>(<span class="str">"shop"</span>)
+
+combatNet:<span class="fn">Post</span>(<span class="str">"hit"</span>, hitData)
+shopNet:<span class="fn">Get</span>(<span class="str">"catalogue"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res) <span class="cm">...</span> <span class="kw">end</span>)</code></pre>
+
+        <h2>When you need a Port</h2>
+        <ul>
+          <li>Two systems that should never share rate limiting (e.g. combat and chat)</li>
+          <li>A system with completely separate middleware that would interfere with other routes</li>
+          <li>A system handled by a different team — clean contract boundary</li>
+        </ul>
+
+        <h2>When you don't need a Port</h2>
+        <ul>
+          <li>Just want to organise routes into logical groups — use route prefixes: <code>"shop/buy"</code>, <code>"combat/hit"</code></li>
+          <li>Only one of the systems will ever run — just use App</li>
+        </ul>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./port.html">Port API</a> &nbsp;·&nbsp;
+          <a href="./app.html">App</a> — single-remote baseline &nbsp;·&nbsp;
+          <a href="./tokenbucket.html">TokenBucket</a> — rate limiting per Port &nbsp;·&nbsp;
+          <a href="./guide-middleware.html">Middleware</a> — per-Port middleware setup
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

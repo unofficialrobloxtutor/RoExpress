@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RoExpress Docs — Express.js-style Networking for Roblox</title>
+  <meta name="description" content="RoExpress: type-safe, rate-limited, Express.js-style networking framework for Roblox. Typed routes, server push, binary streaming, exploit detection, and more — one framework.">
+  <meta name="keywords" content="roblox, luau, networking, remoteevent, framework, express, roexpress, typed routes, server push, rate limiting, binary stream">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/">
+  <meta property="og:title" content="RoExpress Docs">
+  <meta property="og:description" content="One remote. Every request protected, routed, and rate-limited automatically.">
+  <meta property="og:site_name" content="RoExpress">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "RoExpress",
+    "version": "2.4.0",
+    "description": "A type-safe, rate-limited, Express.js-style networking framework for Roblox.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Roblox",
+    "programmingLanguage": "Luau",
+    "url": "https://roexpress.dev",
+    "codeRepository": "https://github.com/unofficialrobloxtutor/RoExpress",
+    "license": "https://opensource.org/licenses/MIT",
+    "dateModified": "2026-06-09",
+    "author": { "@type": "Person", "name": "DeathToTheStadium" },
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  }
+  </script>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="public/css/styles.css">
+  <script src="nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc" id="overview">
+
+        <div class="eyebrow">Getting Started</div>
+        <h1>RoExpress &mdash; <em>structured networking</em> for Roblox</h1>
+        <p class="lead">One remote. Every request protected, routed, and rate-limited automatically. Stop creating a new RemoteEvent for every feature &mdash; RoExpress gives you a single organised pipeline with built-in exploit protection, typed routes, server push, binary streaming, and compression.</p>
+
+        <div class="cl new"><strong>v2.4 is here.</strong> Deflate compression (LZ77 + Huffman), automatic retry with exponential backoff, Stream v3 generic channels, and fully typed <code>GetApp()</code> / <code>GetNetwork()</code> accessors.</div>
+
+        <h2>Module tree</h2>
+        <div class="mt"><span class="mt-r">RoExpress</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">App</span>           <span class="mt-d">server  &mdash; routing, middleware, server push</span>
+<span class="mt-m">&#9474;   &#9500;&#9472;&#9472;</span> <span class="mt-n">Router</span>        <span class="mt-d">&mdash; typed params, wildcards, globs, constraints</span>
+<span class="mt-m">&#9474;   &#9492;&#9472;&#9472;</span> <span class="mt-n">TokenBucket</span>   <span class="mt-d">&mdash; per-instance rate limiter</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Network</span>       <span class="mt-d">client  &mdash; request/response, retry, Promise API</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Broadcast</span>     <span class="mt-d">server  &mdash; unreliable fire-and-forget</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Listener</span>      <span class="mt-d">client  &mdash; broadcast + reliable push subscriptions</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Bridge</span>        <span class="mt-d">shared  &mdash; internal server-side event bus</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Tamper</span>        <span class="mt-d">server  &mdash; passive exploit detection &amp; strike system</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Codec</span>         <span class="mt-d">shared  &mdash; Deflate compression (LZ77 + Huffman)</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Port</span>          <span class="mt-d">server  &mdash; named isolated pipelines</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Stream</span>        <span class="mt-d">shared  &mdash; schema-defined typed binary channels</span>
+<span class="mt-m">&#9474;   &#9500;&#9472;&#9472;</span> <span class="mt-n">Types</span>         <span class="mt-d">&mdash; 20 built-in wire types + custom extension</span>
+<span class="mt-m">&#9474;   &#9500;&#9472;&#9472;</span> <span class="mt-n">Schema</span>        <span class="mt-d">&mdash; compile-time offsets, pack/unpack, delta</span>
+<span class="mt-m">&#9474;   &#9492;&#9472;&#9472;</span> <span class="mt-n">Channel</span>       <span class="mt-d">&mdash; instance, rate limiting, sequence numbers</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">TypeCoercer</span>   <span class="mt-d">shared  &mdash; Roblox type serialisation utility</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Promise</span>       <span class="mt-d">client  &mdash; chainable async Network API</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Benchmark</span>     <span class="mt-d">client  &mdash; round-trip latency measurement</span>
+<span class="mt-m">&#9492;&#9472;&#9472;</span> <span class="mt-n">Base64</span>        <span class="mt-d">shared  &mdash; encode/decode utility</span></div>
+
+        <h2 id="installation">Installation</h2>
+
+        <h3>Wally <span class="pill p-new">recommended</span></h3>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>[dependencies]
+RoExpress = "unofficialrobloxtutor/roexpress@2.4.0"</code></pre>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>wally install</code></pre>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.Packages.RoExpress)</code></pre>
+
+        <h3>Creator Store</h3>
+        <p>Get it from the <a href="https://create.roblox.com/store/asset/94926286357335" target="_blank" rel="noopener">Roblox Creator Store</a> and place the ModuleScript into <code>ReplicatedStorage</code>.</p>
+
+        <h3>Manual</h3>
+        <p>Download from the <a href="pages/community-github.html">GitHub releases page</a> and place in <code>ReplicatedStorage</code>.</p>
+
+        <h2 id="quickstart">Quick start</h2>
+        <h3>Server</h3>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> app       <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
+
+<span class="cm">-- global middleware — runs before every handler</span>
+app:<span class="fn">Use</span>(<span class="str">"logger"</span>, <span class="kw">function</span>(Player, Payload)
+    <span class="fn">print</span>(Player.Name, Payload.method, Payload.route)
+<span class="kw">end</span>)
+
+<span class="cm">-- typed :userId param auto-converted to number</span>
+app:<span class="fn">Get</span>(<span class="str">"player/:userId=number"</span>, <span class="kw">function</span>(req, res)
+    res:<span class="fn">Send</span>({ userId <span class="op">=</span> req.params.userId })
+<span class="kw">end</span>)
+
+app:<span class="fn">Put</span>(<span class="str">"player/:userId=number/name"</span>, <span class="kw">function</span>(req, res)
+    res:<span class="fn">Status</span>(<span class="num">200</span>):<span class="fn">Send</span>()
+<span class="kw">end</span>)
+
+<span class="cm">-- push to all connected clients reliably</span>
+app:<span class="fn">PushAll</span>(<span class="str">"round.end"</span>, { winner <span class="op">=</span> <span class="str">"PlayerName"</span> })</code></pre>
+
+        <h3>Client</h3>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> network   <span class="op">=</span> RoExpress.<span class="fn">GetNetwork</span>()
+<span class="kw">local</span> listener  <span class="op">=</span> RoExpress(<span class="str">"Listener"</span>)
+
+<span class="cm">-- callback style</span>
+network:<span class="fn">Get</span>(<span class="str">"player/123"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res)
+    <span class="fn">print</span>(res.data.userId)
+<span class="kw">end</span>)
+
+<span class="cm">-- promise style (v2.2+)</span>
+network:<span class="fn">GetAsync</span>(<span class="str">"player/123"</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res) <span class="kw">return</span> res.data <span class="kw">end</span>)
+    :<span class="fn">Catch</span>(<span class="kw">function</span>(err) <span class="fn">warn</span>(err.message) <span class="kw">end</span>)
+
+<span class="cm">-- reliable push subscription</span>
+listener:<span class="fn">On</span>(<span class="str">"round.end"</span>, <span class="kw">function</span>(data)
+    <span class="fn">print</span>(<span class="str">"Winner:"</span>, data.winner)
+<span class="kw">end</span>)</code></pre>
+
+        <h2 id="accessors">Context accessors</h2>
+        <table class="tbl">
+          <thead>
+            <tr><th>Call</th><th>Context</th><th>Returns</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>RoExpress.GetApp()</code></td>      <td>Server</td><td>App instance &mdash; fully typed</td></tr>
+            <tr><td><code>RoExpress.GetNetwork()</code></td>  <td>Client</td><td>Network instance &mdash; fully typed</td></tr>
+            <tr><td><code>RoExpress("App")</code></td>        <td>Server</td><td>App instance (returns <code>any</code>)</td></tr>
+            <tr><td><code>RoExpress("Network")</code></td>    <td>Client</td><td>Network instance (returns <code>any</code>)</td></tr>
+            <tr><td><code>RoExpress("Broadcast")</code></td>  <td>Server</td><td>Broadcast instance</td></tr>
+            <tr><td><code>RoExpress("Listener")</code></td>   <td>Client</td><td>Listener instance</td></tr>
+            <tr><td><code>RoExpress.Stream</code></td>        <td>Both</td>  <td>Stream module</td></tr>
+            <tr><td><code>RoExpress.Bridge</code></td>        <td>Both</td>  <td>Bridge module</td></tr>
+            <tr><td><code>RoExpress.Codec</code></td>         <td>Both</td>  <td>Codec module</td></tr>
+            <tr><td><code>RoExpress("Tamper")</code></td>     <td>Server</td><td>Tamper singleton</td></tr>
+          </tbody>
+        </table>
+        <p>Calling a server-only module on the client (or vice versa) throws an assertion with a clear context message.</p>
+
+        <h2 id="pipeline">Request pipeline</h2>
+        <p>Every incoming request passes through the same stages in order:</p>
+        <table class="tbl">
+          <thead><tr><th>#</th><th>Stage</th><th>Rejects with</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Version check &mdash; Tamper discards packets with a mismatched framework version</td><td>silent drop</td></tr>
+            <tr><td>2</td><td>TokenBucket &mdash; per-player rate limiter consumes one token</td><td>429</td></tr>
+            <tr><td>3</td><td>Payload validation &mdash; method, route, and body shape checked</td><td>400 / Tamper strike</td></tr>
+            <tr><td>4</td><td>Global middleware &mdash; each registered handler runs in order; <code>return false</code> stops the chain</td><td>403</td></tr>
+            <tr><td>5</td><td>Route match &mdash; Router finds the first matching pattern and extracts typed params</td><td>404</td></tr>
+            <tr><td>6</td><td>Route middleware &mdash; any <code>:Use</code> scoped to this route</td><td>403</td></tr>
+            <tr><td>7</td><td>Handler &mdash; your code runs; <code>res:Send()</code> or <code>res:Error()</code> fires the response</td><td>500 on unhandled error</td></tr>
+          </tbody>
+        </table>
+
+        <h2 id="versions">Version history</h2>
+        <table class="tbl">
+          <thead><tr><th>Version</th><th>Status</th><th>What shipped</th></tr></thead>
+          <tbody>
+            <tr><td>2.4.0</td><td><span class="pill p-new">current</span></td><td>Deflate compression &middot; Automatic retry &middot; Stream v3 generic channels &middot; Typed accessors</td></tr>
+            <tr><td>2.3.0</td><td>shipped</td><td>PUT &amp; DELETE &middot; Compact handler args &middot; Codec LZ77 upgrade &middot; TypeCoercer: UDim, Rect, UDim2</td></tr>
+            <tr><td>2.2.3</td><td>shipped</td><td>Issue #6 fix &mdash; listener:Once race condition under rapid events</td></tr>
+            <tr><td>2.2.0</td><td>shipped</td><td>TypeCoercer &middot; Promise &middot; Server Push &middot; Tamper &middot; TokenBucket Grant</td></tr>
+            <tr><td>2.1.0</td><td>shipped</td><td>Stream v2 &middot; Named Ports &middot; Benchmark &middot; Bridge.BindOnce</td></tr>
+            <tr><td>2.0.0</td><td>shipped</td><td>Full rewrite &mdash; App, Router, Network, Listener, Bridge, Codec, Broadcast</td></tr>
+          </tbody>
+        </table>
+        <p>Next: YouTube gun framework showcase, then awesome-roblox submission. See the <a href="pages/roadmap.html">Roadmap</a> for the full picture.</p>
+
+        <h2>Where to go next</h2>
+        <table class="tbl">
+          <thead><tr><th>Goal</th><th>Start here</th></tr></thead>
+          <tbody>
+            <tr><td>First time using RoExpress</td><td><a href="#quickstart">Quick Start</a> above, then <a href="pages/pipeline.html">Request Pipeline</a></td></tr>
+            <tr><td>Understand the route + middleware flow</td><td><a href="pages/guide-middleware.html">Middleware Guide</a></td></tr>
+            <tr><td>Sync player positions every tick</td><td><a href="pages/stream.html">Stream</a> &middot; <a href="pages/guide-stream.html">FPS Stream Guide</a></td></tr>
+            <tr><td>Detect and kick exploiters</td><td><a href="pages/tamper.html">Tamper</a> &middot; <a href="pages/guide-tamper.html">Exploit Detection Guide</a></td></tr>
+            <tr><td>Push events from server to client</td><td><a href="pages/push.html">Server Push</a> &middot; <a href="pages/listener.html">Listener</a></td></tr>
+            <tr><td>Compress large payloads</td><td><a href="pages/codec.html">Codec</a></td></tr>
+            <tr><td>Isolate a system on its own remote</td><td><a href="pages/port.html">Ports</a> &middot; <a href="pages/guide-ports.html">Ports Guide</a></td></tr>
+            <tr><td>See a complete worked example</td><td><a href="pages/ex-killfeed.html">Kill Feed</a> &middot; <a href="pages/ex-round.html">Round Manager</a> &middot; <a href="pages/ex-shop.html">Shop</a></td></tr>
+            <tr><td>Look up a specific API</td><td><a href="pages/app.html">App</a> &middot; <a href="pages/network.html">Network</a> &middot; <a href="pages/types.html">Types</a></td></tr>
+            <tr><td>Upgrade from v2.3</td><td><a href="pages/guides-migration.html">Migration Guide</a></td></tr>
+            <tr><td>Get help or report a bug</td><td><a href="pages/community-discord.html">Discord</a> &middot; <a href="pages/community-github.html">GitHub</a></td></tr>
+          </tbody>
+        </table>
+
+      </section>
+    </main>
+  </div>
+</body>
+</html>

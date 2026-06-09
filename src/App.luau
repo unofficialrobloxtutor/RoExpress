@@ -34,29 +34,37 @@ export type Type = typeof(setmetatable({}, Module)) & {
 	_router      : typeof(Router),
 	_middleware  : { { id: string, fn: (Player: Player, Payload: Payload) -> (boolean?) } },
 	_connection  : RBXScriptConnection,
+	_ports       : { [string]: any },
 }
 
-type Payload = {
+export type Payload = {
 	version   : string,
 	type      : "request" | "response" | "error",
-	method    : "GET" | "POST",
+	method    : "GET" | "POST" | "PUT" | "DELETE",
 	requestId : string,
 	route     : string,
 	data      : any,
 }
 
-type Request = {
-	params   : { [string]: any },      -- coerced typed values
-	captures : { any },                -- wildcard / glob positional captures
+export type Request = {
+	params   : { [string]: any },
+	captures : { any },
 	query    : { [string]: string },
 	data     : any,
+	player   : Player?,
+	raw      : Payload?,
 }
 
-type Response = {
-	Send   : (self: Response, data: any) -> (),
+export type Response = {
+	Send   : (self: Response, data: any?) -> (),
 	Error  : (self: Response, message: string) -> (),
 	Status : (self: Response, code: number) -> Response,
 }
+
+export type RouteHandlerCompact = (req: Request, res: Response) -> ()
+export type RouteHandlerLegacy  = (Player: Player, Payload: Payload, req: Request, res: Response) -> ()
+export type RouteHandler        = RouteHandlerCompact | RouteHandlerLegacy
+export type MiddlewareHandler   = (Player: Player, Payload: Payload) -> (boolean?)
 ------------------------------------------------------------------------
 --	PRIVATE
 ------------------------------------------------------------------------
@@ -79,7 +87,7 @@ local function _validatePayload(Payload: Payload): boolean
 		and Payload.type == "request"
 end
 
-local function _buildResponse(Remote: RemoteEvent, Player: Player, requestId: string, method: string, compress: boolean?): Response
+local function _buildResponse(Remote: RemoteEvent, Player: Player, requestId: string, method: string, compress: boolean?, algo: string?): Response
 	local res    = {}
 	res._status  = 200
 	res._sent    = false
@@ -89,17 +97,21 @@ local function _buildResponse(Remote: RemoteEvent, Player: Player, requestId: st
 		return self
 	end
 
-	function res:Send(data: any)
+	function res:Send(data: any?)
 		if self._sent then
 			warn("RoExpress.App: res:Send() called more than once on requestId", requestId)
 			return
 		end
 		self._sent = true
 
+		if (method == "PUT" or method == "DELETE") and type(data) == "table" then
+			warn("RoExpress.App: PUT/DELETE handlers should not send body data — use res:Status(x):Send() or :Send(true/false)")
+			data = nil
+		end
+
 		local payload
 		if compress then
-			-- compress takes priority over plain base64 for POST
-			payload = Codec.Compress(data)
+			payload = algo == "lzh" and Codec.Deflate(data) or Codec.Compress(data)
 		elseif method == "POST" then
 			payload = Base64.EncodeTable(data)
 		else
@@ -217,16 +229,33 @@ local function _handler(self: Type, Player: Player, Payload: Payload)
 	end
 
 	local compress = (match.route :: any).compress == true
-	local res = _buildResponse(self.Remote, Player, Payload.requestId, Payload.method, compress)
+	local algo     = (match.route :: any).algo
+	local res      = _buildResponse(self.Remote, Player, Payload.requestId, Payload.method, compress, algo)
 
-	local req: Request = {
-		params   = match.params,
-		captures = match.captures,
-		query    = query,
-		data     = Payload.data,
-	}
+	local argcount = debug.info(match.route.handler, "a")
+	local req: Request;
+	local ok, err;
+	if argcount and argcount == 2 then
+		req = {
+			player   = Player,
+			params   = match.params,
+			captures = match.captures,
+			query    = query,
+			data     = Payload.data,
+			raw 	 = Payload
+		}
+		ok, err = pcall(match.route.handler, req, res)
+	else
+		req = {
+			params   = match.params,
+			captures = match.captures,
+			query    = query,
+			data     = Payload.data,
+		}
+		ok, err = pcall(match.route.handler, Player, Payload, req, res)
+	end
 
-	local ok, err = pcall(match.route.handler, Player, Payload, req, res)
+	
 	if not ok then
 		warn("RoExpress.App: Handler error on '" .. Payload.route .. "':", err)
 		if not res._sent then
@@ -268,12 +297,20 @@ function Module:Unuse(id: string)
 	warn("RoExpress.App: No middleware found with id '" .. id .. "'")
 end
 
-function Module:Get(route: string, handler: (Player: Player, Payload: Payload, req: Request, res: Response) -> (), options: { compress: boolean? }?)
+function Module:Get(route: string, handler: (...any) -> (), options: { compress: boolean?, algo: ("lz77" | "lzh")? }?)
 	self._router:Add("GET", route, handler, options)
 end
 
-function Module:Post(route: string, handler: (Player: Player, Payload: Payload, req: Request, res: Response) -> (), options: { compress: boolean? }?)
+function Module:Post(route: string, handler: (...any) -> (), options: { compress: boolean?, algo: ("lz77" | "lzh")? }?)
 	self._router:Add("POST", route, handler, options)
+end
+
+function Module:Put(route: string, handler: (...any) -> (), options: { compress: boolean?, algo: ("lz77" | "lzh")? }?)
+	self._router:Add("PUT", route, handler, options)
+end
+
+function Module:Delete(route: string, handler: (...any) -> (), options: { compress: boolean?, algo: ("lz77" | "lzh")? }?)
+	self._router:Add("DELETE", route, handler, options)
 end
 
 --[[

@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TokenBucket — RoExpress Docs</title>
+  <meta name="description" content="RoExpress TokenBucket: per-player rate limiting. Consume, HasTokens, Grant, GrantAll, GrantExact, Reset, Destroy. Configurable max, refill rate, cost.">
+  <meta name="keywords" content="roblox, luau, roexpress, tokenbucket, rate limit, consume, grant, refill, per-player, throttle">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/tokenbucket/">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/tokenbucket/">
+  <meta property="og:title" content="TokenBucket — RoExpress Docs">
+  <meta property="og:description" content="Per-player token bucket rate limiter. Used internally by App and Port; also available standalone.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Shared</div>
+        <h1>TokenBucket</h1>
+        <p class="lead">Per-player rate limiter. Used internally by App and each Port. Also available standalone for custom rate-limiting logic outside the request pipeline.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Access App's built-in bucket</span>
+<span class="kw">local</span> bucket <span class="op">=</span> app.TokenBucket
+
+<span class="cm">-- Or create a standalone instance</span>
+<span class="kw">local</span> TokenBucket <span class="op">=</span> RoExpress(<span class="str">"TokenBucket"</span>)
+<span class="kw">local</span> myBucket    <span class="op">=</span> TokenBucket.<span class="fn">new</span>({ max <span class="op">=</span> <span class="num">10</span>, refill <span class="op">=</span> <span class="num">5</span> })</code></pre>
+
+        <h2>Construction</h2>
+        <div class="sig">TokenBucket.<span class="fn">new</span>(options) → TokenBucket</div>
+        <table class="tbl">
+          <thead><tr><th>Option</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>max</code></td><td>60</td><td>Maximum tokens per player</td></tr>
+            <tr><td><code>refill</code></td><td>20</td><td>Tokens added per second</td></tr>
+            <tr><td><code>start</code></td><td><code>max</code></td><td>Initial token count when a player first appears</td></tr>
+            <tr><td><code>cost</code></td><td>1</td><td>Tokens consumed per <code>Consume()</code> call</td></tr>
+          </tbody>
+        </table>
+
+        <h2>API</h2>
+        <div class="sig">bucket:<span class="fn">Consume</span>(player) → boolean</div>
+        <p>Attempts to consume <code>cost</code> tokens from the player's bucket. Returns <code>true</code> on success, <code>false</code> if empty (rate limit hit). This is what the request pipeline calls automatically — you don't usually need to call it directly.</p>
+        <div class="sig">bucket:<span class="fn">HasTokens</span>(player) → boolean</div>
+        <p>Check without consuming. Useful for preemptive UI feedback.</p>
+        <div class="sig">bucket:<span class="fn">Grant</span>(player, amount)</div>
+        <div class="sig">bucket:<span class="fn">GrantAll</span>(amount)</div>
+        <div class="sig">bucket:<span class="fn">GrantExact</span>(player, amount)</div>
+        <p><code>Grant</code> adds tokens (capped at <code>max</code>). <code>GrantAll</code> adds to every active player. <code>GrantExact</code> sets the count directly.</p>
+        <div class="sig">bucket:<span class="fn">Reset</span>(player)</div>
+        <p>Resets a player's bucket to the <code>start</code> value.</p>
+        <div class="sig">bucket:<span class="fn">Destroy</span>()</div>
+        <p>Stops the refill loop and frees all state.</p>
+
+        <h2>Example: custom action cost</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Port with high-cost actions consuming 5 tokens each</span>
+app:<span class="fn">Listen</span>(<span class="str">"economy"</span>, <span class="kw">function</span>(port)
+    port:<span class="fn">Post</span>(<span class="str">"trade"</span>, handler)
+<span class="kw">end</span>, { max <span class="op">=</span> <span class="num">50</span>, refill <span class="op">=</span> <span class="num">5</span>, cost <span class="op">=</span> <span class="num">5</span> })
+
+<span class="cm">-- Player can burst 10 trades then must wait 1 second per trade</span></code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./pipeline.html">Request Pipeline</a> — TokenBucket is stage 2 (<span class="pill p-warn">429</span> on empty) &nbsp;·&nbsp;
+          <a href="./app.html">App</a> — <code>app.TokenBucket</code> direct access &nbsp;·&nbsp;
+          <a href="./port.html">Port</a> — per-port rate limiting settings &nbsp;·&nbsp;
+          <a href="./tamper.html">Tamper</a> — flood detection using TokenBucket exhaustion signals
+        </p>
+
+      </section>
+    </main>
+  </div>
+</body>
+</html>

@@ -161,66 +161,82 @@ setmetatable(RoExpress, {
 		end
 
 		return _getInstance(RoExpress._root, moduleName)
-	end
+	end,
+
+	-- Property-style access: RoExpress.App, RoExpress.Network, etc.
+	-- Returns the same cached instance as RoExpress("ModuleName").
+	__index = function(_, key: string)
+		local m = _modules[key]
+		if not m then return nil end
+		if not RoExpress._root then
+			RoExpress._root = _new()
+		end
+		return _getInstance(RoExpress._root, key)
+	end,
 })
 ------------------------------------------------------------------------
---	FUNCTIONS
+--	Direct module references (no instantiation needed)
 ------------------------------------------------------------------------
-RoExpress.Base64 = Base64
+RoExpress.Base64      = Base64
+RoExpress.Codec       = Codec
+RoExpress.Promise     = Promise
+RoExpress.Bridge      = Bridge
+RoExpress.TypeCoercer = TypeCoercer
+RoExpress.Tamper      = Tamper
 
+------------------------------------------------------------------------
+--	Typed accessors
+--  Use these instead of RoExpress("ModuleName") when you want Luau to
+--  infer the correct instance type without an explicit annotation.
+--
+--  Server:   local app = RoExpress.GetApp()
+--  Client:   local net = RoExpress.GetNetwork()
+------------------------------------------------------------------------
+type _AppT = require(script.App).Type
+type _NetT = require(script.Network).Type
+
+function RoExpress.GetApp(): _AppT
+	if not RoExpress._root then RoExpress._root = _new() end
+	return _getInstance(RoExpress._root, "App") :: _AppT
+end
+
+function RoExpress.GetNetwork(): _NetT
+	if not RoExpress._root then RoExpress._root = _new() end
+	return _getInstance(RoExpress._root, "Network") :: _NetT
+end
 
 ------------------------------------------------------------------------
 --	TYPES
 ------------------------------------------------------------------------
 
--- core envelope types
-export type Payload = {
-	version   : string,
-	type      : "request" | "response" | "error",
-	method    : "GET" | "POST",
-	requestId : string,
-	route     : string,
-	data      : any,
-}
-
-export type Request = {
-	params : { [string]: string },
-	query  : { [string]: string },
-	data   : any,
-}
-
-export type Response = {
-	Send   : (self: Response, data: any) -> (),
-	Error  : (self: Response, message: string) -> (),
-	Status : (self: Response, code: number) -> Response,
-}
-
-export type NetworkResponse = {
-	version   : string,
-	type      : "response" | "error",
-	method    : "GET" | "POST",
-	requestId : string,
-	status    : number,
-	data      : any?,
-	message   : string?,
-}
+-- Core envelope types forwarded from their source modules.
+-- These always stay in sync because they reference the module directly.
+export type Payload         = require(script.App).Payload
+export type Request         = require(script.App).Request
+export type Response        = require(script.App).Response
+export type NetworkPayload  = require(script.Network).NetworkPayload
+export type NetworkResponse = require(script.Network).NetworkResponse
 
 export type BroadcastEnvelope = {
 	event : string,
 	data  : any,
 }
 
--- handler signatures
-export type RouteHandler      = (Player: Player, Payload: Payload, req: Request, res: Response) -> ()
--- Middleware returns false to block the request, nil/nothing to continue
-export type MiddlewareHandler  = (Player: Player, Payload: Payload) -> (boolean?)
-export type BroadcastHandler  = (data: any) -> ()
-export type ListenerMiddleware = (event: string, data: any) -> ()
-export type NetworkCallback   = (response: NetworkResponse) -> ()
+-- Handler signatures forwarded from App
+export type RouteHandlerCompact = require(script.App).RouteHandlerCompact
+export type RouteHandlerLegacy  = require(script.App).RouteHandlerLegacy
+export type RouteHandler        = require(script.App).RouteHandler
+export type MiddlewareHandler   = require(script.App).MiddlewareHandler
+export type BroadcastHandler    = (data: any) -> ()
+export type ListenerMiddleware  = (event: string, data: any) -> ()
+export type NetworkCallback     = (response: NetworkResponse) -> ()
 
--- module instance types
-export type App         = typeof(require(script.App))
-export type Network     = typeof(require(script.Network))
+-- Module instance types.
+-- App, Network, Port use .Type (the instantiated shape from .New()).
+-- Utility modules return their table directly and are typed as-is.
+export type App         = require(script.App).Type
+export type Network     = require(script.Network).Type
+export type Port        = require(script.Port).Type
 export type Broadcast   = typeof(require(script.Broadcast))
 export type Listener    = typeof(require(script.Listener))
 export type Base64      = typeof(require(script.Base64))
@@ -228,16 +244,15 @@ export type Router      = typeof(require(script.Router))
 export type Codec       = typeof(require(script.Codec))
 export type Bridge      = typeof(require(script.Bridge))
 export type Tamper      = typeof(require(script.Tamper))
-export type Port        = typeof(require(script.Port))
 export type Promise     = typeof(require(script.Promise))
 export type Stream      = typeof(require(script.Stream))
 export type TokenBucket = typeof(require(script.TokenBucket))
 export type Benchmark   = typeof(require(script.Benchmark))
 
--- router sub-types (useful for typed middleware / param error handlers)
-export type ParamType    = Router.ParamType
-export type SegmentKind  = Router.SegmentKind
-export type MatchResult  = Router.MatchResult
+-- Router sub-types
+export type ParamType   = Router.ParamType
+export type SegmentKind = Router.SegmentKind
+export type MatchResult = Router.MatchResult
 
 
 

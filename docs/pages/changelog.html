@@ -1,0 +1,116 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Changelog — RoExpress Docs</title>
+  <meta name="description" content="RoExpress changelog: full version history from v2.0 to v2.4. Added features, breaking changes, and migration notes for every release.">
+  <meta name="keywords" content="roblox, luau, roexpress, changelog, version, release notes, v2.4, v2.3, v2.2, v2.1, v2.0, breaking changes">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/changelog/">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/changelog/">
+  <meta property="og:title" content="Changelog — RoExpress Docs">
+  <meta property="og:description" content="Full version history: added, changed, removed, breaking changes for every RoExpress release.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Reference</div>
+        <h1>Changelog</h1>
+        <p class="lead">Full version history. Entries marked <span class="pill p-breaking">breaking</span> require code changes when upgrading. See the <a href="./guides-migration.html">Migration guide</a> for step-by-step instructions.</p>
+
+        <h2>v2.4.0 <span class="pill p-ok">current</span></h2>
+        <h3>Stream v3 — Added</h3>
+        <ul>
+          <li><code>Stream:Schema(fields)</code> — compile-time binary layout, fixed offsets, delta-compression</li>
+          <li><code>Stream:Channel(name, schema, options?)</code> — typed binary channel instance</li>
+          <li><code>channel:Send(data)</code> — client-to-server send over UnreliableRemoteEvent</li>
+          <li><code>channel:Subscribe(fn)</code> — server subscription with automatic delta decompression</li>
+          <li><code>channel:Unsubscribe(id)</code> — remove subscription</li>
+          <li>20 built-in wire types: <code>uint8</code>, <code>uint16</code>, <code>uint32</code>, <code>int8</code>, <code>int16</code>, <code>int32</code>, <code>float32</code>, <code>float64</code>, <code>bool</code>, <code>string8</code>, <code>string16</code>, <code>Vector2</code>, <code>Vector3</code>, <code>Color3</code>, <code>CFrame</code>, <code>UDim2</code>, <code>Rect</code>, <code>Enum</code>, <code>Instance</code>, <code>BrickColor</code></li>
+          <li>Custom type registration via <code>Stream:RegisterType(name, size, pack, unpack)</code></li>
+          <li>Per-channel rate limiting with sequence number tracking and gap recovery</li>
+        </ul>
+        <h3>Typing — Changed</h3>
+        <ul>
+          <li><code>RoExpress.GetApp()</code> — new typed accessor, returns <code>App</code> instance (fully typed)</li>
+          <li><code>RoExpress.GetNetwork()</code> — new typed accessor, returns <code>Network</code> instance (fully typed)</li>
+          <li>All inner types now <code>export type</code> — forward-referenced from source, can never drift</li>
+          <li>New exported types: <code>RouteHandlerCompact</code>, <code>RouteHandlerLegacy</code>, <code>RouteHandler</code>, <code>MiddlewareHandler</code></li>
+          <li><code>Payload.method</code> expanded to <code>"GET" | "POST" | "PUT" | "DELETE"</code> (was missing PUT/DELETE)</li>
+          <li><code>Request</code> now includes <code>captures</code>, <code>player?</code>, <code>raw?</code> fields (previously missing)</li>
+          <li><code>NetworkResponse</code> now includes <code>compressed: boolean?</code></li>
+          <li><code>export type App/Network/Port</code> now use <code>.Type</code> (instance shape) not <code>typeof(require())</code></li>
+        </ul>
+        <h3>Stream v2 — Removed <span class="pill p-breaking">breaking</span></h3>
+        <ul>
+          <li>Removed <code>Stream:Sender()</code> and <code>Stream:Receiver()</code> — FPS-tick model</li>
+          <li>Removed v2 <code>Stream.Channel</code> type shape</li>
+        </ul>
+
+        <h2>v2.3.0</h2>
+        <h3>Added</h3>
+        <ul>
+          <li><span class="pill p-put">PUT</span> and <span class="pill p-delete">DELETE</span> methods on App and Port</li>
+          <li>Compact handler form <code>(req, res) → ()</code> — auto-detected by parameter count via <code>debug.info</code></li>
+          <li><code>req.player</code> and <code>req.raw</code> fields populated in compact handlers</li>
+          <li>LZH (Deflate) compression in Codec — better ratio than LZ77 for large payloads</li>
+          <li>Automatic retry on Network timeout (2 retries, exponential backoff)</li>
+          <li><code>options.compress = true</code> on route registration — auto-compresses response, auto-decompresses on client</li>
+        </ul>
+
+        <h2>v2.2.0</h2>
+        <h3>Added</h3>
+        <ul>
+          <li>TypeCoercer module — typed route params (<code>number</code>, <code>int</code>, <code>boolean</code>, <code>Vector2</code>, <code>Vector3</code>, <code>CFrame</code>, <code>Color3</code>, <code>Enum</code>, <code>Instance</code>)</li>
+          <li>Range constraints on int params: <code>:n=int[1,100]</code></li>
+          <li>Promise module — chainable async Network API (<code>GetAsync</code>, <code>PostAsync</code> etc.)</li>
+          <li>Version module — runtime version access</li>
+        </ul>
+
+        <h2>v2.1.0</h2>
+        <h3>Added</h3>
+        <ul>
+          <li>Stream v2 — FPS-tick based binary streaming (superseded by v3 in 2.4)</li>
+          <li>Named Ports — <code>app:Listen(name, fn, settings)</code> with isolated RemoteEvent and TokenBucket</li>
+          <li><code>app:GetPort(name)</code> — get Port reference after creation</li>
+        </ul>
+
+        <h2>v2.0.0</h2>
+        <h3>Added</h3>
+        <ul>
+          <li>Router — typed named params, wildcards, globs, route priority</li>
+          <li>Server Push — <code>app:Push()</code>, <code>app:PushAll()</code>, <code>app:PushTo()</code> over reliable RemoteEvent</li>
+          <li>Codec — LZ77 compression for large payloads</li>
+          <li>Bridge — internal server-side event bus</li>
+          <li>Tamper — passive exploit detection, strike system, version checking</li>
+          <li>Broadcast — unreliable server-to-client fire-and-forget via UnreliableRemoteEvent</li>
+          <li>Listener — client-side handler for both Broadcast and Push events</li>
+        </ul>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./guides-migration.html">Migration guide</a> — step-by-step upgrade instructions &nbsp;·&nbsp;
+          <a href="https://github.com/unofficialrobloxtutor/RoExpress/releases" target="_blank">GitHub Releases</a>
+        </p>
+
+      </section>
+    </main>
+  </div>
+</body>
+</html>

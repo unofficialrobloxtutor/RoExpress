@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matchmaking Queue Example — RoExpress Docs</title>
+  <meta name="description" content="RoExpress Matchmaking Queue example: join/leave queue routes, Bridge fires internal match event, push notifies matched players.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/ex-matchmaking.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/ex-matchmaking.html">
+  <meta property="og:title" content="Matchmaking Queue Example — RoExpress Docs">
+  <meta property="og:description" content="Join/leave routes, Bridge internal match event, push to matched players.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Example</div>
+        <h1>Matchmaking Queue</h1>
+        <p class="lead">Players join/leave via routes, Bridge fires an internal event when a match forms, push notifies matched players.</p>
+
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> MATCH_SIZE <span class="op">=</span> <span class="num">2</span>
+<span class="kw">local</span> queue <span class="op">=</span> {}
+
+<span class="kw">local function</span> <span class="fn">tryMatch</span>()
+    <span class="kw">while</span> <span class="op">#</span>queue <span class="op">&gt;=</span> MATCH_SIZE <span class="kw">do</span>
+        <span class="kw">local</span> group <span class="op">=</span> {}
+        <span class="kw">for</span> i <span class="op">=</span> <span class="num">1</span>, MATCH_SIZE <span class="kw">do</span>
+            <span class="fn">table.insert</span>(group, <span class="fn">table.remove</span>(queue, <span class="num">1</span>))
+        <span class="kw">end</span>
+        <span class="kw">local</span> matchId <span class="op">=</span> game:<span class="fn">GetService</span>(<span class="str">"HttpService"</span>):<span class="fn">GenerateGUID</span>(<span class="kw">false</span>)
+        bridge.<span class="fn">Fire</span>(<span class="str">"match.created"</span>, { matchId = matchId, players = group })
+        <span class="kw">for</span> _, player <span class="kw">in</span> <span class="fn">ipairs</span>(group) <span class="kw">do</span>
+            app:<span class="fn">Push</span>(player, <span class="str">"match.found"</span>, { matchId = matchId })
+        <span class="kw">end</span>
+    <span class="kw">end</span>
+<span class="kw">end</span>
+
+app:<span class="fn">Post</span>(<span class="str">"matchmaking/join"</span>, <span class="kw">function</span>(Player, Payload, req, res)
+    <span class="kw">for</span> _, p <span class="kw">in</span> <span class="fn">ipairs</span>(queue) <span class="kw">do</span>
+        <span class="kw">if</span> p <span class="op">==</span> Player <span class="kw">then</span> res:<span class="fn">Status</span>(<span class="num">400</span>):<span class="fn">Error</span>(<span class="str">"Already queued"</span>); <span class="kw">return end</span>
+    <span class="kw">end</span>
+    <span class="fn">table.insert</span>(queue, Player)
+    res:<span class="fn">Send</span>({ position = <span class="op">#</span>queue })
+    <span class="fn">tryMatch</span>()
+<span class="kw">end</span>)
+
+app:<span class="fn">Post</span>(<span class="str">"matchmaking/leave"</span>, <span class="kw">function</span>(Player, Payload, req, res)
+    <span class="kw">for</span> i, p <span class="kw">in</span> <span class="fn">ipairs</span>(queue) <span class="kw">do</span>
+        <span class="kw">if</span> p <span class="op">==</span> Player <span class="kw">then</span> <span class="fn">table.remove</span>(queue, i); res:<span class="fn">Send</span>({ left = <span class="kw">true</span> }); <span class="kw">return end</span>
+    <span class="kw">end</span>
+    res:<span class="fn">Status</span>(<span class="num">400</span>):<span class="fn">Error</span>(<span class="str">"Not in queue"</span>)
+<span class="kw">end</span>)
+
+app:<span class="fn">Get</span>(<span class="str">"matchmaking/status"</span>, <span class="kw">function</span>(Player, Payload, req, res)
+    <span class="kw">for</span> i, p <span class="kw">in</span> <span class="fn">ipairs</span>(queue) <span class="kw">do</span>
+        <span class="kw">if</span> p <span class="op">==</span> Player <span class="kw">then</span> res:<span class="fn">Send</span>({ queued = <span class="kw">true</span>, position = i }); <span class="kw">return end</span>
+    <span class="kw">end</span>
+    res:<span class="fn">Send</span>({ queued = <span class="kw">false</span> })
+<span class="kw">end</span>)</code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./app.html">App</a> &nbsp;·&nbsp;
+          <a href="./bridge.html">Bridge</a> — internal match.created event &nbsp;·&nbsp;
+          <a href="./push.html">Server Push</a> — match.found notification &nbsp;·&nbsp;
+          <a href="./ex-round.html">Round Manager</a> — what comes after a match forms
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

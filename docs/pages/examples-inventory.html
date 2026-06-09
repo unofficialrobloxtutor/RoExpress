@@ -1,0 +1,145 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory System Example — RoExpress Docs</title>
+  <meta name="description" content="Full inventory system using RoExpress: GET all items, POST add item, PUT update slot, DELETE remove item. Compressed responses, DataStore persistence.">
+  <meta name="keywords" content="roblox, luau, roexpress, inventory, example, datastore, get, post, put, delete, codec, compress">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/examples/inventory/">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/examples/inventory/">
+  <meta property="og:title" content="Inventory System Example — RoExpress Docs">
+  <meta property="og:description" content="GET/POST/PUT/DELETE inventory with compressed responses and DataStore.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Example</div>
+        <h1>Inventory System</h1>
+        <p class="lead">A full CRUD inventory using all four HTTP methods. <span class="pill p-get">GET</span> fetches with Deflate compression, <span class="pill p-post">POST</span> adds items, <span class="pill p-put">PUT</span> updates slots, <span class="pill p-delete">DELETE</span> removes items.</p>
+
+        <h2>Route map</h2>
+        <table class="tbl">
+          <thead><tr><th>Method</th><th>Route</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pill p-get">GET</span></td><td><code>inventory</code></td><td>Fetch all items (compressed)</td></tr>
+            <tr><td><span class="pill p-get">GET</span></td><td><code>inventory/:slot=int</code></td><td>Fetch single slot</td></tr>
+            <tr><td><span class="pill p-post">POST</span></td><td><code>inventory</code></td><td>Add item to first free slot</td></tr>
+            <tr><td><span class="pill p-put">PUT</span></td><td><code>inventory/:slot=int</code></td><td>Swap/update a slot</td></tr>
+            <tr><td><span class="pill p-delete">DELETE</span></td><td><code>inventory/:slot=int</code></td><td>Remove item from slot</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Server: InventoryServer.luau</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> app       <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
+<span class="kw">local</span> DS        <span class="op">=</span> game:GetService(<span class="str">"DataStoreService"</span>):<span class="fn">GetDataStore</span>(<span class="str">"Inventory"</span>)
+<span class="kw">local</span> cache     <span class="op">=</span> {}  <span class="cm">-- { [userId] = { [slot] = item } }</span>
+
+<span class="kw">local function</span> <span class="fn">getInv</span>(player)
+    <span class="kw">return</span> cache[player.UserId] <span class="op">or</span> {}
+<span class="kw">end</span>
+
+game.Players.PlayerAdded:<span class="fn">Connect</span>(<span class="kw">function</span>(p)
+    <span class="kw">local</span> ok, data <span class="op">=</span> pcall(DS.GetAsync, DS, <span class="fn">tostring</span>(p.UserId))
+    cache[p.UserId] <span class="op">=</span> (ok <span class="op">and</span> data) <span class="op">or</span> {}
+<span class="kw">end</span>)
+
+game.Players.PlayerRemoving:<span class="fn">Connect</span>(<span class="kw">function</span>(p)
+    pcall(DS.SetAsync, DS, <span class="fn">tostring</span>(p.UserId), cache[p.UserId])
+    cache[p.UserId] <span class="op">=</span> <span class="kw">nil</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- GET all items (large table — compress it)</span>
+app:<span class="fn">Get</span>(<span class="str">"inventory"</span>, <span class="kw">function</span>(req, res)
+    res:<span class="fn">Send</span>(<span class="fn">getInv</span>(req.player))
+<span class="kw">end</span>, { compress <span class="op">=</span> <span class="kw">true</span> })
+
+<span class="cm">-- GET single slot</span>
+app:<span class="fn">Get</span>(<span class="str">"inventory/:slot=int[1,40]"</span>, <span class="kw">function</span>(req, res)
+    <span class="kw">local</span> inv <span class="op">=</span> <span class="fn">getInv</span>(req.player)
+    res:<span class="fn">Send</span>(inv[req.params.slot])
+<span class="kw">end</span>)
+
+<span class="cm">-- POST add item to first free slot</span>
+app:<span class="fn">Post</span>(<span class="str">"inventory"</span>, <span class="kw">function</span>(req, res)
+    <span class="kw">local</span> inv  <span class="op">=</span> <span class="fn">getInv</span>(req.player)
+    <span class="kw">local</span> item <span class="op">=</span> req.data
+    <span class="kw">for</span> slot <span class="op">=</span> <span class="num">1</span>, <span class="num">40</span> <span class="kw">do</span>
+        <span class="kw">if not</span> inv[slot] <span class="kw">then</span>
+            inv[slot] <span class="op">=</span> item
+            res:<span class="fn">Send</span>({ slot <span class="op">=</span> slot })
+            <span class="kw">return</span>
+        <span class="kw">end</span>
+    <span class="kw">end</span>
+    res:<span class="fn">Status</span>(<span class="num">409</span>):<span class="fn">Error</span>(<span class="str">"Inventory full"</span>)
+<span class="kw">end</span>)
+
+<span class="cm">-- PUT update/swap slot</span>
+app:<span class="fn">Put</span>(<span class="str">"inventory/:slot=int[1,40]"</span>, <span class="kw">function</span>(req, res)
+    <span class="fn">getInv</span>(req.player)[req.params.slot] <span class="op">=</span> req.data.item
+    res:<span class="fn">Send</span>()
+<span class="kw">end</span>)
+
+<span class="cm">-- DELETE remove item</span>
+app:<span class="fn">Delete</span>(<span class="str">"inventory/:slot=int[1,40]"</span>, <span class="kw">function</span>(req, res)
+    <span class="fn">getInv</span>(req.player)[req.params.slot] <span class="op">=</span> <span class="kw">nil</span>
+    res:<span class="fn">Send</span>()
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Client: InventoryClient.luau</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> network <span class="op">=</span> RoExpress.<span class="fn">GetNetwork</span>()
+
+<span class="cm">-- Load full inventory on spawn (auto-decompressed)</span>
+network:<span class="fn">GetAsync</span>(<span class="str">"inventory"</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res)
+        <span class="fn">buildInventoryUI</span>(res.data)
+    <span class="kw">end</span>)
+
+<span class="cm">-- Add item to server</span>
+<span class="kw">local function</span> <span class="fn">addItem</span>(itemData)
+    network:<span class="fn">Post</span>(<span class="str">"inventory"</span>, itemData, <span class="kw">function</span>(res)
+        <span class="kw">if</span> res.type <span class="op">==</span> <span class="str">"success"</span> <span class="kw">then</span>
+            <span class="fn">setUISlot</span>(res.data.slot, itemData)
+        <span class="kw">end</span>
+    <span class="kw">end</span>)
+<span class="kw">end</span>
+
+<span class="cm">-- Remove item</span>
+<span class="kw">local function</span> <span class="fn">removeItem</span>(slot)
+    network:<span class="fn">Delete</span>(<span class="str">"inventory/"</span> <span class="op">..</span> slot, <span class="kw">nil</span>, <span class="kw">function</span>(res)
+        <span class="kw">if</span> res.type <span class="op">==</span> <span class="str">"success"</span> <span class="kw">then</span>
+            <span class="fn">clearUISlot</span>(slot)
+        <span class="kw">end</span>
+    <span class="kw">end</span>)
+<span class="kw">end</span></code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./app/">App</a> — routing API &nbsp;·&nbsp;
+          <a href="./network/">Network</a> — client requests &nbsp;·&nbsp;
+          <a href="./codec/">Codec</a> — compression &nbsp;·&nbsp;
+          <a href="./router/">Router</a> — typed params &amp; range constraints
+        </p>
+
+      </section>
+    </main>
+  </div>
+</body>
+</html>

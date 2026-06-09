@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design Decisions — RoExpress Docs</title>
+  <meta name="description" content="The key design decisions behind RoExpress: single remote, HTTP semantics, token bucket, LZ77, lag compensation, and more. Rationale for each choice.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/design-consensus.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/design-consensus.html">
+  <meta property="og:title" content="Design Decisions — RoExpress Docs">
+  <meta property="og:description" content="Rationale behind single remote, HTTP verbs, token bucket, LZ77, and all major choices.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Reference</div>
+        <h1>Design Decisions</h1>
+        <p class="lead">Every non-obvious choice made during RoExpress development — what the alternatives were, and why this path was taken.</p>
+
+        <div class="timeline">
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">One RemoteEvent by default</div>
+            <div class="te-title">Route all requests through a single shared remote</div>
+            <p class="te-desc">
+              Roblox enforces a cap on RemoteEvents per place. A dedicated remote per route would hit the cap quickly in a large game and make tooling (replication, profiling) harder to reason about.
+            </p>
+            <p class="te-desc">
+              The single-remote model adds a small per-request envelope — method and route string — but the overhead is negligible versus the structural win of centralised rate limiting, middleware, and logging. Ports exist for the cases that genuinely need isolation without giving up the rest of the framework.
+            </p>
+            <p><strong>Alternatives considered:</strong> one remote per module, one per route. Both hit the cap too easily.</p>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">HTTP verbs over string event names</div>
+            <div class="te-title">GET/POST/PUT/DELETE carry semantic intent by convention</div>
+            <p class="te-desc">
+              Arbitrary string names for remote events encode no information about whether the call is read-only or mutating, expected to return data or just trigger a side effect. You can't tell from the name alone whether a <code>"stats"</code> event reads or writes stats.
+            </p>
+            <p class="te-desc">
+              HTTP verbs are a well-established convention: <code>GET</code> is read-only and idempotent, <code>POST</code> creates or triggers, <code>PUT</code> replaces, <code>DELETE</code> removes. Any developer familiar with web APIs reads a handler's intent immediately. The same semantic constraint also makes it easier to apply middleware selectively — e.g. rate-limit <code>POST</code> more aggressively than <code>GET</code>.
+            </p>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">Token bucket over fixed-window rate limiting</div>
+            <div class="te-title">Allows legitimate bursts without penalising normal traffic</div>
+            <p class="te-desc">
+              Fixed-window rate limiting resets a counter on a clock boundary. A player who sends 9 requests at 11:59:59 and 9 at 12:00:01 fires 18 requests in 2 seconds without triggering a 10-per-minute limit.
+            </p>
+            <p class="te-desc">
+              The token bucket (RFC 2697) solves this. Tokens accumulate at a fixed rate up to a burst capacity. Each request costs one token. Bursts draw down the bucket but legitimate continuous traffic always gets tokens as fast as they refill. Menu opens legitimately burst a few requests; the bucket handles this gracefully. An exploit that fires continuously drains the bucket and gets 429s.
+            </p>
+            <p><strong>Based on:</strong> <a href="./research.html#rfc2697">RFC 2697</a></p>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">Compression is opt-in per route</div>
+            <div class="te-title">Not all payloads benefit — compression adds CPU cost</div>
+            <p class="te-desc">
+              Compressing small payloads (a single number, a boolean) adds overhead without reducing size. LZ77 only wins when there's repetition in the data — JSON with repeated keys, arrays of similar objects, large text.
+            </p>
+            <p class="te-desc">
+              Making compression opt-in per route via <code>{ compress = true }</code> lets developers apply it exactly where it helps: bulk data responses, leaderboard pages, catalogues. High-frequency low-latency routes like <code>combat/hit</code> stay uncompressed.
+            </p>
+            <p><strong>Based on:</strong> <a href="./research.html#lz77">Ziv &amp; Lempel 1977</a></p>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">Reliable push on the same RemoteEvent</div>
+            <div class="te-title">Piggyback server push on the existing reliable channel</div>
+            <p class="te-desc">
+              Adding a second RemoteEvent for server push would double the remote count and split rate limiting across two channels. The alternative was to multiplex push packets on the existing response channel.
+            </p>
+            <p class="te-desc">
+              Push packets carry <code>type = "push"</code> in their envelope. The Listener filters on this field — request-response packets are routed to Network callbacks, push packets to Listener subscriptions. From a developer's perspective the separation is invisible: push uses <code>listener:On</code>, responses use <code>network:Get</code> callbacks.
+            </p>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">Bridge as internal event bus — no shared imports</div>
+            <div class="te-title">Modules communicate without requiring each other as dependencies</div>
+            <p class="te-desc">
+              In a large server codebase, modules that import each other create dependency cycles and tight coupling. A SpawnService that imports RoundManager imports ScoreService imports SpawnService — circular, untestable.
+            </p>
+            <p class="te-desc">
+              Bridge provides a named-event bus. RoundManager fires <code>"round.began"</code>; SpawnService listens for it. Neither module imports the other. The coupling is in the event name, not the module reference — much easier to change or remove one side independently.
+            </p>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">Stream channels over a position API</div>
+            <div class="te-title">State sync shouldn't be hardcoded to FPS player positions</div>
+            <p class="te-desc">
+              Stream v1 and v2 were purpose-built for broadcasting player positions every tick. The schema was hardcoded: x, y, z, rotY, health. This worked for FPS games but nothing else.
+            </p>
+            <p class="te-desc">
+              Stream v3 (shipped in v2.3) takes a schema at construction time — you declare field names and types, Stream handles packing and unpacking. The FPS use case still works, but now you can stream wheel rotation, economy ticks, weather, or any other high-frequency state. The batch-broadcast model (one buffer, one <code>FireAllClients</code> per tick) is retained regardless of schema.
+            </p>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">Compact args detect signature at dispatch</div>
+            <div class="te-title">Both handler forms coexist — no migration required</div>
+            <p class="te-desc">
+              When compact args (v2.3) were added, there were already many games using the four-argument form <code>function(Player, Payload, req, res)</code>. A breaking change would have forced every user to update.
+            </p>
+            <p class="te-desc">
+              The dispatch path uses <code>debug.info</code> to count the handler's declared parameters at registration time. Four parameters → old form, route normally. Two parameters → compact form, wrap Player and Payload into <code>req.player</code> and <code>req.raw</code>. The detection runs once at registration, not on every call.
+            </p>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">Lag compensation via history rewind</div>
+            <div class="te-title">Server validates against where the target was when the client fired</div>
+            <p class="te-desc">
+              Without lag compensation, a client with 150 ms ping sees the world 150 ms behind the server. If they shoot where a player is on their screen, the server has moved that player 150 ms forward and rejects the hit as a miss. High-ping players are systematically disadvantaged.
+            </p>
+            <p class="te-desc">
+              Stream keeps a rolling position history per channel entry. When a hit claim arrives with a client-side timestamp, <code>ch:Rewind(userId, ts)</code> returns the position that player was at when the client fired. Validation uses the rewound position, making hit registration fair regardless of ping.
+            </p>
+            <p><strong>Based on:</strong> <a href="./research.html#bernier">Bernier 2001</a></p>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">TypeCoercer as a separate utility</div>
+            <div class="te-title">Type serialization shouldn't be baked into the request path</div>
+            <p class="te-desc">
+              RemoteEvent payloads and DataStore both accept only plain Lua types. Roblox types (Vector3, CFrame, Color3) need serialization. The question was whether to handle this automatically in the App/Network layer or expose it as a separate utility.
+            </p>
+            <p class="te-desc">
+              Baking it in would mean invisible overhead on every payload scan. Making it explicit (developer calls <code>TC.ToString</code> and <code>TC.FromString</code> where needed) means the cost is only paid when the developer chooses it. Most routes pass plain tables — they pay nothing.
+            </p>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">Middleware returns false for rejection</div>
+            <div class="te-title">Explicit false distinguishes "reject" from "pass through silently"</div>
+            <p class="te-desc">
+              Early prototypes used a truthy/falsy convention — return any falsy value to reject. The problem: forgetting a return in a logging middleware that should pass through would silently reject every request.
+            </p>
+            <p class="te-desc">
+              Requiring a literal <code>false</code> return makes the convention explicit. A middleware with no return value (or a missing return) always passes through. Only a deliberate <code>return false</code> rejects. This makes middleware safe to write by default.
+            </p>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">Ports for isolation, not as the default</div>
+            <div class="te-title">Namespace isolation at the cost of an extra remote — opt-in only</div>
+            <p class="te-desc">
+              Some teams want completely separate rate limiting, middleware, and event channels for different game systems. A Port gives them that by creating a fresh App instance on its own RemoteEvent. But the cost is a second remote.
+            </p>
+            <p class="te-desc">
+              Making Ports opt-in keeps most projects on a single remote. Games that need isolation (a competitive combat system that must never share rate limiting with a chat system) can use a Port for just that system, while everything else shares the main App.
+            </p>
+          </div>
+
+        </div>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./story.html">The Story</a> — how RoExpress evolved &nbsp;·&nbsp;
+          <a href="./research.html">Research Papers</a> — academic foundations &nbsp;·&nbsp;
+          <a href="./comparison.html">Library Comparison</a> — where these choices lead vs other libraries
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

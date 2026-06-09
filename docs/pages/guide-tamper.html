@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tamper Guide — RoExpress Docs</title>
+  <meta name="description" content="Set up RoExpress Tamper for exploit detection: automatic strike tracking, manual strikes, threshold tuning, kick on exceed.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/guide-tamper.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/guide-tamper.html">
+  <meta property="og:title" content="Tamper Guide — RoExpress Docs">
+  <meta property="og:description" content="Automatic strike tracking, manual strikes, threshold tuning, kick on exceed.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Guide</div>
+        <h1>Exploit Detection with Tamper</h1>
+        <p class="lead">Tamper tracks malformed requests automatically and lets you issue manual strikes for game-logic violations. Kick players when they exceed a configurable threshold.</p>
+
+        <h2>Setup</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Tamper <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress.Tamper)
+
+Tamper:<span class="fn">Configure</span>({
+    threshold  <span class="op">=</span> <span class="num">5</span>,        <span class="cm">-- strikes before kick</span>
+    window     <span class="op">=</span> <span class="num">60</span>,       <span class="cm">-- rolling window in seconds</span>
+    kickMsg    <span class="op">=</span> <span class="str">"Exploiting is not permitted."</span>,
+    onStrike   <span class="op">=</span> <span class="kw">function</span>(player, reason, count)
+        <span class="fn">print</span>(player.Name, <span class="str">"strike"</span>, count, reason)
+    <span class="kw">end</span>,
+})</code></pre>
+
+        <h2>Automatic strikes</h2>
+        <p>Tamper automatically issues a strike when App or Port receives a request it can't parse — wrong method, malformed payload, invalid route. No extra setup needed.</p>
+
+        <h2>Manual strikes</h2>
+        <p>Issue strikes from your own handler when game logic is violated.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>app:<span class="fn">Post</span>(<span class="str">"combat/hit"</span>, <span class="kw">function</span>(Player, Payload, req, res)
+    <span class="kw">local</span> damage <span class="op">=</span> req.data <span class="kw">and</span> req.data.damage
+    <span class="kw">if</span> <span class="kw">type</span>(damage) ~<span class="op">=</span> <span class="str">"number"</span> or damage <span class="op">&lt;=</span> <span class="num">0</span> or damage > <span class="num">100</span> <span class="kw">then</span>
+        Tamper:<span class="fn">Strike</span>(Player, <span class="str">"invalid damage value: "</span> <span class="op">..</span> <span class="fn">tostring</span>(damage))
+        res:<span class="fn">Status</span>(<span class="num">400</span>):<span class="fn">Error</span>(<span class="str">"Invalid"</span>)
+        <span class="kw">return</span>
+    <span class="kw">end</span>
+    <span class="cm">-- process valid hit</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Threshold tuning</h2>
+        <table class="tbl">
+          <thead><tr><th>Game type</th><th>Recommended threshold</th><th>Window</th></tr></thead>
+          <tbody>
+            <tr><td>Competitive / ranked</td><td>3</td><td>30 s</td></tr>
+            <tr><td>Casual / social</td><td>10</td><td>120 s</td></tr>
+            <tr><td>Development / testing</td><td>999</td><td>999 s</td></tr>
+          </tbody>
+        </table>
+
+        <div class="cl warn"><strong>Don't zero-tolerance.</strong> Network errors and client bugs can cause honest players to send malformed data. Start permissive and tighten only if you see repeat offenders in logs.</div>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./tamper.html">Tamper API</a> &nbsp;·&nbsp;
+          <a href="./guide-stream.html">Stream Guide</a> — combining lag compensation + tamper &nbsp;·&nbsp;
+          <a href="./tokenbucket.html">TokenBucket</a> — rate limiting as first line of defence &nbsp;·&nbsp;
+          <a href="./guide-middleware.html">Middleware</a> — additional validation layer
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

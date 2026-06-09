@@ -1,0 +1,157 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Combat System Guide — RoExpress Docs</title>
+  <meta name="description" content="Build a complete gun combat system in Roblox using RoExpress: Ports for isolation, Stream for movement, Broadcast for hit effects, TokenBucket for rate limiting.">
+  <meta name="keywords" content="roblox, luau, roexpress, combat, gun, shoot, hit, damage, port, stream, broadcast, tokenbucket, rate limit">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/guides/combat/">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/guides/combat/">
+  <meta property="og:title" content="Combat System Guide — RoExpress Docs">
+  <meta property="og:description" content="Gun combat with Ports, Stream movement sync, Broadcast for FX, TokenBucket rate limiting.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Guide</div>
+        <h1>Combat System</h1>
+        <p class="lead">A complete gun framework using <a href="./port/">Ports</a> for request isolation, <a href="./stream/">Stream</a> for player movement, <a href="./broadcast/">Broadcast</a> for visual effects, and <a href="./tokenbucket/">TokenBucket</a> rate limiting that matches weapon fire rates.</p>
+
+        <h2>Architecture overview</h2>
+        <table class="tbl">
+          <thead><tr><th>Channel</th><th>Module</th><th>What it carries</th></tr></thead>
+          <tbody>
+            <tr><td>Main App</td><td><a href="./app/">App</a></td><td>Game logic, inventory, player data</td></tr>
+            <tr><td>Combat Port</td><td><a href="./port/">Port</a></td><td>Shoot, reload, weapon switch — isolated rate limits</td></tr>
+            <tr><td>Movement Stream</td><td><a href="./stream/">Stream</a></td><td>CFrame + velocity at 20 Hz, binary delta-compressed</td></tr>
+            <tr><td>Hit FX</td><td><a href="./broadcast/">Broadcast</a></td><td>Particle/sound events — unreliable, lossy OK</td></tr>
+          </tbody>
+        </table>
+
+        <h2>1. Combat Port setup (server)</h2>
+        <p>Isolating combat requests on a Port means a rate-flooding cheater can't starve inventory requests. The <code>cost</code> and <code>refill</code> model the weapon's fire rate.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Server: CombatService.luau</span>
+<span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> app       <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
+<span class="kw">local</span> broadcast <span class="op">=</span> RoExpress(<span class="str">"Broadcast"</span>)
+
+app:<span class="fn">Listen</span>(<span class="str">"combat"</span>, <span class="kw">function</span>(port)
+
+    <span class="cm">-- Shoot: max 10 shots burst, refills at 8/s (semi-auto rifle)</span>
+    port:<span class="fn">Post</span>(<span class="str">"shoot"</span>, <span class="kw">function</span>(req, res)
+        <span class="kw">local</span> origin   <span class="op">=</span> req.data.origin   <span class="cm">-- CFrame</span>
+        <span class="kw">local</span> targetId <span class="op">=</span> req.data.targetId <span class="cm">-- number?</span>
+
+        <span class="kw">local</span> hitResult <span class="op">=</span> <span class="fn">validateShot</span>(req.player, origin, targetId)
+
+        <span class="kw">if</span> hitResult.hit <span class="kw">then</span>
+            <span class="fn">applyDamage</span>(req.player, hitResult.victim, hitResult.damage)
+            broadcast:<span class="fn">EmitAll</span>(<span class="str">"hitFX"</span>, { pos <span class="op">=</span> hitResult.pos })
+        <span class="kw">end</span>
+
+        res:<span class="fn">Send</span>({ hit <span class="op">=</span> hitResult.hit, damage <span class="op">=</span> hitResult.damage })
+    <span class="kw">end</span>)
+
+    port:<span class="fn">Post</span>(<span class="str">"reload"</span>, <span class="kw">function</span>(req, res)
+        <span class="fn">startReload</span>(req.player)
+        res:<span class="fn">Send</span>()
+    <span class="kw">end</span>)
+
+<span class="kw">end</span>, { max <span class="op">=</span> <span class="num">10</span>, refill <span class="op">=</span> <span class="num">8</span>, cost <span class="op">=</span> <span class="num">1</span> })</code></pre>
+
+        <h2>2. Movement Stream (shared schema)</h2>
+        <p>Define the schema once in a shared module. Server and client both require it — no duplication.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Shared: Schemas/Movement.luau</span>
+<span class="kw">local</span> Stream <span class="op">=</span> RoExpress.Stream
+
+<span class="kw">return</span> Stream:<span class="fn">Schema</span>({
+    cframe   <span class="op">=</span> <span class="str">"CFrame"</span>,
+    velocity <span class="op">=</span> <span class="str">"Vector3"</span>,
+    health   <span class="op">=</span> <span class="str">"uint8"</span>,
+    flags    <span class="op">=</span> <span class="str">"uint8"</span>,  <span class="cm">-- bit 0: sprinting, bit 1: crouching</span>
+})</code></pre>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Client: sends at 20 Hz using unreliable channel</span>
+<span class="kw">local</span> MovSchema <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.Schemas.Movement)
+<span class="kw">local</span> channel   <span class="op">=</span> RoExpress.Stream:<span class="fn">Channel</span>(<span class="str">"movement"</span>, MovSchema)
+
+RunService.Heartbeat:<span class="fn">Connect</span>(<span class="kw">function</span>(dt)
+    accum <span class="op">+=</span> dt
+    <span class="kw">if</span> accum <span class="op"><</span> <span class="num">0.05</span> <span class="kw">then return end</span>  <span class="cm">-- 20 Hz</span>
+    accum <span class="op">=</span> <span class="num">0</span>
+    channel:<span class="fn">Send</span>({
+        cframe   <span class="op">=</span> char.HumanoidRootPart.CFrame,
+        velocity <span class="op">=</span> char.HumanoidRootPart.AssemblyLinearVelocity,
+        health   <span class="op">=</span> humanoid.Health,
+        flags    <span class="op">=</span> <span class="fn">getFlags</span>(humanoid),
+    })
+<span class="kw">end</span>)</code></pre>
+
+        <h2>3. Hit FX on the client</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Client: receive broadcast hit events</span>
+<span class="kw">local</span> listener <span class="op">=</span> RoExpress(<span class="str">"Listener"</span>)
+
+listener:<span class="fn">On</span>(<span class="str">"hitFX"</span>, <span class="kw">function</span>(data)
+    <span class="cm">-- Dropped packets are fine — nobody notices a missing particle</span>
+    <span class="fn">spawnBloodParticle</span>(data.pos)
+<span class="kw">end</span>)</code></pre>
+
+        <h2>4. Rate limiting that fits your weapon</h2>
+        <table class="tbl">
+          <thead><tr><th>Weapon type</th><th><code>max</code></th><th><code>refill</code></th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td>Pistol (10 rps)</td><td>10</td><td>10</td><td>Sustained 10 shots/sec, burst 10</td></tr>
+            <tr><td>Semi-auto rifle (8 rps)</td><td>10</td><td>8</td><td>Burst 10, sustained 8</td></tr>
+            <tr><td>Shotgun (2 rps)</td><td>4</td><td>2</td><td>Can double-tap, then 1 per 500ms</td></tr>
+            <tr><td>Sniper (1 rps)</td><td>2</td><td>1</td><td>One shot immediately, then 1/sec</td></tr>
+          </tbody>
+        </table>
+
+        <h2>5. Server-side hit validation</h2>
+        <p>Never trust the client's target ID alone. Always validate on the server:</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local function</span> <span class="fn">validateShot</span>(shooter, origin, targetId)
+    <span class="kw">local</span> target <span class="op">=</span> game.Players:<span class="fn">GetPlayerByUserId</span>(targetId)
+    <span class="kw">if not</span> target <span class="op">or not</span> target.Character <span class="kw">then</span>
+        <span class="kw">return</span> { hit <span class="op">=</span> <span class="kw">false</span> }
+    <span class="kw">end</span>
+
+    <span class="kw">local</span> dist <span class="op">=</span> (origin.Position <span class="op">-</span> target.Character.HumanoidRootPart.Position).Magnitude
+    <span class="kw">if</span> dist <span class="op">></span> MAX_RANGE <span class="kw">then</span>
+        <span class="cm">-- Flag as suspicious for Tamper</span>
+        <span class="kw">return</span> { hit <span class="op">=</span> <span class="kw">false</span> }
+    <span class="kw">end</span>
+
+    <span class="kw">return</span> { hit <span class="op">=</span> <span class="kw">true</span>, victim <span class="op">=</span> target, damage <span class="op">=</span> <span class="num">25</span>, pos <span class="op">=</span> origin.Position }
+<span class="kw">end</span></code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./port/">Ports</a> — isolated pipelines &nbsp;·&nbsp;
+          <a href="./stream/">Stream</a> — binary channels &nbsp;·&nbsp;
+          <a href="./broadcast/">Broadcast</a> — unreliable events &nbsp;·&nbsp;
+          <a href="./tokenbucket/">TokenBucket</a> — rate limiting &nbsp;·&nbsp;
+          <a href="./tamper/">Tamper</a> — exploit detection &nbsp;·&nbsp;
+          <a href="./examples/gun/">Full Gun Example</a>
+        </p>
+
+      </section>
+    </main>
+  </div>
+</body>
+</html>

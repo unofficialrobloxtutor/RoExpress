@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Middleware Guide — RoExpress Docs</title>
+  <meta name="description" content="RoExpress middleware: global blocking middleware, route-scoped guards, analytics. Return false to reject with 403.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/guide-middleware.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/guide-middleware.html">
+  <meta property="og:title" content="Middleware Guide — RoExpress Docs">
+  <meta property="og:description" content="Global blocking, route-scoped guards, analytics. Return false to reject.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Guide</div>
+        <h1>Middleware</h1>
+        <p class="lead">Middleware runs before every handler. Return <code>false</code> to reject with a 403, return nothing to pass through.</p>
+
+        <h2>Signature</h2>
+        <div class="sig">app:<span class="fn">Use</span>(name, <span class="kw">function</span>(Player, Payload) → boolean?)</div>
+
+        <h2>Global blocking</h2>
+        <p>Runs on every request. Good for banning players or blocking suspended accounts.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>app:<span class="fn">Use</span>(<span class="str">"ban-check"</span>, <span class="kw">function</span>(Player, Payload)
+    <span class="kw">if</span> BanList[Player.UserId] <span class="kw">then</span>
+        <span class="kw">return false</span>  <span class="cm">-- 403 Forbidden</span>
+    <span class="kw">end</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Route-scoped guards</h2>
+        <p>Check <code>Payload.route</code> to run logic only for a subset of routes.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>app:<span class="fn">Use</span>(<span class="str">"admin-guard"</span>, <span class="kw">function</span>(Player, Payload)
+    <span class="kw">if</span> Payload.route:<span class="fn">match</span>(<span class="str">"^admin/"</span>) <span class="kw">and not</span> ADMINS[Player.UserId] <span class="kw">then</span>
+        <span class="kw">return false</span>
+    <span class="kw">end</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Analytics / logging</h2>
+        <p>No return value — passes through after recording.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>app:<span class="fn">Use</span>(<span class="str">"analytics"</span>, <span class="kw">function</span>(Player, Payload)
+    Analytics:<span class="fn">Track</span>({
+        userId  = Player.UserId,
+        route   = Payload.route,
+        method  = Payload.method,
+        ts      = <span class="fn">os.time</span>(),
+    })
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Middleware order</h2>
+        <p>Middleware runs in registration order. Register guards before logging so rejected requests aren't tracked as successful.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>app:<span class="fn">Use</span>(<span class="str">"ban-check"</span>,   banCheckFn)    <span class="cm">-- 1st</span>
+app:<span class="fn">Use</span>(<span class="str">"admin-guard"</span>, adminGuardFn)  <span class="cm">-- 2nd</span>
+app:<span class="fn">Use</span>(<span class="str">"analytics"</span>,   analyticsFn)   <span class="cm">-- 3rd — only runs if not rejected</span></code></pre>
+
+        <div class="cl warn"><strong>Return <code>false</code>, not nil.</strong> Returning nil (or nothing) passes through. Only a literal <code>false</code> rejects.</div>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./app.html">App</a> — <code>app:Use()</code> API &nbsp;·&nbsp;
+          <a href="./guides-auth.html">Authentication</a> — full auth middleware with tokens &nbsp;·&nbsp;
+          <a href="./ex-admin.html">Admin Commands</a> — route-scoped guard in practice &nbsp;·&nbsp;
+          <a href="./tamper.html">Tamper</a> — built-in exploit detection
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

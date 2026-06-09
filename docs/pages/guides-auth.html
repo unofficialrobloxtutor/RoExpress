@@ -1,0 +1,121 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authentication Guide — RoExpress Docs</title>
+  <meta name="description" content="How to implement authentication in RoExpress: global middleware, per-route role checks, token verification, whitelist/banlist, and blocking with 403.">
+  <meta name="keywords" content="roblox, luau, roexpress, authentication, auth, middleware, role, permission, banlist, whitelist, 403 forbid">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/guides/auth/">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/guides/auth/">
+  <meta property="og:title" content="Authentication Guide — RoExpress Docs">
+  <meta property="og:description" content="Global middleware, per-route role checks, token verification, ban lists. Complete auth walkthrough.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Guide</div>
+        <h1>Authentication</h1>
+        <p class="lead">RoExpress authentication is built on the <a href="./app/#middleware">middleware system</a>. Every request goes through middleware before the handler runs — return <code>false</code> to block with <span class="pill p-err">403</span>, return nothing to continue.</p>
+
+        <h2>Global ban check</h2>
+        <p>The simplest auth: block banned players from every route. Register this first so it runs before any other middleware.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> app <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
+<span class="kw">local</span> banned <span class="op">=</span> { [<span class="num">1234567</span>] <span class="op">=</span> <span class="kw">true</span> }  <span class="cm">-- userId → banned</span>
+
+app:<span class="fn">Use</span>(<span class="str">"ban-check"</span>, <span class="kw">function</span>(Player, Payload)
+    <span class="kw">if</span> banned[Player.UserId] <span class="kw">then</span>
+        <span class="kw">return false</span>  <span class="cm">-- sends 403 Forbidden</span>
+    <span class="kw">end</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Admin-only routes</h2>
+        <p>Use a helper to create a middleware closure and register it per-route via a second <code>Use</code> call with a unique id, or use a naming convention to scope it.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> ADMINS <span class="op">=</span> { [<span class="num">987654321</span>] <span class="op">=</span> <span class="kw">true</span> }
+
+<span class="kw">local function</span> <span class="fn">requireAdmin</span>(Player)
+    <span class="kw">return</span> ADMINS[Player.UserId] <span class="op">== true</span>
+<span class="kw">end</span>
+
+<span class="cm">-- Register a named middleware that only runs on /admin routes</span>
+app:<span class="fn">Use</span>(<span class="str">"admin-gate"</span>, <span class="kw">function</span>(Player, Payload)
+    <span class="kw">if</span> Payload.route:<span class="fn">match</span>(<span class="str">"^admin/"</span>) <span class="kw">then</span>
+        <span class="kw">if not</span> <span class="fn">requireAdmin</span>(Player) <span class="kw">then return false end</span>
+    <span class="kw">end</span>
+<span class="kw">end</span>)
+
+app:<span class="fn">Get</span>(<span class="str">"admin/stats"</span>, <span class="kw">function</span>(req, res)
+    res:<span class="fn">Send</span>({ serverFPS <span class="op">=</span> workspace:GetRealPhysicsFPS() })
+<span class="kw">end</span>)</code></pre>
+
+        <h2>DataStore-backed ban list</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> DataStoreService <span class="op">=</span> game:GetService(<span class="str">"DataStoreService"</span>)
+<span class="kw">local</span> BanStore <span class="op">=</span> DataStoreService:<span class="fn">GetDataStore</span>(<span class="str">"Bans"</span>)
+<span class="kw">local</span> banCache <span class="op">=</span> {}
+
+<span class="cm">-- Warm cache on player join</span>
+game.Players.PlayerAdded:<span class="fn">Connect</span>(<span class="kw">function</span>(p)
+    <span class="kw">local</span> ok, result <span class="op">=</span> pcall(BanStore.GetAsync, BanStore, <span class="fn">tostring</span>(p.UserId))
+    <span class="kw">if</span> ok <span class="op">and</span> result <span class="kw">then</span>
+        banCache[p.UserId] <span class="op">=</span> <span class="kw">true</span>
+        p:<span class="fn">Kick</span>(<span class="str">"You are banned."</span>)
+    <span class="kw">end</span>
+<span class="kw">end</span>)
+
+app:<span class="fn">Use</span>(<span class="str">"ban"</span>, <span class="kw">function</span>(Player) <span class="kw">if</span> banCache[Player.UserId] <span class="kw">then return false end end</span>)</code></pre>
+
+        <h2>Role-based middleware pattern</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Roles <span class="op">=</span> {} <span class="cm">-- { [userId] = "admin"|"mod"|"player" }</span>
+
+<span class="kw">local function</span> <span class="fn">requireRole</span>(role)
+    <span class="kw">return function</span>(Player)
+        <span class="kw">if</span> Roles[Player.UserId] <span class="op">~=</span> role <span class="kw">then return false end</span>
+    <span class="kw">end</span>
+<span class="kw">end</span>
+
+<span class="cm">-- Per-port with dedicated rate limits and role check</span>
+app:<span class="fn">Listen</span>(<span class="str">"modtools"</span>, <span class="kw">function</span>(port)
+    port:<span class="fn">Use</span>(<span class="str">"role"</span>, <span class="fn">requireRole</span>(<span class="str">"admin"</span>))
+    port:<span class="fn">Delete</span>(<span class="str">"player/:id=number"</span>, <span class="kw">function</span>(req, res)
+        <span class="cm">-- only admins reach this</span>
+        res:<span class="fn">Send</span>(<span class="fn">banPlayer</span>(req.params.id))
+    <span class="kw">end</span>)
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Error handling in middleware</h2>
+        <p>If your middleware throws an unhandled error, RoExpress sends <span class="pill p-err">500</span> and logs the stack trace. Wrap external calls (DataStore, ProfileService) in <code>pcall</code>:</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>app:<span class="fn">Use</span>(<span class="str">"profile-check"</span>, <span class="kw">function</span>(Player)
+    <span class="kw">local</span> ok, profile <span class="op">=</span> pcall(<span class="fn">getProfile</span>, Player)
+    <span class="kw">if not</span> ok <span class="op">or not</span> profile <span class="kw">then return false end</span>
+    <span class="cm">-- attach to request context via Bridge if needed</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./app/">App</a> — full middleware API &nbsp;·&nbsp;
+          <a href="./pipeline/">Request Pipeline</a> — where middleware sits in the pipeline &nbsp;·&nbsp;
+          <a href="./tamper/">Tamper</a> — passive exploit detection &nbsp;·&nbsp;
+          <a href="./port/">Ports</a> — per-port middleware isolation
+        </p>
+
+      </section>
+    </main>
+  </div>
+</body>
+</html>

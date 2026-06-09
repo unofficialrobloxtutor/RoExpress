@@ -41,16 +41,16 @@ export type BucketSettings = {
     Refill : number?,
 }
 
-type Payload = {
+export type Payload = {
     version   : string,
     type      : "request" | "response" | "error",
-    method    : "GET" | "POST",
+    method    : "GET" | "POST" | "PUT" | "DELETE",
     requestId : string,
     route     : string,
     data      : any,
 }
 
-type Request = {
+export type Request = {
     params   : { [string]: any },
     captures : { any },
     query    : { [string]: string },
@@ -58,14 +58,14 @@ type Request = {
     port     : string,
 }
 
-type Response = {
+export type Response = {
     Send   : (self: Response, data: any) -> (),
     Error  : (self: Response, message: string) -> (),
     Status : (self: Response, code: number) -> Response,
 }
 
-type MiddlewareFn = (Player: Player, Payload: Payload) -> (boolean?)
-type RouteHandler = (Player: Player, Payload: Payload, req: Request, res: Response) -> ()
+export type MiddlewareFn = (Player: Player, Payload: Payload) -> (boolean?)
+export type RouteHandler = (Player: Player, Payload: Payload, req: Request, res: Response) -> ()
 
 export type Type = typeof(setmetatable({}, Port)) & {
     Name             : string,
@@ -99,7 +99,7 @@ local function _validatePayload(Payload): boolean
         and Payload.type == "request"
 end
 
-local function _buildResponse(Remote, Player, requestId, method, compress)
+local function _buildResponse(Remote, Player, requestId, method, compress, algo)
     local res   = {}
     res._status = 200
     res._sent   = false
@@ -117,7 +117,7 @@ local function _buildResponse(Remote, Player, requestId, method, compress)
         self._sent = true
         local payload
         if compress then
-            payload = Codec.Compress(data)
+            payload = algo == "lzh" and Codec.Deflate(data) or Codec.Compress(data)
         elseif method == "POST" then
             payload = Base64.EncodeTable(data)
         else
@@ -237,7 +237,8 @@ local function _handler(self: Type, Player, Payload)
     end
 
     local compress = (match.route :: any).compress == true
-    local res = _buildResponse(self.Remote, Player, Payload.requestId, Payload.method, compress)
+    local algo     = (match.route :: any).algo
+    local res      = _buildResponse(self.Remote, Player, Payload.requestId, Payload.method, compress, algo)
 
     local req = {
         params   = match.params,
@@ -309,11 +310,11 @@ function Port:Unuse(id: string): ()
     warn("RoExpress.Port[" .. self.Name .. "]: No local middleware '" .. id .. "'")
 end
 
-function Port:Get(route: string, handler: RouteHandler, options: { compress: boolean? }?): ()
+function Port:Get(route: string, handler: RouteHandler, options: { compress: boolean?, algo: ("lz77" | "lzh")? }?): ()
     self._router:Add("GET", route, handler, options)
 end
 
-function Port:Post(route: string, handler: RouteHandler, options: { compress: boolean? }?): ()
+function Port:Post(route: string, handler: RouteHandler, options: { compress: boolean?, algo: ("lz77" | "lzh")? }?): ()
     self._router:Add("POST", route, handler, options)
 end
 

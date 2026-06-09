@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard Example — RoExpress Docs</title>
+  <meta name="description" content="RoExpress Leaderboard example: live leaderboard with compression, pagination, and periodic push updates.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/ex-leaderboard.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/ex-leaderboard.html">
+  <meta property="og:title" content="Leaderboard Example — RoExpress Docs">
+  <meta property="og:description" content="Live leaderboard with compression, pagination, and periodic push updates.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Example</div>
+        <h1>Leaderboard</h1>
+        <p class="lead">Live leaderboard with compression, paginated fetch, and periodic push updates.</p>
+
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> scores <span class="op">=</span> {}
+
+app:<span class="fn">Get</span>(<span class="str">"leaderboard"</span>, <span class="kw">function</span>(Player, Payload, req, res)
+    <span class="kw">local</span> page  <span class="op">=</span> <span class="fn">tonumber</span>(req.query.page) or <span class="num">1</span>
+    <span class="kw">local</span> limit <span class="op">=</span> <span class="fn">math.min</span>(<span class="fn">tonumber</span>(req.query.limit) or <span class="num">10</span>, <span class="num">50</span>)
+    <span class="kw">local</span> sorted <span class="op">=</span> {}
+    <span class="kw">for</span> userId, score <span class="kw">in</span> <span class="fn">pairs</span>(scores) <span class="kw">do</span>
+        <span class="fn">table.insert</span>(sorted, { userId = userId, score = score })
+    <span class="kw">end</span>
+    <span class="fn">table.sort</span>(sorted, <span class="kw">function</span>(a, b) <span class="kw">return</span> a.score > b.score <span class="kw">end</span>)
+    <span class="kw">local</span> start <span class="op">=</span> (page <span class="op">-</span> <span class="num">1</span>) <span class="op">*</span> limit <span class="op">+</span> <span class="num">1</span>
+    res:<span class="fn">Send</span>({ entries = { <span class="fn">table.unpack</span>(sorted, start, start <span class="op">+</span> limit <span class="op">-</span> <span class="num">1</span>) }, total = <span class="op">#</span>sorted })
+<span class="kw">end</span>, { compress = <span class="kw">true</span> })
+
+app:<span class="fn">Post</span>(<span class="str">"leaderboard/submit"</span>, <span class="kw">function</span>(Player, Payload, req, res)
+    <span class="kw">local</span> score <span class="op">=</span> req.data <span class="kw">and</span> req.data.score
+    <span class="kw">if</span> <span class="kw">type</span>(score) ~<span class="op">=</span> <span class="str">"number"</span> <span class="kw">then</span> res:<span class="fn">Status</span>(<span class="num">400</span>):<span class="fn">Error</span>(<span class="str">"score required"</span>); <span class="kw">return end</span>
+    scores[Player.UserId] <span class="op">=</span> <span class="fn">math.max</span>(scores[Player.UserId] or <span class="num">0</span>, score)
+    res:<span class="fn">Send</span>({ best = scores[Player.UserId] })
+<span class="kw">end</span>)
+
+<span class="cm">-- push top-10 update every 30 s</span>
+task.<span class="fn">spawn</span>(<span class="kw">function</span>()
+    <span class="kw">while true</span> <span class="kw">do</span>
+        task.<span class="fn">wait</span>(<span class="num">30</span>)
+        <span class="kw">local</span> sorted <span class="op">=</span> {}
+        <span class="kw">for</span> userId, score <span class="kw">in</span> <span class="fn">pairs</span>(scores) <span class="kw">do</span>
+            <span class="fn">table.insert</span>(sorted, { userId = userId, score = score })
+        <span class="kw">end</span>
+        <span class="fn">table.sort</span>(sorted, <span class="kw">function</span>(a, b) <span class="kw">return</span> a.score > b.score <span class="kw">end</span>)
+        app:<span class="fn">PushAll</span>(<span class="str">"leaderboard.update"</span>, { <span class="fn">table.unpack</span>(sorted, <span class="num">1</span>, <span class="num">10</span>) })
+    <span class="kw">end</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./app.html">App</a> — compress option &nbsp;·&nbsp;
+          <a href="./push.html">Server Push</a> &nbsp;·&nbsp;
+          <a href="./codec.html">Codec</a> — compression algorithm &nbsp;·&nbsp;
+          <a href="./ex-playerdata.html">Player Data</a> — persisting scores to DataStore
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Story — RoExpress</title>
+  <meta name="description" content="How RoExpress started in 2021 and grew into a full networking framework — five years of iteration, nine modules, 1800 lines.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/story.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/story.html">
+  <meta property="og:title" content="The Story — RoExpress">
+  <meta property="og:description" content="2021 → 2026. Five years, nine modules, 1800 lines.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Origin</div>
+        <h1>The Story</h1>
+        <p class="lead">RoExpress started as a personal utility in 2021 and grew into a full networking framework over five years. Here's what actually happened.</p>
+
+        <div class="timeline">
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">2021 — The problem</div>
+            <div class="te-title">Every game had the same boilerplate</div>
+            <p class="te-desc">
+              Building Roblox games meant writing the same code over and over — FireServer, OnServerEvent, check the player, check the data, respond somehow. There was no standard. Some games used string keys, some used event names, some used argument position. None of it composed.
+            </p>
+            <p class="te-desc">
+              Express.js had already solved this problem for web APIs a decade earlier. Routes, params, middleware, status codes — a uniform interface that every developer on the project could understand immediately. The only question was whether the same model would work on Roblox.
+            </p>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">2022 — First version</div>
+            <div class="te-title">v1: a thin wrapper, mostly for personal use</div>
+            <p class="te-desc">
+              The first version was a single ModuleScript — a few hundred lines. It put a string-keyed router on top of RemoteEvent, added per-player rate limiting, and nothing else. It wasn't published. It was just used in personal projects.
+            </p>
+            <p class="te-desc">
+              The immediate win was structural: other team members could read a route handler and understand it without knowing how the underlying remote worked. That was the signal that the model was right.
+            </p>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">2023 — HTTP semantics</div>
+            <div class="te-title">Adopting GET/POST/PUT/DELETE instead of string event names</div>
+            <p class="te-desc">
+              The first version used arbitrary string names for handlers. Renaming a handler meant searching the entire codebase. HTTP verbs solved this — a <code>GET</code> handler is always read-only, a <code>POST</code> always creates or triggers, a <code>DELETE</code> always removes. The semantics were self-documenting.
+            </p>
+            <p class="te-desc">
+              Status codes followed from the same logic. Returning <code>404</code> for a missing resource was more informative than returning <code>false</code> or an empty table. Clients could pattern-match on the status without parsing the response payload.
+            </p>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">2024 — The v2 rewrite</div>
+            <div class="te-title">Ground-up redesign — all nine modules, Codec, Stream, TypeCoercer</div>
+            <p class="te-desc">
+              By mid-2024 it was clear the v1 architecture couldn't extend cleanly. Compression, typed params, server push, internal events, high-frequency state sync — each needed its own surface. The decision was to do a complete rewrite rather than bolt things on.
+            </p>
+            <p class="te-desc">
+              v2 shipped nine modules: App, Network, Listener, Broadcast, Bridge, Stream, Codec, Router, TokenBucket, TypeCoercer. Each was built to be used independently — you don't need all nine to get started.
+            </p>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">2025 — Push, Tamper, Ports, Benchmark</div>
+            <div class="te-title">The missing pieces — reliable push, exploit detection, isolation, profiling</div>
+            <p class="te-desc">
+              v2.1 and v2.2 filled the gaps that became obvious once people used v2 in real projects. Reliable server push turned out to be the most-requested feature — handling it on the same RemoteEvent as request-response kept the remote count down and made the Listener transparent.
+            </p>
+            <p class="te-desc">
+              Tamper came from watching how games deployed under load. Players would probe routes with malformed payloads to find edge cases. A built-in strike tracker handled the common case without requiring every handler to write its own defence.
+            </p>
+          </div>
+
+          <div class="te">
+            <div class="te-dot"></div>
+            <div class="te-ver">2026 — Stream v3 &amp; compact args</div>
+            <div class="te-title">v2.3: Stream rebuilt for any data, not just FPS</div>
+            <p class="te-desc">
+              The original Stream was purpose-built for FPS player position sync. v2.3 rebuilt it as generic typed channels — you define a schema, Stream handles the packing. The FPS use case still works, but now you can stream wheel rotation, weather state, economy ticks, or anything else that changes every frame.
+            </p>
+            <p class="te-desc">
+              Compact handler args shipped alongside — four arguments shrinking to two was the most common ergonomics complaint. The detection approach (checking parameter count via <code>debug.info</code> at dispatch time) let both forms coexist without a migration.
+            </p>
+          </div>
+
+        </div>
+
+        <div class="cl info">
+          <strong>By the numbers:</strong> 9 modules &nbsp;·&nbsp; ~1800 lines of source &nbsp;·&nbsp; 5 years from first version to v2.3
+        </div>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./design-consensus.html">Design Decisions</a> — the specific choices and trade-offs &nbsp;·&nbsp;
+          <a href="./updates.html">Changelog</a> — version history &nbsp;·&nbsp;
+          <a href="./comparison.html">Library Comparison</a> — where RoExpress fits relative to other libraries &nbsp;·&nbsp;
+          <a href="./research.html">Research Papers</a> — academic foundations
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

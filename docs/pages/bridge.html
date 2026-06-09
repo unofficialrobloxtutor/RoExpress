@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bridge — RoExpress Docs</title>
+  <meta name="description" content="RoExpress Bridge module: internal server-side event bus. Bind, Unbind, Fire, Has, Wait, WaitUntil, WaitFirst for decoupled module-to-module communication.">
+  <meta name="keywords" content="roblox, luau, roexpress, bridge, event bus, bind, unbind, fire, wait, yield, coroutine, internal">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/bridge/">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/bridge/">
+  <meta property="og:title" content="Bridge — RoExpress Docs">
+  <meta property="og:description" content="Internal server-side event bus for decoupled module-to-module communication.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Shared</div>
+        <h1>Bridge</h1>
+        <p class="lead">Internal server-side event bus. Decouples modules from each other — a combat module can fire a "playerDied" event without knowing who is listening. Bridge does not cross the client/server boundary.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Bridge <span class="op">=</span> RoExpress.Bridge</code></pre>
+
+        <h2>Firing &amp; binding</h2>
+        <div class="sig">Bridge:<span class="fn">Fire</span>(event, ...)</div>
+        <div class="sig">Bridge:<span class="fn">Bind</span>(event, callback) → id</div>
+        <div class="sig">Bridge:<span class="fn">Unbind</span>(id)</div>
+        <div class="sig">Bridge:<span class="fn">Has</span>(event) → boolean</div>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Module A: fires event</span>
+Bridge:<span class="fn">Fire</span>(<span class="str">"playerDied"</span>, player, killer)
+
+<span class="cm">-- Module B: reacts</span>
+Bridge:<span class="fn">Bind</span>(<span class="str">"playerDied"</span>, <span class="kw">function</span>(player, killer)
+    <span class="fn">updateLeaderboard</span>(killer)
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Yielding</h2>
+        <div class="sig">Bridge:<span class="fn">Wait</span>(event) → ...</div>
+        <div class="sig">Bridge:<span class="fn">WaitUntil</span>(event, predicate) → ...</div>
+        <div class="sig">Bridge:<span class="fn">WaitFirst</span>({events}) → event, ...</div>
+        <p><code>Wait</code> yields until the next time the event fires. <code>WaitUntil</code> keeps yielding until the predicate returns truthy. <code>WaitFirst</code> yields until any of the listed events fires and returns which one fired first.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Yield until any round-ending event</span>
+<span class="kw">local</span> event, data <span class="op">=</span> Bridge:<span class="fn">WaitFirst</span>({ <span class="str">"roundWon"</span>, <span class="str">"roundDraw"</span>, <span class="str">"roundTimeout"</span> })
+<span class="fn">print</span>(<span class="str">"Round ended via:"</span>, event)</code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./app.html">App</a> — request/response pipeline &nbsp;·&nbsp;
+          <a href="./broadcast.html">Broadcast</a> — cross-client events (Bridge is server-to-server only) &nbsp;·&nbsp;
+          <a href="./listener.html">Listener</a> — client-side event subscription
+        </p>
+
+      </section>
+    </main>
+  </div>
+</body>
+</html>

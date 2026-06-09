@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kill Feed Example — RoExpress Docs</title>
+  <meta name="description" content="RoExpress Kill Feed example: typed params, compression, server push, broadcast, wildcard routes, middleware — every layer in one example.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/ex-killfeed.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/ex-killfeed.html">
+  <meta property="og:title" content="Kill Feed Example — RoExpress Docs">
+  <meta property="og:description" content="Typed params, compression, push, broadcast, wildcards, middleware — all in one.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Example</div>
+        <h1>Kill Feed</h1>
+        <p class="lead">Touches every layer — typed params, compression, server push, broadcast, wildcard routes, and middleware.</p>
+
+        <h2>Server</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> app       <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"App"</span>)
+<span class="kw">local</span> broadcast <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Broadcast"</span>)
+<span class="kw">local</span> bridge    <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Bridge"</span>)
+<span class="kw">local</span> killFeed  <span class="op">=</span> {}
+
+app:<span class="fn">Use</span>(<span class="str">"logger"</span>, <span class="kw">function</span>(Player, Payload)
+    <span class="fn">print</span>(Player.Name, Payload.method, Payload.route)
+<span class="kw">end</span>)
+
+app:<span class="fn">Post</span>(<span class="str">"stats/save"</span>, <span class="kw">function</span>(Player, Payload, req, res)
+    <span class="kw">local</span> entry <span class="op">=</span> { killer<span class="op">=</span>req.data.killerName, victim<span class="op">=</span>req.data.victimName, weapon<span class="op">=</span>req.data.weapon, timestamp<span class="op">=</span><span class="fn">os.time</span>() }
+    <span class="fn">table.insert</span>(killFeed, <span class="num">1</span>, entry)
+    app:<span class="fn">PushAll</span>(<span class="str">"killFeed.entry"</span>, entry)          <span class="cm">-- reliable</span>
+    broadcast:<span class="fn">EmitAll</span>(<span class="str">"killFeed.ping"</span>, { killer<span class="op">=</span>req.data.killerName, victim<span class="op">=</span>req.data.victimName }) <span class="cm">-- unreliable</span>
+    bridge.<span class="fn">Fire</span>(<span class="str">"kill.registered"</span>, entry)           <span class="cm">-- internal bus</span>
+    res:<span class="fn">Send</span>({ success = <span class="kw">true</span> })
+<span class="kw">end</span>)
+
+app:<span class="fn">Get</span>(<span class="str">"stats/:userId=number"</span>, <span class="kw">function</span>(Player, Payload, req, res)
+    res:<span class="fn">Send</span>(stats[req.params.userId])  <span class="cm">-- userId already a number</span>
+<span class="kw">end</span>)
+
+app:<span class="fn">Get</span>(<span class="str">"feed/all"</span>,    handler, { compress = <span class="kw">true</span> })
+app:<span class="fn">Get</span>(<span class="str">"feed/recent"</span>, handler)  <span class="cm">-- ?limit=20</span>
+app:<span class="fn">Get</span>(<span class="str">"feed/*/kills"</span>, handler) <span class="cm">-- req.captures[1] = period</span></code></pre>
+
+        <h2>Client</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>listener:<span class="fn">On</span>(<span class="str">"killFeed.entry"</span>, <span class="kw">function</span>(data) FeedUI:<span class="fn">Add</span>(data) <span class="kw">end</span>)
+listener:<span class="fn">On</span>(<span class="str">"killFeed.ping"</span>,  <span class="kw">function</span>(data) HUD:<span class="fn">Flash</span>(data) <span class="kw">end</span>)
+network:<span class="fn">Get</span>(<span class="str">"feed/all"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res) FeedUI:<span class="fn">Load</span>(res.data.entries) <span class="kw">end</span>)</code></pre>
+
+        <h2>Modules used</h2>
+        <table class="tbl">
+          <thead><tr><th>Module</th><th>Feature demonstrated</th></tr></thead>
+          <tbody>
+            <tr><td><a href="./app.html">App</a></td><td>Routing, middleware, server push, wildcard routes, compression</td></tr>
+            <tr><td><a href="./broadcast.html">Broadcast</a></td><td>Unreliable fire-and-forget</td></tr>
+            <tr><td><a href="./bridge.html">Bridge</a></td><td>Internal server bus decoupling</td></tr>
+            <tr><td><a href="./network.html">Network</a></td><td>Client-side fetch</td></tr>
+            <tr><td><a href="./listener.html">Listener</a></td><td>Subscribing to push and broadcast</td></tr>
+          </tbody>
+        </table>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./push.html">Server Push</a> &nbsp;·&nbsp;
+          <a href="./broadcast.html">Broadcast</a> &nbsp;·&nbsp;
+          <a href="./router.html">Router</a> — wildcard routes &nbsp;·&nbsp;
+          <a href="./codec.html">Codec</a> — compression &nbsp;·&nbsp;
+          <a href="./ex-round.html">Round Manager</a> — similar push pattern
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
