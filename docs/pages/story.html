@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Story — RoExpress</title>
-  <meta name="description" content="How RoExpress started in 2021 and grew into a full networking framework — five years of iteration, nine modules, 1800 lines.">
+  <meta name="description" content="How RoExpress started in 2021 with a DevForum post nobody read, survived a homeless year in 2025, and shipped in 2026. The real story.">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://roexpress.dev/docs/pages/story.html">
@@ -12,7 +12,7 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/pages/story.html">
   <meta property="og:title" content="The Story — RoExpress">
-  <meta property="og:description" content="2021 → 2026. Five years, nine modules, 1800 lines.">
+  <meta property="og:description" content="2021 → 2026. A DevForum post nobody read, a homeless year, and a framework that shipped anyway.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,105 +20,160 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../public/css/styles.css">
   <script src="../nav.js"></script>
+  <style>
+    .story-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--accent2);
+      border: 1px solid var(--border2);
+      padding: 7px 14px; border-radius: 6px;
+      text-decoration: none;
+      transition: background .14s ease, border-color .14s ease;
+      margin-top: 14px;
+    }
+    .story-btn:hover { background: var(--accent-bg); border-color: rgba(139,120,255,.3) }
+    .story-btn + .story-btn { margin-left: 8px }
+    .story-btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px }
+
+    .story-note {
+      margin-top: 14px;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px 16px;
+      font-size: 12.5px; color: var(--text2); line-height: 1.7;
+    }
+    .story-note-label {
+      font-size: 11px; color: var(--text3); display: block; margin-bottom: 6px;
+    }
+
+    .story-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+      margin-top: 20px;
+    }
+    .story-stat {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 16px; text-align: center;
+    }
+    .story-stat-n {
+      font-family: var(--serif); font-size: 1.8rem;
+      color: var(--accent2); line-height: 1;
+    }
+    .story-stat-l { font-size: 11px; color: var(--text3); margin-top: 4px }
+
+    .story-close {
+      margin-top: 20px;
+      background: var(--accent-bg);
+      border: 1px solid rgba(139,120,255,.2);
+      border-radius: 8px; padding: 16px 18px;
+      font-size: 13px; color: var(--text2); line-height: 1.75;
+    }
+  </style>
 </head>
 <body data-theme="dark">
   <div id="overlay" onclick="toggleSidebar()"></div>
-  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
   <header id="hdr"></header>
   <div id="lay">
     <nav id="sb"></nav>
     <main id="ct">
       <section class="doc">
         <div class="eyebrow">Origin</div>
-        <h1>The Story</h1>
-        <p class="lead">RoExpress started as a personal utility in 2021 and grew into a full networking framework over five years. Here's what actually happened.</p>
+        <h1>The Story ✦</h1>
+        <p class="lead">RoExpress didn't arrive fully formed. It came out of years of frustration, failure, circumstance, and stubbornness &mdash; built in pieces across very different seasons of life.</p>
 
         <div class="timeline">
 
+          <!-- 2021 -->
           <div class="te">
             <div class="te-dot"></div>
-            <div class="te-ver">2021 — The problem</div>
-            <div class="te-title">Every game had the same boilerplate</div>
-            <p class="te-desc">
-              Building Roblox games meant writing the same code over and over — FireServer, OnServerEvent, check the player, check the data, respond somehow. There was no standard. Some games used string keys, some used event names, some used argument position. None of it composed.
-            </p>
-            <p class="te-desc">
-              Express.js had already solved this problem for web APIs a decade earlier. Routes, params, middleware, status codes — a uniform interface that every developer on the project could understand immediately. The only question was whether the same model would work on Roblox.
-            </p>
+            <div class="te-ver">2021</div>
+            <div class="te-title">The first post</div>
+            <p class="te-desc">A post went up on the Roblox Developer Forum asking for feedback on an early idea for a remote framework. It never got listed. No traction, no replies worth counting. Most people would have moved on.</p>
+            <p class="te-desc">The core problem was already right: Roblox games scatter RemoteEvents everywhere with no structure and no safety. One remote, one pipeline. That instinct never changed &mdash; everything since has been figuring out how to execute it properly.</p>
+            <div class="story-note">
+              <span class="story-note-label">Original idea, 2021</span>
+              The idea was simple: what if you could write a Roblox route handler the same way you write an Express.js endpoint? One RemoteEvent, one pipeline, all requests routed and protected automatically. Nobody cared at the time. That was fine.
+            </div>
+            <div class="story-btn-row">
+              <a class="story-btn" href="https://devforum.roblox.com/t/need-feedback-ideas-for-my-remote-framework/1528778" target="_blank" rel="noopener">&#8599; View the original DevForum post</a>
+              <!-- PLACEHOLDER: add more 2021 links here -->
+            </div>
           </div>
 
+          <!-- 2023 -->
           <div class="te">
             <div class="te-dot"></div>
-            <div class="te-ver">2022 — First version</div>
-            <div class="te-title">v1: a thin wrapper, mostly for personal use</div>
-            <p class="te-desc">
-              The first version was a single ModuleScript — a few hundred lines. It put a string-keyed router on top of RemoteEvent, added per-player rate limiting, and nothing else. It wasn't published. It was just used in personal projects.
-            </p>
-            <p class="te-desc">
-              The immediate win was structural: other team members could read a route handler and understand it without knowing how the underlying remote worked. That was the signal that the model was right.
-            </p>
+            <div class="te-ver">2023</div>
+            <div class="te-title">A small router module</div>
+            <p class="te-desc">Back at it. A small standalone router module &mdash; basic route matching, typed params, nothing fancy. It worked but it didn't fit together as a framework yet. The pieces weren't talking to each other. The struggle was real: how do you make something that feels like one thing instead of a collection of parts?</p>
+            <p class="te-desc">That question didn't get answered in 2023. But the router module survived as a reference point &mdash; proof that the routing problem was solvable. It became the seed of what would eventually be the Router module in v2.</p>
+            <div class="story-btn-row">
+              <!-- PLACEHOLDER: add 2023 DevForum or GitHub links here -->
+            </div>
           </div>
 
+          <!-- 2024 -->
           <div class="te">
             <div class="te-dot"></div>
-            <div class="te-ver">2023 — HTTP semantics</div>
-            <div class="te-title">Adopting GET/POST/PUT/DELETE instead of string event names</div>
-            <p class="te-desc">
-              The first version used arbitrary string names for handlers. Renaming a handler meant searching the entire codebase. HTTP verbs solved this — a <code>GET</code> handler is always read-only, a <code>POST</code> always creates or triggers, a <code>DELETE</code> always removes. The semantics were self-documenting.
-            </p>
-            <p class="te-desc">
-              Status codes followed from the same logic. Returning <code>404</code> for a missing resource was more informative than returning <code>false</code> or an empty table. Clients could pattern-match on the status without parsing the response payload.
-            </p>
+            <div class="te-ver">2024</div>
+            <div class="te-title">Joining a team, learning new paradigms</div>
+            <p class="te-desc">Joined a small development team. First time working in a real collaborative codebase. Saw how other people structured things &mdash; middleware patterns, request/response pipelines, module boundaries. Express.js wasn't just a reference anymore, it became the mental model.</p>
+            <p class="te-desc">The gap between "a Roblox game's networking" and "a structured API" became clear. And the gap was fixable. Spending time in a real team codebase showed exactly where Roblox networking fell apart at scale &mdash; and what a framework would need to fix it.</p>
+            <div class="story-btn-row">
+              <!-- PLACEHOLDER: add 2024 links here -->
+            </div>
           </div>
 
+          <!-- 2025 -->
           <div class="te">
             <div class="te-dot"></div>
-            <div class="te-ver">2024 — The v2 rewrite</div>
-            <div class="te-title">Ground-up redesign — all nine modules, Codec, Stream, TypeCoercer</div>
-            <p class="te-desc">
-              By mid-2024 it was clear the v1 architecture couldn't extend cleanly. Compression, typed params, server push, internal events, high-frequency state sync — each needed its own surface. The decision was to do a complete rewrite rather than bolt things on.
-            </p>
-            <p class="te-desc">
-              v2 shipped nine modules: App, Network, Listener, Broadcast, Bridge, Stream, Codec, Router, TokenBucket, TypeCoercer. Each was built to be used independently — you don't need all nine to get started.
-            </p>
+            <div class="te-ver">2025</div>
+            <div class="te-title">The hardest year</div>
+            <p class="te-desc">2025 was hard. Homeless, but in school &mdash; studying engineering and working toward a welding certificate. The framework sat on the back burner. Life had other priorities. But the ideas kept accumulating: rate limiting that actually works, typed routes, a broadcast primitive that's honest about reliability.</p>
+            <p class="te-desc">Still showed up on the DevForum. Still talking to other developers, still part of the community. That continuity matters more than it sounds. Sometimes the best thing that can happen to a project is that you can't touch it for a year &mdash; you come back knowing exactly what it needs.</p>
+            <div class="story-btn-row">
+              <a class="story-btn" href="https://devforum.roblox.com/t/has-anyone-gone-thru-homelessness-while-being-a-roblox-developer/2915844/15" target="_blank" rel="noopener">&#8599; DevForum &mdash; on homelessness as a Roblox developer</a>
+              <!-- PLACEHOLDER: add more 2025 links here -->
+            </div>
           </div>
 
+          <!-- 2026 -->
           <div class="te">
             <div class="te-dot"></div>
-            <div class="te-ver">2025 — Push, Tamper, Ports, Benchmark</div>
-            <div class="te-title">The missing pieces — reliable push, exploit detection, isolation, profiling</div>
-            <p class="te-desc">
-              v2.1 and v2.2 filled the gaps that became obvious once people used v2 in real projects. Reliable server push turned out to be the most-requested feature — handling it on the same RemoteEvent as request-response kept the remote count down and made the Listener transparent.
-            </p>
-            <p class="te-desc">
-              Tamper came from watching how games deployed under load. Players would probe routes with malformed payloads to find edge cases. A built-in strike tracker handled the common case without requiring every handler to write its own defence.
-            </p>
+            <div class="te-ver">2026</div>
+            <div class="te-title">Still homeless. Still building.</div>
+            <p class="te-desc">The situation didn't change &mdash; still homeless. What changed was the output. v1.6 shipped as the first real, complete version: one remote, a working request pipeline, rate limiting, middleware, broadcast. Something you could actually put in a game. Then v2.0, then v2.1 through v2.4 in quick succession.</p>
+            <p class="te-desc">Time is the scarce resource. To make up for it, AI tools became part of the workflow &mdash; but not as a shortcut. The approach is to study the research first, understand the problem deeply, write informed prompts, then manually review and fix every hallucination. The framework's correctness comes from that last step. AI accelerates the writing. The decisions are still made by hand.</p>
+            <p class="te-desc">The framework that was sketched in a DevForum post in 2021 finally became the thing it was always trying to be. The circumstances of getting here weren't ideal. That part doesn't matter anymore.</p>
+            <div class="story-stats">
+              <div class="story-stat">
+                <div class="story-stat-n">9</div>
+                <div class="story-stat-l">modules</div>
+              </div>
+              <div class="story-stat">
+                <div class="story-stat-n">~1800</div>
+                <div class="story-stat-l">lines of Luau</div>
+              </div>
+              <div class="story-stat">
+                <div class="story-stat-n">5 yr</div>
+                <div class="story-stat-l">in the making</div>
+              </div>
+            </div>
+            <div class="story-close">
+              <span style="color:var(--accent2);font-weight:500">DeathToTheStadium</span> &mdash; the framework is MIT licensed and free to use. If it helps your game ship faster, that's the whole point.
+            </div>
+            <div class="story-btn-row">
+              <a class="story-btn" href="https://devforum.roblox.com/t/roexpress/4646082" target="_blank" rel="noopener">&#8599; RoExpress on the DevForum</a>
+              <!-- PLACEHOLDER: add launch announcement links here -->
+            </div>
           </div>
 
-          <div class="te">
-            <div class="te-dot"></div>
-            <div class="te-ver">2026 — Stream v3 &amp; compact args</div>
-            <div class="te-title">v2.3: Stream rebuilt for any data, not just FPS</div>
-            <p class="te-desc">
-              The original Stream was purpose-built for FPS player position sync. v2.3 rebuilt it as generic typed channels — you define a schema, Stream handles the packing. The FPS use case still works, but now you can stream wheel rotation, weather state, economy ticks, or anything else that changes every frame.
-            </p>
-            <p class="te-desc">
-              Compact handler args shipped alongside — four arguments shrinking to two was the most common ergonomics complaint. The detection approach (checking parameter count via <code>debug.info</code> at dispatch time) let both forms coexist without a migration.
-            </p>
-          </div>
-
-        </div>
-
-        <div class="cl info">
-          <strong>By the numbers:</strong> 9 modules &nbsp;·&nbsp; ~1800 lines of source &nbsp;·&nbsp; 5 years from first version to v2.3
         </div>
 
         <h2>See also</h2>
         <p>
-          <a href="./design-consensus.html">Design Decisions</a> — the specific choices and trade-offs &nbsp;·&nbsp;
-          <a href="./updates.html">Changelog</a> — version history &nbsp;·&nbsp;
-          <a href="./comparison.html">Library Comparison</a> — where RoExpress fits relative to other libraries &nbsp;·&nbsp;
-          <a href="./research.html">Research Papers</a> — academic foundations
+          <a href="./design-consensus.html">Design Decisions</a> &mdash; the specific trade-offs behind every choice &nbsp;&middot;&nbsp;
+          <a href="./updates.html">Changelog</a> &mdash; every version, what changed &nbsp;&middot;&nbsp;
+          <a href="./research.html">Research Papers</a> &mdash; academic foundations &nbsp;&middot;&nbsp;
+          <a href="./community-discord.html">Discord</a> &mdash; come say hi
         </p>
       </section>
     </main>

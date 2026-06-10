@@ -1,13 +1,15 @@
 # robots.txt — roexpress.dev
-# Last updated: 2026-05-30
+# Last updated: 2026-06-09
 
 # ── ALLOW ALL LEGITIMATE CRAWLERS ──────────────────────────────────
 User-agent: *
 Allow: /
+Disallow: /.archived/
 
 # ── GOOGLE ─────────────────────────────────────────────────────────
 User-agent: Googlebot
 Allow: /
+Disallow: /.archived/
 
 User-agent: Googlebot-Image
 Disallow: /
@@ -15,25 +17,32 @@ Disallow: /
 # ── BING ───────────────────────────────────────────────────────────
 User-agent: Bingbot
 Allow: /
+Disallow: /.archived/
 
 # ── AI CRAWLERS — allow for discoverability ────────────────────────
 User-agent: GPTBot
 Allow: /
+Disallow: /.archived/
 
 User-agent: Claude-Web
 Allow: /
+Disallow: /.archived/
 
 User-agent: anthropic-ai
 Allow: /
+Disallow: /.archived/
 
 User-agent: PerplexityBot
 Allow: /
+Disallow: /.archived/
 
 User-agent: YouBot
 Allow: /
+Disallow: /.archived/
 
 User-agent: CCBot
 Allow: /
+Disallow: /.archived/
 
 # ── KNOWN SCRAPERS / BAD BOTS — block ─────────────────────────────
 User-agent: AhrefsBot

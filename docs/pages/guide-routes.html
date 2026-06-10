@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Route Organisation — RoExpress Guides</title>
+  <meta name="description" content="How to keep your RoExpress routes and handlers clean as your project grows — routes module, handler modules, table style, function style.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/guide-routes.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/guide-routes.html">
+  <meta property="og:title" content="Route Organisation — RoExpress Guides">
+  <meta property="og:description" content="Routes module, handler modules, table style, function style — keeping things clean as your project grows.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Guides</div>
+        <h1>Route Organisation</h1>
+        <p class="lead">As a project grows, putting every route and handler in one script becomes hard to read and harder to maintain. This guide shows several ways to split them out — a routes module for strings, handler modules per system, and two styles for writing the handlers themselves.</p>
+
+        <div class="cl info">None of these patterns require any changes to how RoExpress works. They are purely about how you organise your own files.</div>
+
+        <h2>The baseline problem</h2>
+        <p>A small game might start with this and it's fine:</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- ServerScriptService/Server.luau</span>
+<span class="kw">local</span> app <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
+
+app:<span class="fn">Get</span>(<span class="str">"shop/items"</span>, <span class="kw">function</span>(req, res)
+    res:<span class="fn">Send</span>(ShopData.<span class="fn">GetItems</span>())
+<span class="kw">end</span>)
+
+app:<span class="fn">Post</span>(<span class="str">"shop/buy/:itemId=string"</span>, <span class="kw">function</span>(req, res)
+    <span class="cm">-- 30 lines of purchase logic</span>
+<span class="kw">end</span>)
+
+app:<span class="fn">Get</span>(<span class="str">"player/:userId=number/stats"</span>, <span class="kw">function</span>(req, res)
+    <span class="cm">-- 20 lines of stats logic</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- ... 15 more routes ...</span></code></pre>
+
+        <p>Once you have more than a handful of routes the file becomes a scrolling wall. Finding a specific handler means searching. Changing a route string means hoping you got every reference.</p>
+
+        <h2>Step 1 &mdash; a routes module</h2>
+        <p>Move every route string into one module. Every other file imports from here instead of using raw strings.</p>
+
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- ReplicatedStorage/Routes.luau</span>
+<span class="kw">return</span> {
+    <span class="cm">-- shop</span>
+    SHOP_ITEMS    <span class="op">=</span> <span class="str">"shop/items"</span>,
+    SHOP_BUY      <span class="op">=</span> <span class="str">"shop/buy/:itemId=string"</span>,
+    SHOP_SELL     <span class="op">=</span> <span class="str">"shop/sell/:itemId=string"</span>,
+
+    <span class="cm">-- player</span>
+    PLAYER_STATS  <span class="op">=</span> <span class="str">"player/:userId=number/stats"</span>,
+    PLAYER_SAVE   <span class="op">=</span> <span class="str">"player/:userId=number/save"</span>,
+
+    <span class="cm">-- combat</span>
+    COMBAT_HIT    <span class="op">=</span> <span class="str">"combat/hit"</span>,
+    COMBAT_RELOAD <span class="op">=</span> <span class="str">"combat/reload"</span>,
+}</code></pre>
+
+        <div class="cl tip">Keeping routes in <code>ReplicatedStorage</code> means both the server and client can require the same module. The client uses the same constants when calling <code>network:Get(Routes.SHOP_ITEMS)</code> &mdash; no string duplication, no typos.</div>
+
+        <p>The server now registers against constants:</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Routes <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.Routes)
+
+app:<span class="fn">Get</span>(Routes.SHOP_ITEMS, <span class="kw">function</span>(req, res)
+    res:<span class="fn">Send</span>(ShopData.<span class="fn">GetItems</span>())
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Step 2 &mdash; handler modules</h2>
+        <p>Move the logic for each system into its own module. There are two common styles.</p>
+
+        <h3>Style A &mdash; table of handlers</h3>
+        <p>Export a table where each key maps to a handler function. Clean to iterate, easy to see the full surface of a system at once.</p>
+
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- ServerScriptService/Handlers/ShopHandlers.luau</span>
+<span class="kw">local</span> Routes   <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.Routes)
+<span class="kw">local</span> ShopData <span class="op">=</span> <span class="fn">require</span>(script.Parent.Parent.ShopData)
+
+<span class="kw">return</span> {
+
+    [Routes.SHOP_ITEMS] <span class="op">=</span> { method <span class="op">=</span> <span class="str">"Get"</span>, handler <span class="op">=</span> <span class="kw">function</span>(req, res)
+        res:<span class="fn">Send</span>(ShopData.<span class="fn">GetItems</span>())
+    <span class="kw">end</span> },
+
+    [Routes.SHOP_BUY] <span class="op">=</span> { method <span class="op">=</span> <span class="str">"Post"</span>, handler <span class="op">=</span> <span class="kw">function</span>(req, res)
+        <span class="kw">local</span> ok, err <span class="op">=</span> ShopData.<span class="fn">Buy</span>(req.player, req.params.itemId)
+        <span class="kw">if not</span> ok <span class="kw">then</span>
+            res:<span class="fn">Status</span>(<span class="num">400</span>):<span class="fn">Error</span>(err)
+            <span class="kw">return</span>
+        <span class="kw">end</span>
+        res:<span class="fn">Status</span>(<span class="num">200</span>):<span class="fn">Send</span>()
+    <span class="kw">end</span> },
+
+    [Routes.SHOP_SELL] <span class="op">=</span> { method <span class="op">=</span> <span class="str">"Post"</span>, handler <span class="op">=</span> <span class="kw">function</span>(req, res)
+        <span class="kw">local</span> ok, err <span class="op">=</span> ShopData.<span class="fn">Sell</span>(req.player, req.params.itemId)
+        <span class="kw">if not</span> ok <span class="kw">then</span>
+            res:<span class="fn">Status</span>(<span class="num">400</span>):<span class="fn">Error</span>(err)
+            <span class="kw">return</span>
+        <span class="kw">end</span>
+        res:<span class="fn">Status</span>(<span class="num">200</span>):<span class="fn">Send</span>()
+    <span class="kw">end</span> },
+
+}</code></pre>
+
+        <p>The main server script iterates and registers everything in a loop:</p>
+
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- ServerScriptService/Server.luau</span>
+<span class="kw">local</span> app          <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
+<span class="kw">local</span> ShopHandlers <span class="op">=</span> <span class="fn">require</span>(script.Handlers.ShopHandlers)
+
+<span class="kw">for</span> route, entry <span class="kw">in</span> ShopHandlers <span class="kw">do</span>
+    app[entry.method](app, route, entry.handler)
+<span class="kw">end</span></code></pre>
+
+        <h3>Style B &mdash; register function</h3>
+        <p>Export a single <code>Register(app)</code> function. The module owns its own registration — the server script just calls it. Simpler to write, slightly less flexible to inspect.</p>
+
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- ServerScriptService/Handlers/CombatHandlers.luau</span>
+<span class="kw">local</span> Routes     <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.Routes)
+<span class="kw">local</span> CombatData <span class="op">=</span> <span class="fn">require</span>(script.Parent.Parent.CombatData)
+
+<span class="kw">local</span> CombatHandlers <span class="op">=</span> {}
+
+<span class="kw">function</span> CombatHandlers.<span class="fn">Register</span>(app)
+
+    app:<span class="fn">Post</span>(Routes.COMBAT_HIT, <span class="kw">function</span>(req, res)
+        <span class="kw">local</span> damage <span class="op">=</span> CombatData.<span class="fn">ValidateHit</span>(
+            req.player,
+            req.body.targetId,
+            req.body.timestamp
+        )
+        <span class="kw">if not</span> damage <span class="kw">then</span>
+            res:<span class="fn">Status</span>(<span class="num">400</span>):<span class="fn">Error</span>(<span class="str">"Invalid hit"</span>)
+            <span class="kw">return</span>
+        <span class="kw">end</span>
+        res:<span class="fn">Send</span>({ damage <span class="op">=</span> damage })
+    <span class="kw">end</span>)
+
+    app:<span class="fn">Post</span>(Routes.COMBAT_RELOAD, <span class="kw">function</span>(req, res)
+        CombatData.<span class="fn">Reload</span>(req.player)
+        res:<span class="fn">Status</span>(<span class="num">200</span>):<span class="fn">Send</span>()
+    <span class="kw">end</span>)
+
+<span class="kw">end</span>
+
+<span class="kw">return</span> CombatHandlers</code></pre>
+
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- ServerScriptService/Server.luau</span>
+<span class="kw">local</span> app            <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
+<span class="kw">local</span> CombatHandlers <span class="op">=</span> <span class="fn">require</span>(script.Handlers.CombatHandlers)
+<span class="kw">local</span> ShopHandlers   <span class="op">=</span> <span class="fn">require</span>(script.Handlers.ShopHandlers)
+
+CombatHandlers.<span class="fn">Register</span>(app)
+ShopHandlers.<span class="fn">Register</span>(app)   <span class="cm">-- or use the loop style from Style A</span></code></pre>
+
+        <h2>Putting it all together</h2>
+        <p>A project using both patterns might look like this on disk:</p>
+
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>ServerScriptService/
+&#9492;&#9472;&#9472; Server.luau              <span class="cm">-- requires app, registers middleware, calls each Register()</span>
+    &#9492;&#9472;&#9472; Handlers/
+        &#9500;&#9472;&#9472; ShopHandlers.luau    <span class="cm">-- Style A: table</span>
+        &#9500;&#9472;&#9472; CombatHandlers.luau  <span class="cm">-- Style B: Register(app)</span>
+        &#9492;&#9472;&#9472; PlayerHandlers.luau  <span class="cm">-- Style B: Register(app)</span>
+
+ReplicatedStorage/
+&#9500;&#9472;&#9472; Routes.luau              <span class="cm">-- all route strings as named constants</span>
+&#9492;&#9472;&#9472; RoExpress/               <span class="cm">-- the framework</span>
+
+StarterPlayerScripts/
+&#9492;&#9472;&#9472; Client.luau              <span class="cm">-- requires Routes, calls network:Get(Routes.SHOP_ITEMS)</span></code></pre>
+
+        <div class="cl tip">There is no single right style. Style A (table) works well when you want to inspect or iterate all routes for a system programmatically. Style B (Register function) works well when a system needs setup work before registering &mdash; opening a DataStore, connecting a Bridge listener, etc.</div>
+
+        <h2>Which style should I use?</h2>
+        <table class="tbl">
+          <thead>
+            <tr><th>Situation</th><th>Recommended</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Small project, a few routes total</td><td>Inline in Server.luau &mdash; no split needed</td></tr>
+            <tr><td>Multiple systems, routes shared between server and client</td><td>Routes module in ReplicatedStorage</td></tr>
+            <tr><td>System needs setup before registering (DataStore, Bridge)</td><td>Style B &mdash; Register(app)</td></tr>
+            <tr><td>You want to enumerate or test routes programmatically</td><td>Style A &mdash; table of handlers</td></tr>
+            <tr><td>Large team, each person owns a system</td><td>Style B per system &mdash; each module is self-contained</td></tr>
+          </tbody>
+        </table>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./guide-mvc.html">MVC Pattern</a> &mdash; taking organisation further with models and controllers &nbsp;&middot;&nbsp;
+          <a href="./guide-middleware.html">Middleware</a> &mdash; adding guards without touching handlers &nbsp;&middot;&nbsp;
+          <a href="./app.html">App</a> &mdash; full route registration API
+        </p>
+
+      </section>
+    </main>
+  </div>
+</body>
+</html>

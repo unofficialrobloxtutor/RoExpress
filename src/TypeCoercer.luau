@@ -160,7 +160,7 @@ local _coercers: { [string]: (raw: string) -> (boolean, any) } = {
         )
     end,
 
-    -- cframe: "x,y,z,qX,qY,qZ,qW" (quaternion) or "x,y,z,rx,ry,rz" (euler degrees)
+    -- cframe: "x,y,z,rx,ry,rz" (euler degrees) or "x,y,z" (position only)
     cframe = function(raw)
         local parts = {}
         for v in raw:gmatch("[^,]+") do
@@ -178,13 +178,6 @@ local _coercers: { [string]: (raw: string) -> (boolean, any) } = {
                     math.rad(parts[5]),
                     math.rad(parts[6])
                 )
-        end
-        if #parts == 7 then
-            -- position + quaternion (more accurate)
-            return true, CFrame.new(
-                parts[1], parts[2], parts[3],
-                parts[4], parts[5], parts[6], parts[7]
-            )
         end
         return false, nil
     end,
@@ -256,12 +249,12 @@ local function _toStringValue(value: any): (boolean, string)
     end
 
     if t == "CFrame" then
-        -- serialise as position + quaternion for full accuracy
-        local p  = value.Position
-        local rx, ry, rz, rw = value:ToQuaternion()
-        return true, string.format("%s,%s,%s,%s,%s,%s,%s",
+        -- serialise as position + euler angles in degrees
+        local p = value.Position
+        local rx, ry, rz = value:ToEulerAnglesXYZ()
+        return true, string.format("%s,%s,%s,%s,%s,%s",
             _round(p.X), _round(p.Y), _round(p.Z),
-            _round(rx),  _round(ry),  _round(rz),  _round(rw)
+            _round(math.deg(rx)), _round(math.deg(ry)), _round(math.deg(rz))
         )
     end
 

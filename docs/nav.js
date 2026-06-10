@@ -95,6 +95,7 @@
       <div class="ni open">
         ${nl(P + 'guide-middleware.html', 'guide-middleware', 'Middleware')}
         ${nl(P + 'guide-mvc.html',        'guide-mvc',        'MVC Pattern')}
+        ${nl(P + 'guide-routes.html',     'guide-routes',     'Route Organisation')}
         ${nl(P + 'guide-promise.html',    'guide-promise',    'Promise')}
         ${nl(P + 'guide-typecoercer.html','guide-typecoercer','TypeCoercer')}
         ${nl(P + 'guide-stream.html',     'guide-stream',     'FPS Stream')}

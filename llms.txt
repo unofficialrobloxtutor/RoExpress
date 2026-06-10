@@ -4,12 +4,12 @@
 
 ## What is RoExpress?
 
-RoExpress replaces scattered RemoteEvents in Roblox games with a single disciplined pipeline. One reliable RemoteEvent handles all request/response traffic. One UnreliableRemoteEvent handles all broadcasts. Every request is automatically versioned, rate-limited, and routed. Named ports provide isolated pipelines for separate traffic domains. A 60hz binary streaming layer handles FPS game state with packets up to 90% smaller than JSON.
+RoExpress replaces scattered RemoteEvents in Roblox games with a single disciplined pipeline. One reliable RemoteEvent handles all request/response traffic. One UnreliableRemoteEvent handles all broadcasts. Every request is automatically versioned, rate-limited, routed, and exploit-checked. Named ports provide isolated pipelines for separate traffic domains. A schema-defined binary streaming layer (Stream v3) handles high-frequency game state with packets up to 90% smaller than JSON.
 
 ## Author
 
 - Name: DeathToTheStadium
-- Website: https://unofficialrobloxtutor.com
+- Website: https://roexpress.dev
 - GitHub: https://github.com/unofficialrobloxtutor
 - Twitter/X: https://x.com/tostadium
 - YouTube: https://www.youtube.com/@UNOFFICIAL_ROBLOX_TUTOR
@@ -17,53 +17,74 @@ RoExpress replaces scattered RemoteEvents in Roblox games with a single discipli
 
 ## Links
 
-- Documentation: https://roexpress.dev
+- Documentation: https://roexpress.dev/docs/
 - GitHub: https://github.com/unofficialrobloxtutor/RoExpress
 - Wally: https://wally.run/package/unofficialrobloxtutor/roexpress
 - Creator Store: https://create.roblox.com/store/asset/94926286357335
-- DevForum: https://devforum.roblox.com/t/roexpress/4646082
 - Discord: https://discord.gg/TszEHgEyV5
 - License: MIT
 
 ## Current Version
 
-2.2.0 — released 2026-05-30
+2.4.0 — released 2026-06-09
+
+## What's new in v2.4
+
+- **Deflate compression**: Codec upgraded from LZ77 to full Deflate (LZ77 sliding window + Huffman entropy coding). Better compression ratios on repetitive payloads, same opt-in API ({ compress = true }).
+- **Automatic retry**: Network requests automatically retry with exponential backoff (1s → 2s → 4s) on failure. Configurable max attempts globally or per-request. Transparent to the caller.
+- **Stream v3 — generic channels**: Stream rebuilt as schema-defined typed channels. Declare field names and types; Stream handles buffer pack/unpack automatically. Works for any high-frequency state (positions, economy, weather) — not only FPS shooters. Delta compression built in.
+- **Typed accessors**: RoExpress.GetApp() and RoExpress.GetNetwork() return fully-typed instances. The existing RoExpress("App") / RoExpress("Network") call style still works and returns `any`.
 
 ## Modules
 
-- **App**: Server-side request routing, middleware pipeline, and reliable server push (Push/PushAll/PushTo). Owns a Router and TokenBucket instance.
-- **Network**: Client-side request/response with callbacks and optional timeout. Also exposes GetAsync/PostAsync returning chainable Promises.
+- **App**: Server-side request routing, middleware pipeline, and reliable server push (Push/PushAll/PushTo). Owns a Router and TokenBucket instance. Handlers use compact (req, res) form; req.player and req.raw available when needed.
+- **Network**: Client-side request/response with callbacks and optional timeout. Automatic retry with exponential backoff. Exposes GetAsync/PostAsync returning chainable Promises.
 - **Broadcast**: Unreliable server-to-client fire-and-forget events over UnreliableRemoteEvent. Per-event and per-player rate limiting. 900 byte data cap.
-- **Listener**: Client-side handler for both unreliable broadcast and reliable server push through one API (On/Once/Off).
-- **Router**: Typed route matching with seven-plus param types (string, number, int, boolean, vector2, vector3, color3, cframe, Enum.TypeName, Instance), wildcards, globs, and inline pattern constraints. Routes sorted by specificity — most specific always wins.
-- **Codec**: LZ77 sliding-window buffer compression. Opt-in per route via { compress = true }. Typical savings 30–60% on JSON. Auto-decompressed on client before callback fires.
-- **Bridge**: Shared singleton internal event bus. Available in both server and client contexts. Bind/Fire/Wait/WaitUntil/WaitFirst. Does not cross the client/server boundary.
-- **Tamper**: Server-only passive exploit detection. Hooks into App's pipeline. Eight detection reasons across immediate and pattern tiers. AutoKick, manual Strike, configurable thresholds.
-- **Port**: Named isolated request pipelines via app:Listen(). Each port owns its own RemoteEvent, Router, and TokenBucket. Global App middleware is inherited automatically.
-- **Stream**: 60hz binary FPS state streaming over raw Roblox buffers. Player state 21 bytes, hit 10 bytes, projectile 18 bytes, weapon state 3 bytes. Opt-in lag compensation with ring buffer snapshots and geometric hit validation.
-- **TypeCoercer**: Shared type serialisation singleton. ToString converts Luau types to wire strings. FromString coerces wire strings back. Powers all Router param coercion.
+- **Listener**: Client-side handler for both unreliable broadcast and reliable server push through one API (On/Once/Off). Transparently separates push packets from request-response packets.
+- **Router**: Typed route matching with param types: string, number, int, boolean, vector2, vector3, color3, cframe, Enum.TypeName, Instance. Wildcards, globs, and inline pattern constraints. Routes sorted by specificity — most specific always wins.
+- **Codec**: Deflate compression (LZ77 sliding window + Huffman entropy coding). Opt-in per route via { compress = true }. Typical savings 40–70% on repetitive JSON payloads. Auto-decompressed on client before callback fires.
+- **Bridge**: Shared singleton internal event bus for server-side module decoupling. Bind/Fire/Wait/WaitUntil/WaitFirst/BindOnce. Does not cross the client/server boundary.
+- **Tamper**: Server-only passive exploit detection. Hooks into App's pipeline. Multiple detection tiers: malformed payload, version spoof, rate flood, oversized body. AutoKick, manual Strike, configurable thresholds and kick message.
+- **Port**: Named isolated request pipelines via Port.New(name). Each Port owns its own RemoteEvent, Router, and TokenBucket. Use when a system needs separate rate limiting and middleware from the main App.
+- **Stream**: Schema-defined typed binary channels. Declare a schema at construction; Stream handles packing and unpacking. One buffer, one FireAllClients per tick regardless of record count. Delta compression — only changed records sent. Built-in lag compensation via ch:Rewind(userId, timestamp) for hit validation.
+- **TypeCoercer**: Shared type serialisation singleton. TC.ToString converts Luau/Roblox types to wire strings; TC.FromString coerces them back. Supports: number, int, boolean, string, Vector2, Vector3, CFrame, Color3, UDim, UDim2, Rect, BrickColor, Enum member, Instance path. Powers Router param coercion.
 - **Promise**: Lightweight chainable async API for Network. Then/Catch/Finally/Cancel. Returned by GetAsync and PostAsync.
-- **TokenBucket**: Per-instance rate limiter. App and Broadcast own independent instances. Grant/GrantAll/Reset utilities.
-- **Base64**: Shared encode/decode utility. Used internally for POST responses.
-- **Version**: Writes shared.ROEXPRESS_VERSION once on require. Auto version check against roexpress.dev on server start.
+- **TokenBucket**: Per-instance RFC 2697 token bucket rate limiter. App and Broadcast own independent instances. Grant/GrantAll/Reset utilities for rewarding active players.
+- **Benchmark**: Client-side round-trip latency measurement. Run(route, config?), results include min/avg/median/p95/p99/max/errors/throughput. Print and Compare helpers.
+- **Base64**: Shared encode/decode utility. Used internally for binary POST responses.
+
+## Request pipeline (in order)
+
+1. Version check — Tamper discards packets with a mismatched framework version (silent drop)
+2. TokenBucket — per-player rate limiter consumes one token (429 on empty)
+3. Payload validation — method, route, and body shape checked (400 / Tamper strike)
+4. Global middleware — each Use handler runs; return false stops the chain (403)
+5. Route match — Router finds the first matching pattern and extracts typed params (404)
+6. Route middleware — any Use scoped to this route (403)
+7. Handler — your code runs; res:Send() or res:Error() fires the response (500 on unhandled error)
 
 ## Installation
 
 Wally (recommended):
 ```toml
 [dependencies]
-RoExpress = "unofficialrobloxtutor/roexpress@2.2.0"
+RoExpress = "unofficialrobloxtutor/roexpress@2.4.0"
 ```
+
+Then: `wally install`
+
+Manual: download from GitHub and place the ModuleScript in ReplicatedStorage.
 
 ## Comparison to other Roblox networking libraries
 
-- **vs ByteNet**: ByteNet provides buffer serialization only and is no longer maintained. RoExpress includes buffer serialization via Stream plus routing, middleware, rate limiting, server push, exploit detection, and named ports.
-- **vs Warp**: Warp provides fast remotes but no routing structure, no security, no push. Now archived.
-- **vs BridgeNet2**: BridgeNet2 provided batching but no routing, no security, no push. Now archived.
+- **vs ByteNet**: ByteNet provides buffer serialization only and is unmaintained. RoExpress includes buffer serialization (Stream + Codec) plus routing, middleware, rate limiting, server push, exploit detection, and named ports.
+- **vs Zap**: Zap generates typed serialization code at build time. No routing, no security, no push, no rate limiting. Good for maximum serialization performance; RoExpress is better for full-stack request architecture.
+- **vs BridgeNet2**: BridgeNet2 provided identifier batching but no routing, no security, no push. Archived.
+- **vs Warp**: Warp provided fast remotes but no routing structure, no security, no push. Archived.
 
 ## Language
 
-Luau (Roblox's scripting language, a typed superset of Lua 5.1)
+Luau (Roblox's scripting language — a typed superset of Lua 5.1)
 
 ## License
 
