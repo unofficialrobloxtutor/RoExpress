@@ -57,6 +57,23 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
 
+    @keyframes journey-pulse {
+      0%, 100% { opacity: .5;  color: var(--text2); }
+      50%       { opacity: 1;   color: var(--accent2); text-shadow: 0 0 12px rgba(184,170,255,.5); }
+    }
+    .journey-link {
+      font-size: 12px; font-weight: 500; text-decoration: none;
+      margin-bottom: 10px; display: inline-block;
+      animation: journey-pulse 2s ease-in-out infinite;
+      transition: opacity .14s ease, color .14s ease;
+    }
+    .journey-link:hover {
+      animation: none;
+      opacity: 1;
+      color: var(--accent2);
+      text-shadow: 0 0 16px rgba(184,170,255,.6);
+    }
+
     :root {
       --bg:         #080810;
       --bg2:        #0f0f1a;
@@ -353,6 +370,7 @@
       <span class="hero-badge-dot"></span>
       v2.4 — Deflate compression &amp; automatic retry
     </a>
+    <a class="journey-link" href="/docs/pages/story.html">Read the journey to get here ↗</a>
     <h1>Express.js-style networking<br>for <em>Roblox</em></h1>
     <p>One remote. Every request routed, rate-limited, and protected automatically. Typed params, server push, binary streaming, lag compensation, and exploit detection — one framework.</p>
     <div class="hero-ctas">
