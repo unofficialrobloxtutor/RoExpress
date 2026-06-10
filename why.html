@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Why RoExpress — The Networking Problems Every Roblox Developer Hits</title>
+  <meta name="description" content="Scattered RemoteEvents. No rate limiting. Silent failures. Exploiters firing whatever they want. These are the networking problems every Roblox developer hits — and why RoExpress exists.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/why.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/why.html">
+  <meta property="og:title" content="Why RoExpress">
+  <meta property="og:description" content="Scattered RemoteEvents. No rate limiting. Silent failures. These are the networking problems every Roblox developer hits.">
+  <meta property="og:site_name" content="RoExpress">
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+
+    :root {
+      --bg:      #080810;
+      --bg2:     #0f0f1a;
+      --bg3:     #16162a;
+      --border:  rgba(140,120,255,.08);
+      --border2: rgba(140,120,255,.16);
+      --text:    #ddddf0;
+      --text2:   #8888aa;
+      --text3:   #44445a;
+      --accent:  #8b78ff;
+      --accent2: #b8aaff;
+      --accent-bg: rgba(139,120,255,.10);
+      --green:   #4ade9a;
+      --red:     #f87171;
+      --amber:   #fbbf24;
+      --code-bg: #06060f;
+      --radius:  7px;
+      --font:    'DM Mono', monospace;
+      --serif:   'DM Serif Display', serif;
+      --ease:    .14s ease;
+      --header-h: 54px;
+    }
+
+    html { scroll-behavior: smooth }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 13.5px; line-height: 1.7 }
+
+    ::-webkit-scrollbar { width: 4px }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px }
+
+    /* ── HEADER ── */
+    header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: var(--header-h);
+      background: rgba(8,8,16,.85); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text) }
+    .logo-name { font-size: 14px; font-weight: 500; letter-spacing: -.3px }
+    .logo-ver  { font-size: 10px; color: var(--text3); align-self: flex-end; padding-bottom: 2px }
+    nav { display: flex; align-items: center; gap: 4px }
+    nav a {
+      padding: 6px 12px; border-radius: var(--radius);
+      text-decoration: none; color: var(--text2); font-size: 12.5px;
+      transition: color var(--ease), background var(--ease);
+    }
+    nav a:hover { color: var(--text); background: var(--bg3) }
+    nav a.btn-nav { color: var(--accent2); background: var(--accent-bg); border: 1px solid rgba(139,120,255,.25) }
+    nav a.btn-nav:hover { background: rgba(139,120,255,.18) }
+
+    /* ── HERO ── */
+    .hero {
+      padding-top: calc(var(--header-h) + 80px);
+      padding-bottom: 64px;
+      text-align: center;
+      max-width: 780px; margin: 0 auto; padding-left: 24px; padding-right: 24px;
+    }
+    .hero-kicker {
+      display: inline-block; font-size: 11px; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--red); margin-bottom: 20px;
+      background: rgba(248,113,113,.08); border: 1px solid rgba(248,113,113,.2);
+      padding: 4px 12px; border-radius: 99px;
+    }
+    .hero h1 {
+      font-family: var(--serif); font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 400; line-height: 1.15; letter-spacing: -.02em;
+      color: var(--text); margin-bottom: 20px;
+    }
+    .hero h1 em { font-style: italic; color: var(--accent2) }
+    .hero p { font-size: 14.5px; color: var(--text2); max-width: 560px; margin: 0 auto 36px; line-height: 1.8 }
+
+    /* ── PAIN POINTS ── */
+    .pains { max-width: 860px; margin: 0 auto; padding: 0 24px 100px }
+
+    .pain {
+      border-top: 1px solid var(--border);
+      padding: 64px 0;
+    }
+    .pain:first-child { border-top: none }
+
+    .pain-num {
+      font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text3); margin-bottom: 16px;
+    }
+    .pain h2 {
+      font-family: var(--serif); font-size: clamp(1.5rem, 3.5vw, 2.1rem);
+      font-weight: 400; line-height: 1.2; letter-spacing: -.02em;
+      color: var(--text); margin-bottom: 16px;
+    }
+    .pain-lead {
+      font-size: 14px; color: var(--text2); max-width: 640px;
+      line-height: 1.85; margin-bottom: 36px;
+    }
+    .pain-lead strong { color: var(--text) }
+
+    /* ── SPLIT ── */
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 680px) { .split { grid-template-columns: 1fr } }
+
+    .split-panel { background: var(--code-bg); border-radius: 10px; overflow: hidden; border: 1px solid var(--border) }
+    .split-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 14px; border-bottom: 1px solid var(--border);
+      font-size: 11px;
+    }
+    .split-bar.bad  { color: var(--red);   background: rgba(248,113,113,.05) }
+    .split-bar.good { color: var(--green); background: rgba(74,222,154,.05)  }
+    .split-bar .dots { display: flex; gap: 5px }
+    .split-bar .dots span { width: 9px; height: 9px; border-radius: 50%; background: var(--border2) }
+    pre {
+      padding: 20px 20px; overflow-x: auto;
+      font-family: var(--font); font-size: 12px; line-height: 1.75; color: var(--text2);
+    }
+    .kw  { color: #c792ea }
+    .fn  { color: #82aaff }
+    .str { color: #c3e88d }
+    .num { color: #f78c6c }
+    .cm  { color: var(--text3); font-style: italic }
+    .op  { color: var(--text3) }
+    .hi  { color: var(--text) }
+    .bad-hi  { color: var(--red);   font-weight: 500 }
+    .good-hi { color: var(--green); font-weight: 500 }
+
+    /* ── CALLOUT ── */
+    .pain-note {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 16px 20px;
+      font-size: 12.5px; color: var(--text2); line-height: 1.7;
+    }
+    .pain-note strong { color: var(--accent2) }
+
+    /* ── CTA ── */
+    .cta-band {
+      background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      padding: 72px 24px; text-align: center;
+    }
+    .cta-band h2 {
+      font-family: var(--serif); font-size: 2rem; font-weight: 400;
+      letter-spacing: -.02em; color: var(--text); margin-bottom: 12px;
+    }
+    .cta-band p { color: var(--text2); font-size: 13.5px; margin-bottom: 28px }
+    .cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap }
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 22px; border-radius: var(--radius);
+      font-family: var(--font); font-size: 13px; font-weight: 500;
+      text-decoration: none; transition: opacity var(--ease), transform var(--ease);
+    }
+    .btn:hover { opacity: .85; transform: translateY(-1px) }
+    .btn-primary { background: var(--accent); color: #fff }
+    .btn-ghost   { background: var(--bg3); color: var(--text2); border: 1px solid var(--border2) }
+    .btn-ghost:hover { color: var(--text) }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 28px 32px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    }
+    footer .left { color: var(--text3); font-size: 12px }
+    footer .links { display: flex; gap: 16px }
+    footer .links a { color: var(--text3); text-decoration: none; font-size: 12px; transition: color var(--ease) }
+    footer .links a:hover { color: var(--text2) }
+
+    @media (max-width: 600px) { header { padding: 0 16px } }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <a class="logo" href="/">
+      <svg width="28" height="28" viewBox="80 120 148 148" xmlns="http://www.w3.org/2000/svg" style="border-radius:7px;flex-shrink:0">
+        <rect x="80" y="120" width="148" height="148" rx="30" fill="#a594ff"/>
+        <rect x="104" y="158" width="100" height="9" rx="4.5" fill="#0d0d1f"/>
+        <rect x="104" y="217" width="100" height="9" rx="4.5" fill="#0d0d1f"/>
+        <rect x="104" y="158" width="9" height="68" rx="4.5" fill="#0d0d1f"/>
+        <rect x="152" y="167" width="9" height="30" rx="4.5" fill="#0d0d1f"/>
+        <circle cx="156" cy="162" r="7" fill="#0d0d1f"/>
+        <circle cx="156" cy="222" r="7" fill="#0d0d1f"/>
+        <circle cx="204" cy="162" r="7" fill="#0d0d1f"/>
+        <circle cx="204" cy="222" r="7" fill="#0d0d1f"/>
+      </svg>
+      <span class="logo-name">RoExpress</span>
+      <span class="logo-ver">v2.4</span>
+    </a>
+    <nav>
+      <a href="/docs/">Docs</a>
+      <a href="/why.html" style="color:var(--text)">Why RoExpress</a>
+      <a href="https://github.com/unofficialrobloxtutor/RoExpress" target="_blank" rel="noopener">GitHub</a>
+      <a href="/docs/pages/installation.html" class="btn-nav">Get started &rarr;</a>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <div class="hero">
+    <span class="hero-kicker">The problems nobody talks about</span>
+    <h1>Roblox networking is<br><em>quietly breaking your game</em></h1>
+    <p>Not all at once. It starts with one RemoteEvent. Then five. Then fifteen. Then someone finds the one you forgot to validate, and suddenly your economy is broken and your leaderboard is full of accounts with 10 billion coins.</p>
+  </div>
+
+  <!-- PAIN POINTS -->
+  <div class="pains">
+
+    <!-- 1 -->
+    <div class="pain">
+      <div class="pain-num">Problem 01</div>
+      <h2>Your RemoteEvent folder<br>is a graveyard.</h2>
+      <p class="pain-lead">
+        It starts with one remote. <strong>PlayerDataRequest.</strong> Fine. Then you need shop purchases — <strong>ShopBuyRequest.</strong> Then combat hits. Then admin commands. Then leaderboard sync. Three months later you have thirty-seven RemoteEvents, half of them are named things like <strong>RemoteEvent14</strong>, and you genuinely cannot remember what six of them do.
+        <br><br>
+        There is no index. There is no routing. Changing a route means hunting through every script that references that string. Adding logging to all requests means touching every handler individually.
+      </p>
+      <div class="split">
+        <div class="split-panel">
+          <div class="split-bar bad">
+            <span>&#x2715; Without RoExpress</span>
+            <div class="dots"><span></span><span></span><span></span></div>
+          </div>
+          <pre><span class="cm">-- ReplicatedStorage
+-- &#9500;&#9472;&#9472; PlayerDataRequest
+-- &#9500;&#9472;&#9472; ShopBuyRequest
+-- &#9500;&#9472;&#9472; ShopSellRequest
+-- &#9500;&#9472;&#9472; CombatHitRemote
+-- &#9500;&#9472;&#9472; AdminKickEvent
+-- &#9500;&#9472;&#9472; LeaderboardSync
+-- &#9500;&#9472;&#9472; RemoteEvent14
+-- &#9492;&#9472;&#9472; ... 29 more</span>
+
+<span class="cm">-- Every script wires up its own remote</span>
+<span class="kw">local</span> buyRemote <span class="op">=</span> RS:WaitForChild(<span class="str">"ShopBuyRequest"</span>)
+<span class="kw">local</span> sellRemote <span class="op">=</span> RS:WaitForChild(<span class="str">"ShopSellRequest"</span>)
+
+buyRemote.OnServerEvent:<span class="fn">Connect</span>(<span class="kw">function</span>(player, data)
+    <span class="cm">-- what shape is data? who knows</span>
+<span class="kw">end</span>)</pre>
+        </div>
+        <div class="split-panel">
+          <div class="split-bar good">
+            <span>&#x2713; With RoExpress</span>
+            <div class="dots"><span></span><span></span><span></span></div>
+          </div>
+          <pre><span class="cm">-- One remote. Every route in one place.</span>
+<span class="kw">local</span> app <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
+
+app:<span class="fn">Post</span>(<span class="str">"shop/buy/:itemId=string"</span>,  handler)
+app:<span class="fn">Post</span>(<span class="str">"shop/sell/:itemId=string"</span>, handler)
+app:<span class="fn">Post</span>(<span class="str">"combat/hit"</span>,              handler)
+app:<span class="fn">Post</span>(<span class="str">"admin/kick/:userId=number"</span>, handler)
+
+<span class="cm">-- One global middleware log for everything</span>
+app:<span class="fn">Use</span>(<span class="str">"logger"</span>, <span class="kw">function</span>(player, payload)
+    <span class="fn">print</span>(player.Name, payload.method, payload.route)
+<span class="kw">end</span>)</pre>
+        </div>
+      </div>
+      <div class="pain-note"><strong>One RemoteEvent.</strong> Every route is a string. Adding logging, auth, or rate limiting means one <code>app:Use()</code> call that covers everything — not editing thirty files.</div>
+    </div>
+
+    <!-- 2 -->
+    <div class="pain">
+      <div class="pain-num">Problem 02</div>
+      <h2>You have zero protection<br>against exploiters.</h2>
+      <p class="pain-lead">
+        RemoteEvents fire from any client, with any data, at any rate, with no validation. A single exploiter with a script executor can call <strong>ShopBuyRequest</strong> ten thousand times a second with crafted arguments your handler never expected. If you forgot to validate one field — and you will forget, because there's no framework reminding you — the economy breaks.
+        <br><br>
+        Rate limiting is not optional. It is not something to add later. And writing it from scratch for every remote is how bugs slip through.
+      </p>
+      <div class="split">
+        <div class="split-panel">
+          <div class="split-bar bad">
+            <span>&#x2715; Without RoExpress</span>
+            <div class="dots"><span></span><span></span><span></span></div>
+          </div>
+          <pre><span class="cm">-- You have to write this for every single remote</span>
+<span class="kw">local</span> lastFired <span class="op">=</span> {}
+
+remote.OnServerEvent:<span class="fn">Connect</span>(<span class="kw">function</span>(player, data)
+    <span class="kw">local</span> now <span class="op">=</span> tick()
+    <span class="kw">if</span> lastFired[player] <span class="kw">and</span> now <span class="op">-</span> lastFired[player] <span class="op">&lt;</span> <span class="num">0.5</span> <span class="kw">then</span>
+        <span class="kw">return</span> <span class="cm">-- silently drop, no kick, no logging</span>
+    <span class="kw">end</span>
+    lastFired[player] <span class="op">=</span> now
+
+    <span class="cm">-- now validate data... manually... every time</span>
+    <span class="kw">if</span> <span class="kw">typeof</span>(data) <span class="op">~=</span> <span class="str">"table"</span> <span class="kw">then return end</span>
+    <span class="kw">if</span> <span class="kw">typeof</span>(data.itemId) <span class="op">~=</span> <span class="str">"string"</span> <span class="kw">then return end</span>
+    <span class="cm">-- ...</span>
+<span class="kw">end</span>)</pre>
+        </div>
+        <div class="split-panel">
+          <div class="split-bar good">
+            <span>&#x2713; With RoExpress</span>
+            <div class="dots"><span></span><span></span><span></span></div>
+          </div>
+          <pre><span class="cm">-- Rate limiting: built in. Runs before every handler.</span>
+<span class="cm">-- Tamper: passive exploit detection, auto-strike.</span>
+<span class="cm">-- Types: enforced in the route string itself.</span>
+
+app:<span class="fn">Post</span>(<span class="str">"shop/buy/:itemId=string"</span>, <span class="kw">function</span>(req, res)
+    <span class="cm">-- req.params.itemId is already a string</span>
+    <span class="cm">-- player already rate-checked (429 if over limit)</span>
+    <span class="cm">-- payload already validated (400 if malformed)</span>
+    <span class="cm">-- version already verified (silent drop if spoofed)</span>
+
+    ShopData.<span class="fn">Buy</span>(req.player, req.params.itemId)
+    res:<span class="fn">Send</span>()
+<span class="kw">end</span>)</pre>
+        </div>
+      </div>
+      <div class="pain-note"><strong>Token bucket rate limiting runs before your handler sees the request.</strong> Tamper tracks malformed payloads and version spoofs automatically. Strike thresholds are configurable. You write the business logic — RoExpress handles the surface area.</div>
+    </div>
+
+    <!-- 3 -->
+    <div class="pain">
+      <div class="pain-num">Problem 03</div>
+      <h2>You copy-paste the same<br>auth check into every handler.</h2>
+      <p class="pain-lead">
+        Admin routes. Moderator-only actions. Whitelist checks. Every game has them. And without a middleware system, the only way to protect them is to paste the same guard at the top of every handler. Then someone adds a new admin route and forgets the check. Then a player finds it.
+        <br><br>
+        There is no clean way to share logic across routes with vanilla RemoteEvents. Middleware is the solution and Roblox gives you nothing.
+      </p>
+      <div class="split">
+        <div class="split-panel">
+          <div class="split-bar bad">
+            <span>&#x2715; Without RoExpress</span>
+            <div class="dots"><span></span><span></span><span></span></div>
+          </div>
+          <pre><span class="cm">-- Pasted into every admin handler. Every single one.</span>
+kickRemote.OnServerEvent:<span class="fn">Connect</span>(<span class="kw">function</span>(player, target)
+    <span class="bad-hi">if not AdminList[player.UserId] then return end</span>
+    <span class="cm">-- actual logic</span>
+<span class="kw">end</span>)
+
+banRemote.OnServerEvent:<span class="fn">Connect</span>(<span class="kw">function</span>(player, target)
+    <span class="bad-hi">if not AdminList[player.UserId] then return end</span>
+    <span class="cm">-- actual logic</span>
+<span class="kw">end</span>)
+
+announceRemote.OnServerEvent:<span class="fn">Connect</span>(<span class="kw">function</span>(player, msg)
+    <span class="bad-hi">if not AdminList[player.UserId] then return end</span>
+    <span class="cm">-- someone will forget this one day</span>
+<span class="kw">end</span>)</pre>
+        </div>
+        <div class="split-panel">
+          <div class="split-bar good">
+            <span>&#x2713; With RoExpress</span>
+            <div class="dots"><span></span><span></span><span></span></div>
+          </div>
+          <pre><span class="cm">-- One middleware. Covers every admin route.</span>
+app:<span class="fn">Use</span>(<span class="str">"admin"</span>, <span class="kw">function</span>(player, payload)
+    <span class="kw">if</span> payload.route:<span class="fn">sub</span>(<span class="num">1</span>, <span class="num">6</span>) <span class="op">~=</span> <span class="str">"admin/"</span> <span class="kw">then return end</span>
+    <span class="good-hi">if not AdminList[player.UserId] then return false end</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- Handlers contain zero auth boilerplate</span>
+app:<span class="fn">Post</span>(<span class="str">"admin/kick/:userId=number"</span>,     kickHandler)
+app:<span class="fn">Post</span>(<span class="str">"admin/ban/:userId=number"</span>,      banHandler)
+app:<span class="fn">Post</span>(<span class="str">"admin/announce"</span>,              announceHandler)</pre>
+        </div>
+      </div>
+      <div class="pain-note"><strong>Middleware runs before the handler, every time, for every matching route.</strong> Return <code>false</code> to reject with 403. New routes added later are protected automatically — no extra work.</div>
+    </div>
+
+    <!-- 4 -->
+    <div class="pain">
+      <div class="pain-num">Problem 04</div>
+      <h2>When a request fails,<br>the client finds out by accident.</h2>
+      <p class="pain-lead">
+        Fire-and-forget is not a request/response pattern. You fire a RemoteEvent, the server does something, and if it fails — network hiccup, server overload, script error — the client has no idea. No timeout. No retry. No callback. The player just sits there wondering why nothing happened.
+        <br><br>
+        Worse: without response semantics, you cannot tell the difference between "server received this and said no" and "server never received it at all."
+      </p>
+      <div class="split">
+        <div class="split-panel">
+          <div class="split-bar bad">
+            <span>&#x2715; Without RoExpress</span>
+            <div class="dots"><span></span><span></span><span></span></div>
+          </div>
+          <pre><span class="cm">-- Client fires and hopes for the best</span>
+buyRemote:<span class="fn">FireServer</span>({ itemId = <span class="str">"sword"</span> })
+
+<span class="cm">-- Need a result? Wire a second remote back</span>
+<span class="kw">local</span> resultRemote <span class="op">=</span> RS:WaitForChild(<span class="str">"ShopBuyResult"</span>)
+resultRemote.OnClientEvent:<span class="fn">Connect</span>(<span class="kw">function</span>(success, msg)
+    <span class="cm">-- hope the server fires this before timeout</span>
+    <span class="cm">-- what timeout? you don't have one</span>
+<span class="kw">end</span>)</pre>
+        </div>
+        <div class="split-panel">
+          <div class="split-bar good">
+            <span>&#x2713; With RoExpress</span>
+            <div class="dots"><span></span><span></span><span></span></div>
+          </div>
+          <pre><span class="cm">-- Callback style: one round-trip, one response</span>
+network:<span class="fn">Post</span>(<span class="str">"shop/buy/sword"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res)
+    <span class="kw">if</span> res.ok <span class="kw">then</span>
+        UI:<span class="fn">ShowSuccess</span>(<span class="str">"Purchased!"</span>)
+    <span class="kw">else</span>
+        UI:<span class="fn">ShowError</span>(res.data.message)
+    <span class="kw">end</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- Promise style: chainable, with auto-retry</span>
+network:<span class="fn">PostAsync</span>(<span class="str">"shop/buy/sword"</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res) UI:<span class="fn">ShowSuccess</span>() <span class="kw">end</span>)
+    :<span class="fn">Catch</span>(<span class="kw">function</span>(err) UI:<span class="fn">ShowError</span>(err.message) <span class="kw">end</span>)</pre>
+        </div>
+      </div>
+      <div class="pain-note"><strong>Every request gets a response.</strong> Status codes, error messages, typed data. Failed requests retry automatically with exponential backoff — 1s, 2s, 4s. You find out when it worked and when it did not.</div>
+    </div>
+
+    <!-- 5 -->
+    <div class="pain">
+      <div class="pain-num">Problem 05</div>
+      <h2>Sending game state every frame<br>is destroying your bandwidth.</h2>
+      <p class="pain-lead">
+        Player positions. Health bars. Economy values. Anything that changes frequently gets sent as a RemoteEvent payload — usually a table, usually serialised to a format Roblox's replication layer was not designed for. At 20 players and 20 ticks per second, that is four hundred FireAllClients calls per second carrying JSON-shaped tables.
+        <br><br>
+        The packets are large. The bandwidth adds up. And you are not getting delta compression or lag compensation for free.
+      </p>
+      <div class="split">
+        <div class="split-panel">
+          <div class="split-bar bad">
+            <span>&#x2715; Without RoExpress</span>
+            <div class="dots"><span></span><span></span><span></span></div>
+          </div>
+          <pre><span class="cm">-- One FireAllClients per player per tick</span>
+<span class="cm">-- Table overhead, no compression, no delta</span>
+RunService.Heartbeat:<span class="fn">Connect</span>(<span class="kw">function</span>()
+    <span class="kw">for</span> _, player <span class="kw">in</span> Players.<span class="fn">GetPlayers</span>() <span class="kw">do</span>
+        stateRemote:<span class="fn">FireAllClients</span>({
+            userId   <span class="op">=</span> player.UserId,
+            position <span class="op">=</span> player.Character.HumanoidRootPart.Position,
+            health   <span class="op">=</span> player.Character.Humanoid.Health,
+            <span class="cm">-- full table every tick, no delta</span>
+        })
+    <span class="kw">end</span>
+<span class="kw">end</span>)</pre>
+        </div>
+        <div class="split-panel">
+          <div class="split-bar good">
+            <span>&#x2713; With RoExpress</span>
+            <div class="dots"><span></span><span></span><span></span></div>
+          </div>
+          <pre><span class="cm">-- One packed buffer per tick, all players</span>
+<span class="cm">-- Delta compression built in</span>
+<span class="kw">local</span> ch <span class="op">=</span> Stream.<span class="fn">Channel</span>({
+    userId   <span class="op">=</span> <span class="str">"uint32"</span>,
+    position <span class="op">=</span> <span class="str">"vector3"</span>,
+    health   <span class="op">=</span> <span class="str">"float32"</span>,
+})
+
+RunService.Heartbeat:<span class="fn">Connect</span>(<span class="kw">function</span>()
+    <span class="kw">for</span> _, player <span class="kw">in</span> Players.<span class="fn">GetPlayers</span>() <span class="kw">do</span>
+        ch:<span class="fn">Write</span>(player.UserId, {
+            position <span class="op">=</span> player.Character.HumanoidRootPart.Position,
+            health   <span class="op">=</span> player.Character.Humanoid.Health,
+        })
+    <span class="kw">end</span>
+    ch:<span class="fn">Flush</span>() <span class="cm">-- one FireAllClients, only changed records</span>
+<span class="kw">end</span>)</pre>
+        </div>
+      </div>
+      <div class="pain-note"><strong>Stream v3 packs all records into one binary buffer per tick.</strong> Delta compression means only changed values go over the wire. Built-in lag compensation lets you rewind channel state for hit validation — no separate history table to maintain.</div>
+    </div>
+
+    <!-- 6 -->
+    <div class="pain">
+      <div class="pain-num">Problem 06</div>
+      <h2>Calling a webhook from your<br>game server is a fifty-line adventure.</h2>
+      <p class="pain-lead">
+        Discord webhook for round results. External leaderboard API. Analytics endpoint. Score submission. Every game eventually needs to talk to something outside of Roblox. And every time, you write the same boilerplate — <strong>GetService, GetAsync, JSONEncode, pcall, retry logic, header management</strong> — from scratch, in a different script, with slightly different error handling each time.
+      </p>
+      <div class="split">
+        <div class="split-panel">
+          <div class="split-bar bad">
+            <span>&#x2715; Without RoExpress</span>
+            <div class="dots"><span></span><span></span><span></span></div>
+          </div>
+          <pre><span class="cm">-- Written from scratch, every time, in every game</span>
+<span class="kw">local</span> HS <span class="op">=</span> game:<span class="fn">GetService</span>(<span class="str">"HttpService"</span>)
+
+<span class="kw">local function</span> <span class="fn">sendWebhook</span>(winner)
+    <span class="kw">local</span> ok, err <span class="op">=</span> <span class="fn">pcall</span>(<span class="kw">function</span>()
+        HS:<span class="fn">RequestAsync</span>({
+            Url    <span class="op">=</span> WEBHOOK_URL,
+            Method <span class="op">=</span> <span class="str">"POST"</span>,
+            Headers <span class="op">=</span> { [<span class="str">"Content-Type"</span>] <span class="op">=</span> <span class="str">"application/json"</span> },
+            Body   <span class="op">=</span> HS:<span class="fn">JSONEncode</span>({ content <span class="op">=</span> winner <span class="op">..</span> <span class="str">" won!"</span> }),
+        })
+    <span class="kw">end</span>)
+    <span class="kw">if not</span> ok <span class="kw">then</span>
+        <span class="cm">-- retry? manually? give up?</span>
+    <span class="kw">end</span>
+<span class="kw">end</span></pre>
+        </div>
+        <div class="split-panel">
+          <div class="split-bar good">
+            <span>&#x2713; With RoExpress</span>
+            <div class="dots"><span></span><span></span><span></span></div>
+          </div>
+          <pre><span class="cm">-- Configure once. Use everywhere.</span>
+<span class="kw">local</span> webhook <span class="op">=</span> RoExpress.Harpy.<span class="fn">New</span>({
+    base    <span class="op">=</span> WEBHOOK_URL,
+    retries <span class="op">=</span> <span class="num">3</span>,
+})
+
+<span class="cm">-- Body JSON-encoded automatically</span>
+<span class="cm">-- Retries on failure automatically</span>
+<span class="cm">-- Headers set once, used on every call</span>
+webhook:<span class="fn">Post</span>(<span class="str">""</span>, { content <span class="op">=</span> winner <span class="op">..</span> <span class="str">" won!"</span> })
+
+<span class="cm">-- Multiple APIs? One client each.</span>
+<span class="kw">local</span> scores <span class="op">=</span> RoExpress.Harpy.<span class="fn">New</span>({ base <span class="op">=</span> SCORES_API })
+scores:<span class="fn">SetHeader</span>(<span class="str">"X-Api-Key"</span>, API_KEY)</pre>
+        </div>
+      </div>
+      <div class="pain-note"><strong>Harpy wraps HttpService with a clean client API.</strong> Base URL, shared headers, automatic JSON encoding, and retry with exponential backoff — set up once, use everywhere. Multiple external APIs each get their own client with independent config.</div>
+    </div>
+
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-band">
+    <h2>You have felt all of these.</h2>
+    <p>RoExpress solves every one of them. One framework, every layer, MIT licensed and free forever.</p>
+    <div class="cta-btns">
+      <a class="btn btn-primary" href="/docs/pages/installation.html">Install in 30 seconds &rarr;</a>
+      <a class="btn btn-ghost"   href="/docs/">Read the docs</a>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="left">RoExpress v2.4 &mdash; MIT License &mdash; by DeathToTheStadium</div>
+    <div class="links">
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/unofficialrobloxtutor/RoExpress" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://discord.gg/roexpress" target="_blank" rel="noopener">Discord</a>
+      <a href="https://x.com/tostadium" target="_blank" rel="noopener">X</a>
+    </div>
+  </footer>
+
+</body>
+</html>

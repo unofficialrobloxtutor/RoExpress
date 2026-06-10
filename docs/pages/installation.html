@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Installation — RoExpress</title>
+  <meta name="description"
+    content="Install RoExpress in Roblox Studio with one command bar paste, Wally, or a manual download. Up and running in under a minute.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/installation.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/installation.html">
+  <meta property="og:title" content="Installation — RoExpress">
+  <meta property="og:description"
+    content="Install RoExpress in Roblox Studio with one command bar paste, Wally, or a manual download.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+  <style>
+    /* ── Terminal window ──────────────────────────────────────── */
+    .term-win {
+      background: #07070e;
+      border: 1px solid #1e1e30;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 1.5rem 0;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, .55);
+    }
+
+    .term-bar {
+      background: #111120;
+      padding: 9px 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid #1e1e30;
+      user-select: none;
+    }
+
+    .term-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .term-dot.r {
+      background: #ff5f57;
+    }
+
+    .term-dot.y {
+      background: #ffbd2e;
+    }
+
+    .term-dot.g {
+      background: #28ca41;
+    }
+
+    .term-ttl {
+      color: #555577;
+      font-size: .72rem;
+      letter-spacing: .04em;
+      margin-left: 6px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .term-body {
+      padding: 18px 22px 20px;
+      font-family: 'DM Mono', monospace;
+      font-size: .82rem;
+      line-height: 1.75;
+      position: relative;
+    }
+
+    .term-body .cb {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+    }
+
+    .term-line {
+      display: block;
+    }
+
+    .term-ps {
+      color: var(--accent);
+    }
+
+    /* prompt / command */
+    .term-ok {
+      color: var(--green);
+    }
+
+    /* success output  */
+    .term-inf {
+      color: var(--text2);
+    }
+
+    /* info / dim      */
+    .term-kw {
+      color: #c792ea;
+    }
+
+    /* keyword tint    */
+    .term-str {
+      color: #c3e88d;
+    }
+
+    /* string tint     */
+    .term-fn {
+      color: #82aaff;
+    }
+
+    /* function tint   */
+    .term-cm {
+      color: #546e7a;
+      font-style: italic;
+    }
+
+    /* ── Method tabs ──────────────────────────────────────────── */
+    .mtabs {
+      display: flex;
+      gap: .5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .mtab {
+      padding: .35rem .9rem;
+      border-radius: 6px;
+      border: 1px solid var(--text3);
+      background: var(--bg2);
+      color: var(--text2);
+      font-size: .8rem;
+      font-family: 'DM Mono', monospace;
+      cursor: pointer;
+      transition: border-color .15s, color .15s, background .15s;
+    }
+
+    .mtab:hover,
+    .mtab.act {
+      border-color: var(--accent);
+      color: var(--accent2);
+      background: rgba(139, 120, 255, .08);
+    }
+
+    .mblock {
+      display: none;
+    }
+
+    .mblock.act {
+      display: block;
+    }
+
+    /* ── Step list ────────────────────────────────────────────── */
+    .steps {
+      counter-reset: step;
+      list-style: none;
+      padding: 0;
+      margin: 1rem 0;
+    }
+
+    .steps li {
+      counter-increment: step;
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.1rem;
+      align-items: flex-start;
+    }
+
+    .steps li::before {
+      content: counter(step);
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: .72rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+    }
+
+    .steps li p {
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Getting Started</div>
+        <h1>Installation</h1>
+        <p class="lead">Three ways to install — pick the one that fits your workflow. The Studio command bar option gets
+          you running in under 30 seconds without leaving Studio.</p>
+
+        <div class="mtabs">
+          <button class="mtab act" onclick="switchTab(this,'studio')">Studio command bar</button>
+          <button class="mtab" onclick="switchTab(this,'wally')">Wally</button>
+          <button class="mtab" onclick="switchTab(this,'manual')">Manual</button>
+        </div>
+
+        <!-- ── STUDIO ─────────────────────────────────────── -->
+        <div class="mblock act" id="tab-studio">
+          <p>Open Roblox Studio, press <kbd>View → Command Bar</kbd>, paste the line below, and hit <kbd>Enter</kbd>.
+            RoExpress is downloaded from the Creator Store and placed in <code>ReplicatedStorage</code> automatically.
+          </p>
+
+          <div class="term-win">
+            <div class="term-bar">
+              <span class="term-dot r"></span>
+              <span class="term-dot y"></span>
+              <span class="term-dot g"></span>
+              <span class="term-ttl">Studio &mdash; Command Bar</span>
+            </div>
+            <div class="term-body">
+              <button class="cb" onclick="cp(this)">copy</button>
+              <span class="term-line"><span class="term-ps">&#62;&nbsp;</span><span id="install-oneliner">local
+                  H=game:GetService"HttpService";loadstring(H:GetAsync"https://raw.githubusercontent.com/unofficialrobloxtutor/RoExpress/main/install.lua")()</span></span>
+            </div>
+          </div>
+
+          <p>When it runs you should see this in the Output window:</p>
+
+          <div class="term-win">
+            <div class="term-bar">
+              <span class="term-dot r"></span>
+              <span class="term-dot y"></span>
+              <span class="term-dot g"></span>
+              <span class="term-ttl">Studio &mdash; Output</span>
+            </div>
+            <div class="term-body">
+              <span class="term-line term-inf">[RoExpress] Downloading from GitHub (main)...</span>
+              <span class="term-line term-ok">[RoExpress] Done -&gt; ReplicatedStorage/RoExpress (22 modules)</span>
+              <span class="term-line term-inf">[RoExpress] require: local RoExpress =
+                require(game.ReplicatedStorage.RoExpress)</span>
+            </div>
+          </div>
+
+          <p>Then require it from any script:</p>
+
+          <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)</code></pre>
+
+          <div class="cl tip">
+            If the command fails with a permissions error, go to <strong>Home &rarr; Game Settings &rarr;
+              Security</strong> and make sure <strong>Allow HTTP Requests</strong> is on. This is only needed for the
+            install step &mdash; RoExpress itself does not require HTTP access in published games.
+          </div>
+
+          <h3>What the installer does</h3>
+          <ol class="steps">
+            <li>
+              <p>Uses <code>HttpService:GetAsync</code> to fetch <code>install.lua</code> from the GitHub repository.
+              </p>
+            </li>
+            <li>
+              <p>Runs the fetched script with <code>loadstring()</code>. <code>loadstring</code> is available in
+                Studio's command bar context.</p>
+            </li>
+            <li>
+              <p>The installer fetches each of the 22 module source files directly from GitHub raw, creates
+                <code>ModuleScript</code> instances, and sets their <code>Source</code> property.</p>
+            </li>
+            <li>
+              <p>Parents the completed <code>RoExpress</code> hierarchy to <code>ReplicatedStorage</code>. Re-running
+                removes the old install first so you always get a clean copy.</p>
+            </li>
+          </ol>
+
+          <h3>Full install.lua</h3>
+          <p>The script fetched from GitHub. You can read it before running: <a
+              href="https://raw.githubusercontent.com/unofficialrobloxtutor/RoExpress/main/install.lua" target="_blank"
+              rel="noopener">raw.githubusercontent.com &rarr;</a></p>
+          <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> HttpService       <span class="op">=</span> game:<span class="fn">GetService</span>(<span class="str">"HttpService"</span>)
+<span class="kw">local</span> ReplicatedStorage <span class="op">=</span> game:<span class="fn">GetService</span>(<span class="str">"ReplicatedStorage"</span>)
+<span class="kw">local</span> BRANCH <span class="op">=</span> <span class="str">"main"</span>
+<span class="kw">local</span> BASE   <span class="op">=</span> <span class="str">"https://raw.githubusercontent.com/unofficialrobloxtutor/RoExpress/"</span> <span class="op">..</span> BRANCH <span class="op">..</span> <span class="str">"/src/"</span>
+
+<span class="kw">local function</span> <span class="fn">fetch</span>(path)
+    <span class="kw">local</span> ok, r <span class="op">=</span> <span class="fn">pcall</span>(HttpService.GetAsync, HttpService, BASE <span class="op">..</span> path)
+    <span class="kw">if not</span> ok <span class="kw">then</span> <span class="fn">error</span>(<span class="str">"[RoExpress] Failed to fetch "</span> <span class="op">..</span> path) <span class="kw">end</span>
+    <span class="kw">return</span> r
+<span class="kw">end</span>
+<span class="kw">local function</span> <span class="fn">ms</span>(name, source, parent)
+    <span class="kw">local</span> m <span class="op">=</span> Instance.<span class="fn">new</span>(<span class="str">"ModuleScript"</span>)
+    m.Name, m.Source, m.Parent <span class="op">=</span> name, source, parent
+    <span class="kw">return</span> m
+<span class="kw">end</span>
+
+<span class="kw">local</span> existing <span class="op">=</span> ReplicatedStorage:<span class="fn">FindFirstChild</span>(<span class="str">"RoExpress"</span>)
+<span class="kw">if</span> existing <span class="kw">then</span> existing:<span class="fn">Destroy</span>() <span class="kw">end</span>
+
+<span class="fn">print</span>(<span class="str">"[RoExpress] Downloading from GitHub (" </span><span class="op">..</span> BRANCH <span class="op">..</span> <span class="str">")..."</span>)
+
+<span class="kw">local</span> root <span class="op">=</span> <span class="fn">ms</span>(<span class="str">"RoExpress"</span>, <span class="fn">fetch</span>(<span class="str">"init.luau"</span>), ReplicatedStorage)
+<span class="kw">for</span> _, name <span class="kw">in</span> { <span class="str">"App"</span>,<span class="str">"Base64"</span>,<span class="str">"Benchmark"</span>,<span class="str">"Bridge"</span>,<span class="str">"Broadcast"</span>,<span class="str">"Harpy"</span>,
+                 <span class="str">"Listener"</span>,<span class="str">"Network"</span>,<span class="str">"Port"</span>,<span class="str">"Promise"</span>,<span class="str">"Router"</span>,<span class="str">"Tamper"</span>,
+                 <span class="str">"TokenBucket"</span>,<span class="str">"TypeCoercer"</span>,<span class="str">"Version"</span> } <span class="kw">do</span>
+    <span class="fn">ms</span>(name, <span class="fn">fetch</span>(name <span class="op">..</span> <span class="str">".luau"</span>), root)
+<span class="kw">end</span>
+
+<span class="kw">local</span> codec  <span class="op">=</span> <span class="fn">ms</span>(<span class="str">"Codec"</span>,  <span class="fn">fetch</span>(<span class="str">"Codec/init.luau"</span>),  root)
+<span class="fn">ms</span>(<span class="str">"LZ77"</span>, <span class="fn">fetch</span>(<span class="str">"Codec/LZ77.luau"</span>), codec)
+<span class="fn">ms</span>(<span class="str">"LZH"</span>,  <span class="fn">fetch</span>(<span class="str">"Codec/LZH.luau"</span>),  codec)
+
+<span class="kw">local</span> stream <span class="op">=</span> <span class="fn">ms</span>(<span class="str">"Stream"</span>, <span class="fn">fetch</span>(<span class="str">"Stream/init.luau"</span>), root)
+<span class="fn">ms</span>(<span class="str">"Channel"</span>, <span class="fn">fetch</span>(<span class="str">"Stream/Channel.luau"</span>), stream)
+<span class="fn">ms</span>(<span class="str">"Schema"</span>,  <span class="fn">fetch</span>(<span class="str">"Stream/Schema.luau"</span>),  stream)
+<span class="fn">ms</span>(<span class="str">"Types"</span>,   <span class="fn">fetch</span>(<span class="str">"Stream/Types.luau"</span>),   stream)
+
+<span class="fn">print</span>(<span class="str">"[RoExpress] Done -> ReplicatedStorage/RoExpress (22 modules)"</span>)</code></pre>
+        </div>
+
+        <!-- ── WALLY ──────────────────────────────────────── -->
+        <div class="mblock" id="tab-wally">
+          <p>Wally is the standard Roblox package manager. Use this method if your project already uses Rojo and a CI
+            pipeline.</p>
+
+          <ol class="steps">
+            <li>
+              <p>Add RoExpress to your <code>wally.toml</code>:</p>
+            </li>
+          </ol>
+
+          <pre><button class="cb" onclick="cp(this)">copy</button><code>[dependencies]
+RoExpress = "unofficialrobloxtutor/roexpress@2.4.0"</code></pre>
+
+          <ol class="steps" style="counter-reset:step 1">
+            <li style="counter-increment:step 1">
+              <p style="display:none"></p>
+            </li>
+            <li>
+              <p>Run the install:</p>
+            </li>
+          </ol>
+
+          <pre><button class="cb" onclick="cp(this)">copy</button><code>wally install</code></pre>
+
+          <ol class="steps" style="counter-reset:step 2">
+            <li style="counter-increment:step 2">
+              <p style="display:none"></p>
+            </li>
+            <li>
+              <p style="display:none"></p>
+            </li>
+            <li>
+              <p>Require from any script (Wally places packages in <code>ReplicatedStorage/Packages</code> by default):
+              </p>
+            </li>
+          </ol>
+
+          <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.Packages.RoExpress)</code></pre>
+
+          <div class="cl info">Wally: <a href="https://wally.run/package/unofficialrobloxtutor/roexpress"
+              target="_blank" rel="noopener">wally.run/package/unofficialrobloxtutor/roexpress</a></div>
+        </div>
+
+        <!-- ── MANUAL ─────────────────────────────────────── -->
+        <div class="mblock" id="tab-manual">
+          <p>Download the latest release from GitHub and drop it into your place file manually.</p>
+
+          <ol class="steps">
+            <li>
+              <p>Go to the <a href="./community-github.html">GitHub releases page</a> and download
+                <code>RoExpress.rbxm</code> from the latest release.</p>
+            </li>
+            <li>
+              <p>In Roblox Studio, right-click <code>ReplicatedStorage</code> in the Explorer &rarr; <strong>Insert from
+                  File</strong> &rarr; select the downloaded file.</p>
+            </li>
+            <li>
+              <p>Require it:</p>
+            </li>
+          </ol>
+
+          <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)</code></pre>
+
+          <div class="cl warn">Manual installs do not auto-update. When a new version ships you will need to repeat this
+            process. Wally and the command bar installer always pull the latest published version.</div>
+        </div>
+
+        <!-- ── NEXT STEPS ─────────────────────────────────── -->
+        <h2>Next steps</h2>
+        <p>Once RoExpress is in <code>ReplicatedStorage</code>, head to the quick start:</p>
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Where to go</th>
+              <th>What you will find</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="../#quickstart">Quick Start</a></td>
+              <td>Server and client setup in under 20 lines</td>
+            </tr>
+            <tr>
+              <td><a href="./app.html">App</a></td>
+              <td>Full routing and middleware API</td>
+            </tr>
+            <tr>
+              <td><a href="./network.html">Network</a></td>
+              <td>Client request, retry, and Promise API</td>
+            </tr>
+            <tr>
+              <td><a href="./guide-routes.html">Route Organisation</a></td>
+              <td>Keeping routes clean as the project grows</td>
+            </tr>
+          </tbody>
+        </table>
+
+      </section>
+    </main>
+  </div>
+
+  <script>
+    function switchTab(btn, id) {
+      document.querySelectorAll('.mtab').forEach(b => b.classList.remove('act'));
+      document.querySelectorAll('.mblock').forEach(b => b.classList.remove('act'));
+      btn.classList.add('act');
+      document.getElementById('tab-' + id).classList.add('act');
+    }
+  </script>
+</body>
+
+</html>

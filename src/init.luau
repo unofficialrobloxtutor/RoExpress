@@ -35,34 +35,43 @@ else
 	UnreliableRemote = script:WaitForChild(UNRELIABLE_NAME)
 end
 
--- load only the modules valid for this context
-local Base64      = require(script.Base64)
-local Router      = require(script.Router)
-local Codec       = require(script.Codec)
-local Bridge      = require(script.Bridge)
-local Tamper      = require(script.Tamper)
-local TypeCoercer = require(script.TypeCoercer)
-local Promise     = require(script.Promise)
-local Harpy       = require(script.Harpy)
+-- All sub-modules required as locals so they can be referenced in type
+-- positions below — the Luau LSP does not support require() in type expressions.
+local Base64       = require(script.Base64)
+local Router       = require(script.Router)
+local Codec        = require(script.Codec)
+local Bridge       = require(script.Bridge)
+local Tamper       = require(script.Tamper)
+local TypeCoercer  = require(script.TypeCoercer)
+local Promise      = require(script.Promise)
+local Harpy        = require(script.Harpy)
+local App          = require(script.App)
+local Network      = require(script.Network)
+local Port         = require(script.Port)
+local Broadcast    = require(script.Broadcast)
+local Listener     = require(script.Listener)
+local Stream       = require(script.Stream)
+local Benchmark    = require(script.Benchmark)
+local TokenBucket  = require(script.TokenBucket)
 
 local _modules = if IS_SERVER
 	then {
-		App         = require(script.App),
-		Broadcast   = require(script.Broadcast),
+		App         = App,
+		Broadcast   = Broadcast,
 		Base64      = Base64,
 		Bridge      = Bridge,
 		Tamper      = Tamper,
-		Port        = require(script.Port),
-		Stream      = require(script.Stream),
+		Stream      = Stream,
 		TypeCoercer = TypeCoercer,
 		Version     = _Version,
 	}
 	else {
-		Network     = require(script.Network),
-		Listener    = require(script.Listener),
+		Network     = Network,
+		Listener    = Listener,
+		Benchmark   = Benchmark,
 		Base64      = Base64,
 		Bridge      = Bridge,
-		Stream      = require(script.Stream),
+		Stream      = Stream,
 		TypeCoercer = TypeCoercer,
 		Promise     = Promise,
 		Version     = _Version,
@@ -82,12 +91,12 @@ local function _getRemoteForModule(moduleName: string): any
 end
 
 -->> Types <<--
-export type Type = typeof(setmetatable({}, RoExpress)) & {
+export type Type = {
 	_instances: { [string]: any },
 }
 
 type ServerModuleName = "App" | "Broadcast" | "Base64" | "Bridge" | "Tamper" | "Stream" | "TypeCoercer" | "Version"
-type ClientModuleName = "Network" | "Listener" | "Base64" | "Bridge" | "Stream" | "TypeCoercer" | "Promise" | "Version"
+type ClientModuleName = "Network" | "Listener" | "Benchmark" | "Base64" | "Bridge" | "Stream" | "TypeCoercer" | "Promise" | "Version"
 type ModuleName = ServerModuleName | ClientModuleName
 ------------------------------------------------------------------------
 --	PRIVATE
@@ -103,10 +112,14 @@ local function _getInstance(self: Type, moduleName: ModuleName): any
 
 	-- Base64, Bridge, Tamper and Stream have no constructor — return directly.
 	-- Listener takes two remotes — unpack accordingly.
+	-- Benchmark takes a Network instance (not a remote) — wire after Network is resolved.
 	local instance
 	if moduleName == "Listener" then
 		local unreliable, reliable = _getRemoteForModule(moduleName)
 		instance = m.New(unreliable, reliable)
+	elseif moduleName == "Benchmark" then
+		local network = _getInstance(self, "Network")
+		instance = m.New(network)
 	elseif m.New then
 		instance = m.New(_getRemoteForModule(moduleName))
 	else
@@ -120,22 +133,31 @@ end
 --	CONSTRUCTORS
 ------------------------------------------------------------------------
 local function _new(): Type
-	local self = setmetatable({}, RoExpress) :: Type
+	local self = (setmetatable({}, RoExpress) :: any) :: Type
 	self._instances = {}
 	return self
 end
 
+-- Module-level root instance — avoids storing it on the RoExpress table,
+-- which would otherwise force Luau to widen all property accesses to 'any'
+-- via the __index metamethod.
+local _root: Type
+
+local function _getRoot(): Type
+	if not _root then
+		_root = _new()
+	end
+	return _root
+end
+
 setmetatable(RoExpress, {
 	__call = function(_, moduleName: ModuleName, portName: string?)
-		if not RoExpress._root then
-			RoExpress._root = _new()
-		end
-
 		-- if a portName is given, client wants a Network/Listener on a named port
 		if portName and not IS_SERVER then
+			local root = _getRoot()
 			local cacheKey = moduleName .. ":" .. portName
-			if RoExpress._root._instances[cacheKey] then
-				return RoExpress._root._instances[cacheKey]
+			if root._instances[cacheKey] then
+				return root._instances[cacheKey]
 			end
 
 			-- find the port remote in ReplicatedStorage/RoExpressPorts
@@ -157,22 +179,11 @@ setmetatable(RoExpress, {
 				instance = m
 			end
 
-			RoExpress._root._instances[cacheKey] = instance
+			root._instances[cacheKey] = instance
 			return instance
 		end
 
-		return _getInstance(RoExpress._root, moduleName)
-	end,
-
-	-- Property-style access: RoExpress.App, RoExpress.Network, etc.
-	-- Returns the same cached instance as RoExpress("ModuleName").
-	__index = function(_, key: string)
-		local m = _modules[key]
-		if not m then return nil end
-		if not RoExpress._root then
-			RoExpress._root = _new()
-		end
-		return _getInstance(RoExpress._root, key)
+		return _getInstance(_getRoot(), moduleName)
 	end,
 })
 ------------------------------------------------------------------------
@@ -194,30 +205,28 @@ RoExpress.Harpy       = Harpy
 --  Server:   local app = RoExpress.GetApp()
 --  Client:   local net = RoExpress.GetNetwork()
 ------------------------------------------------------------------------
-type _AppT = require(script.App).Type
-type _NetT = require(script.Network).Type
+type _AppT = App.Type
+type _NetT = Network.Type
 
 function RoExpress.GetApp(): _AppT
-	if not RoExpress._root then RoExpress._root = _new() end
-	return _getInstance(RoExpress._root, "App") :: _AppT
+	return _getInstance(_getRoot(), "App") :: _AppT
 end
 
 function RoExpress.GetNetwork(): _NetT
-	if not RoExpress._root then RoExpress._root = _new() end
-	return _getInstance(RoExpress._root, "Network") :: _NetT
+	return _getInstance(_getRoot(), "Network") :: _NetT
 end
 
 ------------------------------------------------------------------------
 --	TYPES
 ------------------------------------------------------------------------
 
--- Core envelope types forwarded from their source modules.
--- These always stay in sync because they reference the module directly.
-export type Payload         = require(script.App).Payload
-export type Request         = require(script.App).Request
-export type Response        = require(script.App).Response
-export type NetworkPayload  = require(script.Network).NetworkPayload
-export type NetworkResponse = require(script.Network).NetworkResponse
+-- Core envelope types forwarded from their source modules via pre-required
+-- locals — the LSP does not support require() inside type expressions.
+export type Payload         = App.Payload
+export type Request         = App.Request
+export type Response        = App.Response
+export type NetworkPayload  = Network.NetworkPayload
+export type NetworkResponse = Network.NetworkResponse
 
 export type BroadcastEnvelope = {
 	event : string,
@@ -225,32 +234,32 @@ export type BroadcastEnvelope = {
 }
 
 -- Handler signatures forwarded from App
-export type RouteHandlerCompact = require(script.App).RouteHandlerCompact
-export type RouteHandlerLegacy  = require(script.App).RouteHandlerLegacy
-export type RouteHandler        = require(script.App).RouteHandler
-export type MiddlewareHandler   = require(script.App).MiddlewareHandler
+export type RouteHandlerCompact = App.RouteHandlerCompact
+export type RouteHandlerLegacy  = App.RouteHandlerLegacy
+export type RouteHandler        = App.RouteHandler
+export type MiddlewareHandler   = App.MiddlewareHandler
 export type BroadcastHandler    = (data: any) -> ()
 export type ListenerMiddleware  = (event: string, data: any) -> ()
 export type NetworkCallback     = (response: NetworkResponse) -> ()
 
 -- Module instance types.
 -- App, Network, Port use .Type (the instantiated shape from .New()).
--- Utility modules return their table directly and are typed as-is.
-export type App         = require(script.App).Type
-export type Network     = require(script.Network).Type
-export type Port        = require(script.Port).Type
-export type Broadcast   = typeof(require(script.Broadcast))
-export type Listener    = typeof(require(script.Listener))
-export type Base64      = typeof(require(script.Base64))
-export type Router      = typeof(require(script.Router))
-export type Codec       = typeof(require(script.Codec))
-export type Bridge      = typeof(require(script.Bridge))
-export type Tamper      = typeof(require(script.Tamper))
-export type Promise     = typeof(require(script.Promise))
-export type Stream      = typeof(require(script.Stream))
-export type TokenBucket = typeof(require(script.TokenBucket))
-export type Benchmark   = typeof(require(script.Benchmark))
-export type Harpy       = typeof(require(script.Harpy))
+-- Utility modules are typed as their module table via typeof().
+export type App         = App.Type
+export type Network     = Network.Type
+export type Port        = Port.Type
+export type Broadcast   = typeof(Broadcast)
+export type Listener    = typeof(Listener)
+export type Base64      = typeof(Base64)
+export type Router      = typeof(Router)
+export type Codec       = typeof(Codec)
+export type Bridge      = typeof(Bridge)
+export type Tamper      = typeof(Tamper)
+export type Promise     = typeof(Promise)
+export type Stream      = typeof(Stream)
+export type TokenBucket = typeof(TokenBucket)
+export type Benchmark   = typeof(Benchmark)
+export type Harpy       = typeof(Harpy)
 
 -- Router sub-types
 export type ParamType   = Router.ParamType

@@ -31,8 +31,9 @@
       <button class="nsh open" onclick="tn(this)">Getting Started <span class="chv">▶</span></button>
       <div class="ni open">
         ${nl(BASE + '/', 'overview', 'Overview')}
-        ${nl(BASE + '/#installation', 'installation', 'Installation')}
+        ${nl(P + 'installation.html', 'installation', 'Installation')}
         ${nl(BASE + '/#quickstart', 'quickstart', 'Quick Start')}
+        ${nl(P + 'accessors.html', 'accessors', 'Module Accessors')}
         ${nl(P + 'pipeline.html', 'pipeline', 'Request Pipeline')}
         ${nl(P + 'roadmap.html',  'roadmap',  'Roadmap' + nb('2.4+', 'background:#b45309;color:#fef3c7'))}
       </div>
@@ -162,6 +163,8 @@
   const IDX = [
     { s:'overview',    url:BASE+'/',                        t:'guide',   n:'Overview',             x:'structured networking roblox pipeline module tree install' },
     { s:'pipeline',    url:P+'pipeline.html',               t:'ref',     n:'Request Pipeline',     x:'version tokenbucket validate middleware route 400 403 404 429 500' },
+    { s:'installation',url:P+'installation.html',            t:'guide',   n:'Installation',         x:'install command bar wally manual creator store insertservice loadasset studio setup' },
+    { s:'accessors',   url:P+'accessors.html',               t:'guide',   n:'Module Accessors',     x:'getapp getnetwork accessor typed call form property port name cache context any' },
     { s:'roadmap',     url:P+'roadmap.html',                t:'guide',   n:'Roadmap',              x:'next planned future retry compact deflate stream overhaul typing youtube' },
     { s:'app',         url:P+'app.html',                    t:'api',     n:'App',                  x:'get post put delete use unuse push pushall req res send error status compress' },
     { s:'broadcast',   url:P+'broadcast.html',              t:'api',     n:'Broadcast',            x:'emit emitall emitto unreliable 900 bytes' },

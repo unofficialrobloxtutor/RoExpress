@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RoExpress Docs — Express.js-style Networking for Roblox</title>
-  <meta name="description" content="RoExpress: type-safe, rate-limited, Express.js-style networking framework for Roblox. Typed routes, server push, binary streaming, exploit detection, and more — one framework.">
+  <title>RoExpress Docs — The Complete Roblox Networking Stack</title>
+  <meta name="description" content="RoExpress: the first complete networking stack for Roblox. Typed routing, server push, binary streaming, outbound HTTP, exploit detection, and compression — every layer, one framework.">
   <meta name="keywords" content="roblox, luau, networking, remoteevent, framework, express, roexpress, typed routes, server push, rate limiting, binary stream">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
@@ -21,7 +21,7 @@
     "@type": "SoftwareApplication",
     "name": "RoExpress",
     "version": "2.4.0",
-    "description": "A type-safe, rate-limited, Express.js-style networking framework for Roblox.",
+    "description": "The first complete networking stack for Roblox — typed routing, middleware, server push, binary streaming, outbound HTTP, exploit detection, and compression in one framework.",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Roblox",
     "programmingLanguage": "Luau",
@@ -50,8 +50,8 @@
       <section class="doc" id="overview">
 
         <div class="eyebrow">Getting Started</div>
-        <h1>RoExpress &mdash; <em>structured networking</em> for Roblox</h1>
-        <p class="lead">One remote. Every request protected, routed, and rate-limited automatically. Stop creating a new RemoteEvent for every feature &mdash; RoExpress gives you a single organised pipeline with built-in exploit protection, typed routes, server push, binary streaming, and compression.</p>
+        <h1>RoExpress &mdash; <em>the complete networking stack</em> for Roblox</h1>
+        <p class="lead">The first Roblox framework that covers every layer of networking in one place: inbound routing with typed params and middleware, reliable server push, tick-rate binary streaming, outbound HTTP to external APIs, built-in exploit detection, per-player rate limiting, and Deflate compression. Stop patching together RemoteEvents. Start with a stack that is already complete.</p>
 
         <div class="cl new"><strong>v2.4 is here.</strong> Deflate compression (LZ77 + Huffman), automatic retry with exponential backoff, Stream v3 generic channels, and fully typed <code>GetApp()</code> / <code>GetNetwork()</code> accessors.</div>
 
@@ -74,21 +74,19 @@
 <span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">TypeCoercer</span>   <span class="mt-d">shared  &mdash; Roblox type serialisation utility</span>
 <span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Promise</span>       <span class="mt-d">client  &mdash; chainable async Network API</span>
 <span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Benchmark</span>     <span class="mt-d">client  &mdash; round-trip latency measurement</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Harpy</span>         <span class="mt-d">server  &mdash; outbound HTTP client (base URL, headers, retry)</span>
 <span class="mt-m">&#9492;&#9472;&#9472;</span> <span class="mt-n">Base64</span>        <span class="mt-d">shared  &mdash; encode/decode utility</span></div>
 
         <h2 id="installation">Installation</h2>
 
-        <h3>Wally <span class="pill p-new">recommended</span></h3>
+        <p>The fastest way is the Studio command bar &mdash; paste one line and you're done. <a href="pages/installation.html">Full install guide &rarr;</a></p>
+
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>local H=game:GetService"HttpService";loadstring(H:GetAsync"https://raw.githubusercontent.com/unofficialrobloxtutor/RoExpress/main/install.lua")()</code></pre>
+
+        <p>Or with Wally:</p>
         <pre><button class="cb" onclick="cp(this)">copy</button><code>[dependencies]
 RoExpress = "unofficialrobloxtutor/roexpress@2.4.0"</code></pre>
         <pre><button class="cb" onclick="cp(this)">copy</button><code>wally install</code></pre>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.Packages.RoExpress)</code></pre>
-
-        <h3>Creator Store</h3>
-        <p>Get it from the <a href="https://create.roblox.com/store/asset/94926286357335" target="_blank" rel="noopener">Roblox Creator Store</a> and place the ModuleScript into <code>ReplicatedStorage</code>.</p>
-
-        <h3>Manual</h3>
-        <p>Download from the <a href="pages/community-github.html">GitHub releases page</a> and place in <code>ReplicatedStorage</code>.</p>
 
         <h2 id="quickstart">Quick start</h2>
         <h3>Server</h3>
@@ -133,24 +131,35 @@ listener:<span class="fn">On</span>(<span class="str">"round.end"</span>, <span 
 <span class="kw">end</span>)</code></pre>
 
         <h2 id="accessors">Context accessors</h2>
+        <p>There are three access forms. Use <strong>typed accessors</strong> for App and Network — Luau infers the full type automatically so autocomplete and type checking work without an annotation. The call form (<code>RoExpress("Name")</code>) returns <code>any</code>. Property access (<code>RoExpress.Name</code>) is used for utility modules that don't need instantiation.</p>
         <table class="tbl">
           <thead>
             <tr><th>Call</th><th>Context</th><th>Returns</th></tr>
           </thead>
           <tbody>
-            <tr><td><code>RoExpress.GetApp()</code></td>      <td>Server</td><td>App instance &mdash; fully typed</td></tr>
-            <tr><td><code>RoExpress.GetNetwork()</code></td>  <td>Client</td><td>Network instance &mdash; fully typed</td></tr>
-            <tr><td><code>RoExpress("App")</code></td>        <td>Server</td><td>App instance (returns <code>any</code>)</td></tr>
-            <tr><td><code>RoExpress("Network")</code></td>    <td>Client</td><td>Network instance (returns <code>any</code>)</td></tr>
-            <tr><td><code>RoExpress("Broadcast")</code></td>  <td>Server</td><td>Broadcast instance</td></tr>
-            <tr><td><code>RoExpress("Listener")</code></td>   <td>Client</td><td>Listener instance</td></tr>
-            <tr><td><code>RoExpress.Stream</code></td>        <td>Both</td>  <td>Stream module</td></tr>
-            <tr><td><code>RoExpress.Bridge</code></td>        <td>Both</td>  <td>Bridge module</td></tr>
+            <tr style="background:rgba(139,120,255,.04)">
+              <td colspan="3" style="color:var(--text3);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px">Typed accessors — use these</td>
+            </tr>
+            <tr><td><code>RoExpress.GetApp()</code></td>      <td>Server</td><td>App — fully typed, autocomplete works</td></tr>
+            <tr><td><code>RoExpress.GetNetwork()</code></td>  <td>Client</td><td>Network — fully typed, autocomplete works</td></tr>
+            <tr style="background:rgba(139,120,255,.04)">
+              <td colspan="3" style="color:var(--text3);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px">Named ports — client side</td>
+            </tr>
+            <tr><td><code>RoExpress("Network", "portName")</code></td> <td>Client</td><td>Network wired to the named port's RemoteEvent</td></tr>
+            <tr><td><code>RoExpress("Listener", "portName")</code></td><td>Client</td><td>Listener wired to the named port's RemoteEvent</td></tr>
+            <tr style="background:rgba(139,120,255,.04)">
+              <td colspan="3" style="color:var(--text3);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px">Other modules</td>
+            </tr>
+            <tr><td><code>RoExpress("Broadcast")</code></td>  <td>Server</td><td>Broadcast instance (returns <code>any</code>)</td></tr>
+            <tr><td><code>RoExpress("Listener")</code></td>   <td>Client</td><td>Listener wired to the main channel</td></tr>
+            <tr><td><code>RoExpress.Stream</code></td>        <td>Both</td>  <td>Stream factory</td></tr>
+            <tr><td><code>RoExpress.Bridge</code></td>        <td>Both</td>  <td>Bridge singleton</td></tr>
             <tr><td><code>RoExpress.Codec</code></td>         <td>Both</td>  <td>Codec module</td></tr>
-            <tr><td><code>RoExpress("Tamper")</code></td>     <td>Server</td><td>Tamper singleton</td></tr>
+            <tr><td><code>RoExpress.Harpy</code></td>         <td>Server</td><td>Harpy factory (call <code>.New(config)</code>)</td></tr>
+            <tr><td><code>RoExpress.Tamper</code></td>        <td>Server</td><td>Tamper singleton</td></tr>
           </tbody>
         </table>
-        <p>Calling a server-only module on the client (or vice versa) throws an assertion with a clear context message.</p>
+        <p>Calling a server-only module on the client (or vice versa) throws an assertion with the context name. Port names on the server side are ignored — ports are created via <code>app:Listen()</code>, not via the accessor.</p>
 
         <h2 id="pipeline">Request pipeline</h2>
         <p>Every incoming request passes through the same stages in order:</p>

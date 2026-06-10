@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RoExpress — Express.js-style Networking for Roblox</title>
+  <title>RoExpress — The Complete Roblox Networking Stack</title>
 
-  <meta name="description" content="One remote. Every request protected, routed, and rate-limited automatically. RoExpress brings typed routes, server push, binary streaming, and exploit detection to Roblox.">
-  <meta name="keywords" content="roblox, luau, networking, remoteevent, framework, express, roexpress, typed routes, server push, rate limiting">
+  <meta name="description" content="The first complete networking stack for Roblox. Typed routing, server push, binary streaming, outbound HTTP, exploit detection, and compression — one framework, every direction.">
+  <meta name="keywords" content="roblox, luau, networking, remoteevent, framework, roexpress, typed routes, server push, rate limiting, binary stream, exploit detection, http client">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://roexpress.dev">
@@ -14,8 +14,8 @@
 
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev">
-  <meta property="og:title" content="RoExpress — Express.js-style Networking for Roblox">
-  <meta property="og:description" content="One remote. Every request protected, routed, and rate-limited automatically. Free and MIT licensed.">
+  <meta property="og:title" content="RoExpress — The Complete Roblox Networking Stack">
+  <meta property="og:description" content="The first complete networking stack for Roblox. Every direction, every layer, one framework. MIT licensed and free forever.">
   <meta property="og:image" content="https://roexpress.dev/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -31,7 +31,7 @@
     "@type": "SoftwareApplication",
     "name": "RoExpress",
     "version": "2.4.0",
-    "description": "A type-safe, rate-limited, Express.js-style networking framework for Roblox.",
+    "description": "The first complete networking stack for Roblox — typed routing, middleware, server push, binary streaming, outbound HTTP, exploit detection, and compression in one framework.",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Roblox",
     "programmingLanguage": "Luau",
@@ -358,6 +358,7 @@
     </a>
     <nav>
       <a href="/docs/">Docs</a>
+      <a href="/why.html">Why RoExpress</a>
       <a href="https://github.com/unofficialrobloxtutor/RoExpress" target="_blank" rel="noopener">GitHub</a>
       <a href="https://discord.gg/roexpress" target="_blank" rel="noopener">Discord</a>
       <a href="https://create.roblox.com/store/asset/94926286357335" target="_blank" rel="noopener" class="btn-nav">Get it free →</a>
@@ -371,8 +372,8 @@
       v2.4 — Deflate compression &amp; automatic retry
     </a>
     <a class="journey-link" href="/docs/pages/story.html">Read the journey to get here ↗</a>
-    <h1>Express.js-style networking<br>for <em>Roblox</em></h1>
-    <p>One remote. Every request routed, rate-limited, and protected automatically. Typed params, server push, binary streaming, lag compensation, and exploit detection — one framework.</p>
+    <h1>The complete networking<br>stack for <em>Roblox</em></h1>
+    <p>Every direction covered — client requests in, server push out, real-time binary channels, and outbound HTTP to external APIs. Every layer built in — routing, rate limiting, exploit detection, compression, and automatic retry. No other Roblox library does all of this.</p>
     <div class="hero-ctas">
       <a class="btn btn-primary" href="/docs/">Read the docs →</a>
       <a class="btn btn-ghost" href="https://create.roblox.com/store/asset/94926286357335" target="_blank" rel="noopener">Get on Roblox</a>
@@ -386,14 +387,14 @@
     <span class="pill"><span class="pill-dot" style="background:#fbbf24"></span>Middleware pipeline</span>
     <span class="pill"><span class="pill-dot" style="background:#a594ff"></span>Automatic retry</span>
     <span class="pill"><span class="pill-dot" style="background:#4ade9a"></span>Wally support</span>
-    <span class="pill"><span class="pill-dot" style="background:#8b78ff"></span>9 modules</span>
+    <span class="pill"><span class="pill-dot" style="background:#8b78ff"></span>15 modules</span>
     <span class="pill"><span class="pill-dot" style="background:#2dd4bf"></span>MIT licensed</span>
   </div>
 
   <!-- STATS -->
   <section>
     <div class="stats">
-      <div class="stat"><div class="stat-n">9</div><div class="stat-l">modules</div></div>
+      <div class="stat"><div class="stat-n">15</div><div class="stat-l">modules</div></div>
       <div class="stat"><div class="stat-n">~1800</div><div class="stat-l">lines of source</div></div>
       <div class="stat"><div class="stat-n">5 yr</div><div class="stat-l">in development</div></div>
       <div class="stat"><div class="stat-n">MIT</div><div class="stat-l">free forever</div></div>
@@ -402,8 +403,8 @@
 
   <!-- QUICK START CODE -->
   <section>
-    <h2>Looks familiar.</h2>
-    <div class="sub">If you've used Express.js, you already know how to use RoExpress.</div>
+    <h2>Less boilerplate. More structure.</h2>
+    <div class="sub">Typed routes, middleware guards, and reliable push — wired up in the same lines it used to take just to create a RemoteEvent.</div>
     <div class="code-wrap">
       <div class="code-bar">
         <div class="code-dots"><span></span><span></span><span></span></div>
@@ -433,7 +434,7 @@
   <!-- FEATURE GRID -->
   <section>
     <h2>Why should I use RoExpress?</h2>
-    <div class="sub">Nine standalone modules — use one or all nine. Each does one job cleanly.</div>
+    <div class="sub">Fifteen modules, every networking layer covered. Use one or all fifteen — each does one job and stays out of your way.</div>
     <div class="grid">
       <div class="card">
         <div class="card-icon">⬡</div>
@@ -480,13 +481,18 @@
         <h3>Ports <span class="card-tag">isolation</span></h3>
         <p>Isolated App instances each on their own RemoteEvent. Separate rate limiting, middleware, and push channels per system.</p>
       </div>
+      <div class="card">
+        <div class="card-icon">⇡</div>
+        <h3>Harpy <span class="card-tag">outbound</span></h3>
+        <p>Server-to-external HTTP client. Set a base URL and headers once — GET, POST, PUT, DELETE with automatic retry and a chainable Promise API.</p>
+      </div>
     </div>
   </section>
 
   <!-- COMPARISON -->
   <section>
     <h2>How it compares.</h2>
-    <div class="sub">RoExpress is the only Roblox networking library built around structured request/response.</div>
+    <div class="sub">The only Roblox library that covers every layer — routing, security, streaming, compression, and outbound HTTP in one place.</div>
     <div style="overflow-x:auto; border: 1px solid var(--border); border-radius: 10px">
       <table class="cmp">
         <thead>
@@ -507,6 +513,7 @@
           <tr><td>Lag compensation</td>       <td class="rx yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
           <tr><td>Exploit detection</td>      <td class="rx yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
           <tr><td>Automatic retry</td>        <td class="rx yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+          <tr><td>Outbound HTTP client</td>   <td class="rx yes">✓ Harpy</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
           <tr><td>Tick-rate channel sync</td> <td class="rx yes">✓ Stream</td><td class="no">✗</td><td class="yes">✓</td><td class="yes">✓</td></tr>
           <tr><td>Binary serialization</td>   <td class="rx yes">✓ Codec</td><td class="no">✗</td><td class="yes">✓</td><td class="yes">✓</td></tr>
           <tr><td>Code generation</td>        <td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td></tr>

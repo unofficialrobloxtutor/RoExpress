@@ -72,7 +72,27 @@ app:<span class="fn">Listen</span>(<span class="str">"combat"</span>, <span clas
 combatPort:<span class="fn">Get</span>(<span class="str">"status"</span>, <span class="kw">function</span>(req, res) res:<span class="fn">Send</span>(<span class="str">"ok"</span>) <span class="kw">end</span>)</code></pre>
 
         <h2>Client side</h2>
-        <p>Ports create their own RemoteEvent at <code>game.ReplicatedStorage.RoExpressPorts.&lt;name&gt;</code>. The client calls into a port using <a href="./network.html">Network</a> with the port name specified — exact API TBD in a future release. For now, fire the port's RemoteEvent directly.</p>
+        <p>Pass the port name as the second argument to get a <a href="./network.html">Network</a> or <a href="./listener.html">Listener</a> wired to that port's RemoteEvent. The call signature matches the main-channel versions exactly — same methods, same response shape.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> combatNet <span class="op">=</span> RoExpress(<span class="str">"Network"</span>, <span class="str">"combat"</span>)
+
+<span class="cm">-- callback style</span>
+combatNet:<span class="fn">Post</span>(<span class="str">"shoot/123"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res)
+    <span class="kw">if</span> res.ok <span class="kw">then</span> <span class="fn">showHit</span>(res.data) <span class="kw">end</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- promise style</span>
+combatNet:<span class="fn">PostAsync</span>(<span class="str">"shoot/123"</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res) <span class="fn">showHit</span>(res.data) <span class="kw">end</span>)
+    :<span class="fn">Catch</span>(<span class="kw">function</span>(err) <span class="fn">warn</span>(err.message) <span class="kw">end</span>)</code></pre>
+
+        <p>For push events fired from a port (<code>port:Push()</code> / <code>port:PushAll()</code>), subscribe with a Listener on the same port name:</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> combatListener <span class="op">=</span> RoExpress(<span class="str">"Listener"</span>, <span class="str">"combat"</span>)
+
+combatListener:<span class="fn">On</span>(<span class="str">"hit.confirmed"</span>, <span class="kw">function</span>(data)
+    <span class="fn">print</span>(<span class="str">"damage:"</span>, data.damage)
+<span class="kw">end</span>)</code></pre>
+
+        <p>Each port name is cached — calling <code>RoExpress("Network", "combat")</code> from multiple scripts returns the same instance.</p>
 
         <h2>See also</h2>
         <p>

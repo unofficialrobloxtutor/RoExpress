@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Module Accessors — RoExpress Docs</title>
+  <meta name="description" content="How to access every RoExpress module — typed accessors, call form, property access, and named port connections. Covers all four patterns and when to use each.">
+  <meta name="keywords" content="roblox, luau, roexpress, accessor, getapp, getnetwork, module, require, typed, port, context">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/accessors.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/accessors.html">
+  <meta property="og:title" content="Module Accessors — RoExpress Docs">
+  <meta property="og:description" content="How to access every RoExpress module — typed accessors, call form, property access, and named port connections.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Getting Started</div>
+        <h1>Module Accessors</h1>
+        <p class="lead">RoExpress has four patterns for accessing its modules. Each one exists for a reason — knowing which to use and why removes the confusion about <code>RoExpress("App")</code> vs <code>RoExpress.GetApp()</code> vs <code>RoExpress.Bridge</code>.</p>
+
+        <!-- ────────────────────────────────────────────── -->
+        <h2>The four patterns</h2>
+
+        <h3>1 — Typed accessors <code>RoExpress.GetApp()</code> / <code>RoExpress.GetNetwork()</code></h3>
+        <p>Use these for <strong>App</strong> (server) and <strong>Network</strong> (client). They return a fully-typed instance — Luau infers the complete method list without any extra annotation. Autocomplete and type checking work out of the box.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Server script</span>
+<span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> app <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()   <span class="cm">-- type is inferred as App.Type</span>
+
+app:<span class="fn">Get</span>(<span class="str">"player/:id=number"</span>, <span class="kw">function</span>(req, res)   <span class="cm">-- autocomplete works</span>
+    res:<span class="fn">Send</span>({ userId <span class="op">=</span> req.params.id })
+<span class="kw">end</span>)</code></pre>
+
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Client script</span>
+<span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> network <span class="op">=</span> RoExpress.<span class="fn">GetNetwork</span>()   <span class="cm">-- type is inferred as Network.Type</span>
+
+network:<span class="fn">GetAsync</span>(<span class="str">"player/123"</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res) <span class="fn">print</span>(res.data.userId) <span class="kw">end</span>)</code></pre>
+
+        <div class="callout callout-tip">
+          <strong>Rule of thumb:</strong> always use <code>GetApp()</code> and <code>GetNetwork()</code> — never use the call form for these two modules. The only reason to use <code>RoExpress("App")</code> would be if you need <code>any</code> intentionally, which is rare.
+        </div>
+
+        <!-- ─────── -->
+        <h3>2 — Call form <code>RoExpress("ModuleName")</code></h3>
+        <p>Returns the module's singleton instance. The return type is <code>any</code>, so Luau won't give you autocomplete. Use this for <strong>Broadcast</strong>, <strong>Listener</strong>, <strong>Stream</strong>, and other instantiated modules where the typed accessor doesn't exist.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Server</span>
+<span class="kw">local</span> broadcast <span class="op">=</span> RoExpress(<span class="str">"Broadcast"</span>)
+<span class="kw">local</span> tamper    <span class="op">=</span> RoExpress(<span class="str">"Tamper"</span>)
+
+<span class="cm">-- Client</span>
+<span class="kw">local</span> listener <span class="op">=</span> RoExpress(<span class="str">"Listener"</span>)</code></pre>
+
+        <p>Every call is cached — calling <code>RoExpress("Broadcast")</code> from two different scripts returns the same instance. The module is only constructed once.</p>
+
+        <!-- ─────── -->
+        <h3>3 — Property access <code>RoExpress.ModuleName</code></h3>
+        <p>Used for utility modules that are <strong>not instantiated</strong> — they are the module table directly, with full type information. These are set as direct properties on the root module rather than going through the call cache.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Both contexts</span>
+<span class="kw">local</span> Codec       <span class="op">=</span> RoExpress.Codec        <span class="cm">-- compression</span>
+<span class="kw">local</span> Base64      <span class="op">=</span> RoExpress.Base64       <span class="cm">-- encode / decode</span>
+<span class="kw">local</span> Bridge      <span class="op">=</span> RoExpress.Bridge       <span class="cm">-- internal event bus</span>
+<span class="kw">local</span> TypeCoercer <span class="op">=</span> RoExpress.TypeCoercer  <span class="cm">-- type serialisation</span>
+<span class="kw">local</span> Promise     <span class="op">=</span> RoExpress.Promise      <span class="cm">-- async utilities</span>
+
+<span class="cm">-- Server only</span>
+<span class="kw">local</span> Harpy  <span class="op">=</span> RoExpress.Harpy    <span class="cm">-- outbound HTTP factory</span>
+<span class="kw">local</span> Tamper <span class="op">=</span> RoExpress.Tamper   <span class="cm">-- exploit detection singleton</span></code></pre>
+
+        <p>Harpy is a factory, not a singleton. You always call <code>Harpy.New(config)</code> to create a client — the property just gives you the factory table:</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Harpy   <span class="op">=</span> RoExpress.Harpy
+<span class="kw">local</span> webhook <span class="op">=</span> Harpy.<span class="fn">New</span>({ base <span class="op">=</span> WEBHOOK_URL, retries <span class="op">=</span> <span class="num">3</span> })</code></pre>
+
+        <!-- ─────── -->
+        <h3>4 — Named port <code>RoExpress("Network", "portName")</code></h3>
+        <p>Client-only. Passing a second argument returns a <strong>Network</strong> or <strong>Listener</strong> wired to that port's dedicated RemoteEvent, not the main channel. The port must already exist on the server (created via <code>app:Listen()</code>).</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Client: connect to the "combat" port</span>
+<span class="kw">local</span> combatNet      <span class="op">=</span> RoExpress(<span class="str">"Network"</span>,  <span class="str">"combat"</span>)
+<span class="kw">local</span> combatListener <span class="op">=</span> RoExpress(<span class="str">"Listener"</span>, <span class="str">"combat"</span>)
+
+combatNet:<span class="fn">Post</span>(<span class="str">"shoot/:targetId=number"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res)
+    <span class="fn">showHit</span>(res.data)
+<span class="kw">end</span>)
+
+combatListener:<span class="fn">On</span>(<span class="str">"hit.confirmed"</span>, <span class="kw">function</span>(data)
+    <span class="fn">print</span>(data.damage)
+<span class="kw">end</span>)</code></pre>
+
+        <p>The port name is also cached — <code>RoExpress("Network", "combat")</code> called from multiple scripts returns the same instance.</p>
+        <p>On the <strong>server</strong>, passing a port name to the call form is a no-op — the name is ignored and the main App instance is returned. Ports are created server-side via <code>app:Listen()</code>, not via the accessor.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Server: create a port (NOT via accessor)</span>
+<span class="kw">local</span> app <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
+
+app:<span class="fn">Listen</span>(<span class="str">"combat"</span>, <span class="kw">function</span>(port)
+    port:<span class="fn">Post</span>(<span class="str">"shoot/:targetId=number"</span>, <span class="kw">function</span>(req, res)
+        res:<span class="fn">Send</span>(<span class="fn">handleShoot</span>(req.player, req.params.targetId))
+    <span class="kw">end</span>)
+<span class="kw">end</span>)</code></pre>
+
+        <!-- ────────────────────────────────────────────── -->
+        <h2>Full module reference</h2>
+        <p>Every module, which context it runs in, and the correct access form:</p>
+        <table class="tbl">
+          <thead>
+            <tr><th>Module</th><th>Context</th><th>Access form</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr style="background:rgba(139,120,255,.04)">
+              <td colspan="4" style="color:var(--text3);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px">Server</td>
+            </tr>
+            <tr><td><a href="./app.html">App</a></td>              <td>Server</td><td><code>RoExpress.GetApp()</code></td>         <td>Typed. Use this — not the call form.</td></tr>
+            <tr><td><a href="./broadcast.html">Broadcast</a></td>   <td>Server</td><td><code>RoExpress("Broadcast")</code></td>     <td>Returns <code>any</code>.</td></tr>
+            <tr><td><a href="./tamper.html">Tamper</a></td>         <td>Server</td><td><code>RoExpress.Tamper</code></td>           <td>Singleton. Property access, fully typed.</td></tr>
+            <tr><td><a href="./harpy.html">Harpy</a></td>           <td>Server</td><td><code>RoExpress.Harpy</code></td>            <td>Factory — call <code>.New(config)</code> per API.</td></tr>
+            <tr><td><a href="./port.html">Port</a></td>             <td>Server</td><td><code>app:Listen("name", fn)</code></td>     <td>Created through App, not the root accessor.</td></tr>
+            <tr style="background:rgba(139,120,255,.04)">
+              <td colspan="4" style="color:var(--text3);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px">Client</td>
+            </tr>
+            <tr><td><a href="./network.html">Network</a></td>       <td>Client</td><td><code>RoExpress.GetNetwork()</code></td>    <td>Typed. Use this — not the call form.</td></tr>
+            <tr><td><a href="./listener.html">Listener</a></td>     <td>Client</td><td><code>RoExpress("Listener")</code></td>     <td>Main channel. Returns <code>any</code>.</td></tr>
+            <tr><td><a href="./benchmark.html">Benchmark</a></td>   <td>Client</td><td><code>RoExpress("Benchmark")</code></td>    <td>Returns <code>any</code>.</td></tr>
+            <tr style="background:rgba(139,120,255,.04)">
+              <td colspan="4" style="color:var(--text3);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px">Named ports (client only)</td>
+            </tr>
+            <tr><td><a href="./network.html">Network on port</a></td>  <td>Client</td><td><code>RoExpress("Network", "name")</code></code></td>  <td>Network wired to that port's RemoteEvent.</td></tr>
+            <tr><td><a href="./listener.html">Listener on port</a></td><td>Client</td><td><code>RoExpress("Listener", "name")</code></td> <td>Listener wired to that port's RemoteEvent.</td></tr>
+            <tr style="background:rgba(139,120,255,.04)">
+              <td colspan="4" style="color:var(--text3);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px">Both contexts</td>
+            </tr>
+            <tr><td><a href="./stream.html">Stream</a></td>          <td>Both</td><td><code>RoExpress("Stream")</code></td>        <td>Schema-defined binary channels.</td></tr>
+            <tr><td><a href="./bridge.html">Bridge</a></td>          <td>Both</td><td><code>RoExpress.Bridge</code></td>           <td>Server-side only in practice; client import is safe.</td></tr>
+            <tr><td><a href="./codec.html">Codec</a></td>            <td>Both</td><td><code>RoExpress.Codec</code></td>            <td>Compression utilities.</td></tr>
+            <tr><td><a href="./base64.html">Base64</a></td>          <td>Both</td><td><code>RoExpress.Base64</code></td>           <td>Encode / decode.</td></tr>
+            <tr><td><a href="./typecoercer.html">TypeCoercer</a></td><td>Both</td><td><code>RoExpress.TypeCoercer</code></td>     <td>Type serialisation.</td></tr>
+            <tr><td><a href="./promise.html">Promise</a></td>        <td>Both</td><td><code>RoExpress.Promise</code></td>          <td>Async utilities.</td></tr>
+          </tbody>
+        </table>
+
+        <!-- ────────────────────────────────────────────── -->
+        <h2>Why typed vs untyped matters</h2>
+        <p>In Luau, a variable typed as <code>any</code> provides no autocomplete and suppresses type errors. For a framework with dozens of methods, that matters:</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- This variable is typed 'any' — Studio won't autocomplete it</span>
+<span class="kw">local</span> app <span class="op">=</span> RoExpress(<span class="str">"App"</span>)
+app:<span class="fn">Pots</span>(<span class="str">"player"</span>, handler)   <span class="cm">-- typo: no error until runtime</span>
+
+<span class="cm">-- This variable is typed App.Type — Studio catches the typo immediately</span>
+<span class="kw">local</span> app <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
+app:<span class="fn">Pots</span>(<span class="str">"player"</span>, handler)   <span class="cm">-- error: 'Pots' is not a member of App.Type</span></code></pre>
+
+        <!-- ────────────────────────────────────────────── -->
+        <h2>Instance caching</h2>
+        <p>Every module is created once and cached on the root RoExpress object. Calling the same accessor multiple times from different scripts is safe — you always get the same instance back.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- ServerScriptService/A.server.luau</span>
+<span class="kw">local</span> app1 <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
+
+<span class="cm">-- ServerScriptService/B.server.luau</span>
+<span class="kw">local</span> app2 <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
+
+<span class="cm">-- app1 and app2 are the exact same object</span>
+<span class="fn">print</span>(app1 <span class="op">==</span> app2)  <span class="cm">-- true</span></code></pre>
+        <p>Port instances are cached by <code>"ModuleName:portName"</code> key — <code>RoExpress("Network", "combat")</code> returns the same Network instance every time.</p>
+
+        <!-- ────────────────────────────────────────────── -->
+        <h2>Wrong context errors</h2>
+        <p>Calling a server-only module on the client (or vice versa) throws an assertion immediately with a message that names the module and which context you're in. You will never get a silent nil.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- In a LocalScript:</span>
+<span class="kw">local</span> app <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
+<span class="cm">-- Error: RoExpress: 'App' is not available in this context (Client)</span></code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./app.html">App</a> — server routing API &nbsp;·&nbsp;
+          <a href="./network.html">Network</a> — client request API &nbsp;·&nbsp;
+          <a href="./port.html">Ports</a> — named isolated pipelines &nbsp;·&nbsp;
+          <a href="./types.html">Types</a> — exported Luau types &nbsp;·&nbsp;
+          <a href="./pipeline.html">Request Pipeline</a> — what happens after the accessor
+        </p>
+
+      </section>
+    </main>
+  </div>
+</body>
+</html>
