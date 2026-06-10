@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Harpy — RoExpress Server API</title>
+  <meta name="description" content="Harpy is RoExpress's outbound HTTP client. Set a base URL and shared headers once, then call Get/Post/Put/Delete with retry, backoff, and a chainable Promise API.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/harpy.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/harpy.html">
+  <meta property="og:title" content="Harpy — RoExpress Server API">
+  <meta property="og:description" content="Outbound HTTP client with base URL, shared headers, retry, and chainable Promise API.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Server API</div>
+        <h1>Harpy <span class="nb nb-green">NEW</span></h1>
+        <p class="lead">Outbound HTTP client for server-to-external-API calls. Set a base URL and shared headers once; every subsequent request uses them automatically. Failed requests retry with exponential backoff. Every method returns a consistent response shape, and async variants return a chainable <a href="./promise.html">Promise</a>.</p>
+
+        <div class="cl warn"><strong>Server only</strong> &mdash; <code>HttpService:RequestAsync</code> is not available on the client. Harpy will error if called from a LocalScript.</div>
+
+        <h2>Setup</h2>
+        <p>Harpy is a factory &mdash; create one client per external API and configure it once:</p>
+
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> Harpy     <span class="op">=</span> RoExpress.Harpy
+
+<span class="kw">local</span> client <span class="op">=</span> Harpy.<span class="fn">New</span>({
+    base    <span class="op">=</span> <span class="str">"https://api.example.com"</span>,
+    retries <span class="op">=</span> <span class="num">3</span>,   <span class="cm">-- optional, default 3</span>
+})
+
+client:<span class="fn">SetHeader</span>(<span class="str">"Authorization"</span>, <span class="str">"Bearer "</span> <span class="op">..</span> SECRET)
+client:<span class="fn">SetHeader</span>(<span class="str">"X-Game-Id"</span>,     <span class="str">"my-game-123"</span>)</code></pre>
+
+        <p>You can also pass <code>headers</code> directly in the config table. All fields are optional:</p>
+
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> client <span class="op">=</span> Harpy.<span class="fn">New</span>({
+    base    <span class="op">=</span> <span class="str">"https://hooks.slack.com/services/..."</span>,
+    headers <span class="op">=</span> { [<span class="str">"Content-Type"</span>] <span class="op">=</span> <span class="str">"application/json"</span> },
+    retries <span class="op">=</span> <span class="num">1</span>,
+})</code></pre>
+
+        <h2>Callback style</h2>
+        <p>Every method fires in a new thread and calls the callback when done. Omit the callback to fire-and-forget.</p>
+
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- GET</span>
+client:<span class="fn">Get</span>(<span class="str">"/players/123"</span>, <span class="kw">function</span>(res)
+    <span class="kw">if</span> res.ok <span class="kw">then</span>
+        <span class="fn">print</span>(res.data.name, res.data.score)
+    <span class="kw">else</span>
+        <span class="fn">warn</span>(<span class="str">"fetch failed"</span>, res.status)
+    <span class="kw">end</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- POST — body table is JSON-encoded automatically</span>
+client:<span class="fn">Post</span>(<span class="str">"/events"</span>, {
+    type   <span class="op">=</span> <span class="str">"round_end"</span>,
+    winner <span class="op">=</span> <span class="str">"Player1"</span>,
+    kills  <span class="op">=</span> <span class="num">12</span>,
+})
+
+<span class="cm">-- PUT / DELETE</span>
+client:<span class="fn">Put</span>(<span class="str">"/players/123"</span>, { score <span class="op">=</span> <span class="num">9900</span> })
+client:<span class="fn">Delete</span>(<span class="str">"/sessions/abc"</span>)</code></pre>
+
+        <h2>Promise style</h2>
+        <p>The <code>*Async</code> variants return a <a href="./promise.html">Promise</a>. Resolves with the <code>Response</code> on 2xx, rejects with <code>{ message, status, response }</code> on failure.</p>
+
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>client:<span class="fn">GetAsync</span>(<span class="str">"/leaderboard"</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res)
+        <span class="kw">return</span> res.data   <span class="cm">-- pass data to the next Then</span>
+    <span class="kw">end</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(data)
+        <span class="fn">UpdateLeaderboard</span>(data)
+    <span class="kw">end</span>)
+    :<span class="fn">Catch</span>(<span class="kw">function</span>(err)
+        <span class="fn">warn</span>(<span class="str">"leaderboard fetch failed"</span>, err.message, err.status)
+    <span class="kw">end</span>)
+
+client:<span class="fn">PostAsync</span>(<span class="str">"/scores"</span>, { userId <span class="op">=</span> userId, score <span class="op">=</span> score })
+    :<span class="fn">Catch</span>(<span class="kw">function</span>(err)
+        <span class="fn">warn</span>(<span class="str">"score submit failed"</span>, err.status)
+    <span class="kw">end</span>)</code></pre>
+
+        <h2>Response shape</h2>
+        <p>Every callback and resolved Promise receives the same object:</p>
+
+        <table class="tbl">
+          <thead>
+            <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>ok</code></td><td><code>boolean</code></td><td>True if the status code is 2xx</td></tr>
+            <tr><td><code>status</code></td><td><code>number</code></td><td>HTTP status code (0 if connection failed)</td></tr>
+            <tr><td><code>data</code></td><td><code>any</code></td><td>JSON-decoded body; raw string if the body is not valid JSON; <code>nil</code> if empty</td></tr>
+            <tr><td><code>headers</code></td><td><code>{ [string]: string }</code></td><td>Response headers</td></tr>
+            <tr><td><code>raw</code></td><td><code>string</code></td><td>Raw response body string</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Retry behaviour</h2>
+        <p>On a 5xx response or a connection error, Harpy waits and retries automatically before giving up:</p>
+        <table class="tbl">
+          <thead><tr><th>Attempt</th><th>Wait before retry</th></tr></thead>
+          <tbody>
+            <tr><td>1 (first try)</td><td>&mdash;</td></tr>
+            <tr><td>2</td><td>1 s</td></tr>
+            <tr><td>3</td><td>2 s</td></tr>
+            <tr><td>4 (default max)</td><td>4 s</td></tr>
+          </tbody>
+        </table>
+        <p>4xx responses (client errors) are <em>not</em> retried &mdash; they are returned immediately.</p>
+
+        <h2>API reference</h2>
+
+        <h3>Constructor</h3>
+
+        <table class="tbl">
+          <thead><tr><th>Signature</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>Harpy.New(config?)</code></td>
+              <td><code>Harpy</code></td>
+              <td>Create a new client. <code>config</code> fields: <code>base</code> (string), <code>headers</code> (table), <code>retries</code> (number, default&nbsp;3).</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Configuration methods</h3>
+
+        <table class="tbl">
+          <thead><tr><th>Method</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>:SetBase(url)</code></td><td>Set or replace the base URL. Applied to all future requests.</td></tr>
+            <tr><td><code>:SetHeader(key, value)</code></td><td>Add or update a persistent header sent on every request.</td></tr>
+            <tr><td><code>:RemoveHeader(key)</code></td><td>Remove a persistent header.</td></tr>
+            <tr><td><code>:SetRetries(n)</code></td><td>Change the maximum retry count. Use <code>0</code> to disable retries.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Callback methods</h3>
+
+        <table class="tbl">
+          <thead><tr><th>Method</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>:Get(path, callback?)</code></td><td>GET request. Callback receives <code>Response</code> when done. Omit callback to fire-and-forget.</td></tr>
+            <tr><td><code>:Post(path, body, callback?)</code></td><td>POST request. <code>body</code> table is JSON-encoded automatically. Adds <code>Content-Type: application/json</code>.</td></tr>
+            <tr><td><code>:Put(path, body, callback?)</code></td><td>PUT request.</td></tr>
+            <tr><td><code>:Delete(path, callback?)</code></td><td>DELETE request.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Promise methods</h3>
+
+        <table class="tbl">
+          <thead><tr><th>Method</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>:GetAsync(path)</code></td><td>Returns a Promise. Resolves with <code>Response</code> on 2xx.</td></tr>
+            <tr><td><code>:PostAsync(path, body)</code></td><td>Returns a Promise.</td></tr>
+            <tr><td><code>:PutAsync(path, body)</code></td><td>Returns a Promise.</td></tr>
+            <tr><td><code>:DeleteAsync(path)</code></td><td>Returns a Promise.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Real-world examples</h2>
+
+        <h3>Webhook (Discord / Slack)</h3>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> webhook <span class="op">=</span> Harpy.<span class="fn">New</span>({ base <span class="op">=</span> DISCORD_WEBHOOK_URL })
+
+<span class="kw">local function</span> <span class="fn">NotifyRoundEnd</span>(winner: string, kills: number)
+    webhook:<span class="fn">Post</span>(<span class="str">""</span>, {
+        content <span class="op">=</span> <span class="fn">string.format</span>(<span class="str">"Round over! Winner: **%s** (%d kills)"</span>, winner, kills)
+    })
+<span class="kw">end</span></code></pre>
+
+        <h3>External leaderboard API</h3>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> api <span class="op">=</span> Harpy.<span class="fn">New</span>({ base <span class="op">=</span> <span class="str">"https://scores.example.com"</span> })
+api:<span class="fn">SetHeader</span>(<span class="str">"X-Api-Key"</span>, API_KEY)
+
+<span class="kw">local function</span> <span class="fn">SubmitScore</span>(userId: number, score: number)
+    api:<span class="fn">PostAsync</span>(<span class="str">"/scores"</span>, { userId <span class="op">=</span> userId, score <span class="op">=</span> score })
+        :<span class="fn">Catch</span>(<span class="kw">function</span>(err)
+            <span class="fn">warn</span>(<span class="str">"Score submit failed after retries:"</span>, err.status)
+        <span class="kw">end</span>)
+<span class="kw">end</span>
+
+<span class="kw">local function</span> <span class="fn">GetTop10</span>(): { any }
+    <span class="kw">local</span> data
+    api:<span class="fn">GetAsync</span>(<span class="str">"/scores/top?limit=10"</span>)
+        :<span class="fn">Then</span>(<span class="kw">function</span>(res) data <span class="op">=</span> res.data <span class="kw">end</span>)
+        :<span class="fn">Finally</span>(<span class="kw">function</span>() <span class="cm">-- cleanup if needed</span> <span class="kw">end</span>)
+    <span class="kw">return</span> data
+<span class="kw">end</span></code></pre>
+
+        <h3>Multiple APIs in the same game</h3>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Each client is independent — different base URL, different headers</span>
+<span class="kw">local</span> analyticsClient <span class="op">=</span> Harpy.<span class="fn">New</span>({ base <span class="op">=</span> <span class="str">"https://analytics.example.com"</span> })
+<span class="kw">local</span> webhookClient   <span class="op">=</span> Harpy.<span class="fn">New</span>({ base <span class="op">=</span> DISCORD_WEBHOOK_URL, retries <span class="op">=</span> <span class="num">1</span> })
+<span class="kw">local</span> scoresClient    <span class="op">=</span> Harpy.<span class="fn">New</span>({ base <span class="op">=</span> <span class="str">"https://scores.example.com"</span> })
+
+analyticsClient:<span class="fn">SetHeader</span>(<span class="str">"Authorization"</span>, <span class="str">"Bearer "</span> <span class="op">..</span> ANALYTICS_SECRET)
+scoresClient:<span class="fn">SetHeader</span>(<span class="str">"X-Api-Key"</span>, SCORES_KEY)</code></pre>
+
+        <div class="cl info">Each Harpy client is completely independent. Base URL, headers, and retry count are per-instance. Create as many as you need.</div>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./promise.html">Promise</a> &mdash; the chainable async API returned by <code>*Async</code> methods &nbsp;&middot;&nbsp;
+          <a href="./app.html">App</a> &mdash; inbound routing (server receives requests from clients) &nbsp;&middot;&nbsp;
+          <a href="./network.html">Network</a> &mdash; client-to-server requests (the other direction)
+        </p>
+
+      </section>
+    </main>
+  </div>
+</body>
+</html>

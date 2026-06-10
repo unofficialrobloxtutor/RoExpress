@@ -44,6 +44,12 @@
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>
+  <url>
+    <loc>https://roexpress.dev/docs/pages/harpy.html</loc>
+    <lastmod>2026-06-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+  </url>
 
   <!-- ── CLIENT API ────────────────────────────────────────────────── -->
   <url>

@@ -43,6 +43,7 @@
         ${nl(P + 'app.html',       'app',       'App')}
         ${nl(P + 'broadcast.html', 'broadcast', 'Broadcast')}
         ${nl(P + 'tamper.html',    'tamper',    'Tamper')}
+        ${nl(P + 'harpy.html',     'harpy',     'Harpy' + nb('new', 'background:var(--accent-bg);color:var(--accent2)'))}
       </div>
     </div>
     <div class="ns">
@@ -165,6 +166,7 @@
     { s:'app',         url:P+'app.html',                    t:'api',     n:'App',                  x:'get post put delete use unuse push pushall req res send error status compress' },
     { s:'broadcast',   url:P+'broadcast.html',              t:'api',     n:'Broadcast',            x:'emit emitall emitto unreliable 900 bytes' },
     { s:'tamper',      url:P+'tamper.html',                 t:'api',     n:'Tamper',               x:'exploit detection strike autokick version spoof malformed payload rate flood' },
+    { s:'harpy',       url:P+'harpy.html',                  t:'api',     n:'Harpy',                x:'http outbound httpclient requestasync get post put delete webhook retry backoff base url headers' },
     { s:'network',     url:P+'network.html',                t:'api',     n:'Network',              x:'get post put delete cancel timeout networkresponse callback promise async' },
     { s:'listener',    url:P+'listener.html',               t:'api',     n:'Listener',             x:'on once off use unuse push broadcast dual channel reliable unreliable' },
     { s:'benchmark',   url:P+'benchmark.html',              t:'api',     n:'Benchmark',            x:'run print compare latency p95 p99 throughput rtt warmup' },

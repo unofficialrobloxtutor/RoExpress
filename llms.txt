@@ -37,6 +37,7 @@ RoExpress replaces scattered RemoteEvents in Roblox games with a single discipli
 
 ## Modules
 
+- **Harpy**: Server-only outbound HTTP client. Wraps HttpService:RequestAsync with a persistent base URL, shared headers, automatic retry with exponential backoff, and a consistent response shape { ok, status, data, headers, raw }. Factory pattern — create one client per external API. Callback style (:Get/:Post/:Put/:Delete) and chainable Promise style (:GetAsync etc.).
 - **App**: Server-side request routing, middleware pipeline, and reliable server push (Push/PushAll/PushTo). Owns a Router and TokenBucket instance. Handlers use compact (req, res) form; req.player and req.raw available when needed.
 - **Network**: Client-side request/response with callbacks and optional timeout. Automatic retry with exponential backoff. Exposes GetAsync/PostAsync returning chainable Promises.
 - **Broadcast**: Unreliable server-to-client fire-and-forget events over UnreliableRemoteEvent. Per-event and per-player rate limiting. 900 byte data cap.

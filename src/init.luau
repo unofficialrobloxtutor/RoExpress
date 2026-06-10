@@ -43,6 +43,7 @@ local Bridge      = require(script.Bridge)
 local Tamper      = require(script.Tamper)
 local TypeCoercer = require(script.TypeCoercer)
 local Promise     = require(script.Promise)
+local Harpy       = require(script.Harpy)
 
 local _modules = if IS_SERVER
 	then {
@@ -183,6 +184,7 @@ RoExpress.Promise     = Promise
 RoExpress.Bridge      = Bridge
 RoExpress.TypeCoercer = TypeCoercer
 RoExpress.Tamper      = Tamper
+RoExpress.Harpy       = Harpy
 
 ------------------------------------------------------------------------
 --	Typed accessors
@@ -248,6 +250,7 @@ export type Promise     = typeof(require(script.Promise))
 export type Stream      = typeof(require(script.Stream))
 export type TokenBucket = typeof(require(script.TokenBucket))
 export type Benchmark   = typeof(require(script.Benchmark))
+export type Harpy       = typeof(require(script.Harpy))
 
 -- Router sub-types
 export type ParamType   = Router.ParamType
