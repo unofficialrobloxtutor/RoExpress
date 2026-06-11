@@ -103,6 +103,7 @@ app:<span class="fn">Get</span>(<span class="str">"player/:id=number"</span>, <s
             <tr><td><code>res:Send(data?)</code></td><td>Send <span class="pill p-ok">200</span> success response. PUT/DELETE accept <code>boolean?</code> or <code>nil</code> only | passing a table is warned and stripped. Callable once.</td></tr>
             <tr><td><code>res:Error(message)</code></td><td>Send <span class="pill p-err">500</span> error response. Callable once.</td></tr>
             <tr><td><code>res:Status(code)</code></td><td>Set HTTP-style status code. Chainable | <code>res:Status(204):Send()</code></td></tr>
+            <tr><td><code>res:Redirect(path)</code></td><td>Re-dispatch the request to a different server route. Transparent to the client | the redirected handler sends the actual response. Version check, rate limit, and middleware run once only. Chains capped at 5 hops (508 on overflow). Callable once.</td></tr>
           </tbody>
         </table>
 
