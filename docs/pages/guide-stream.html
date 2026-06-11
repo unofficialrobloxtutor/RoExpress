@@ -33,7 +33,7 @@
         <h1>FPS with Stream</h1>
         <p class="lead">Stream sends player state to all clients every tick — one packed buffer, one <code>FireAllClients</code>. This guide walks through a typical FPS setup with lag compensation for hit validation.</p>
 
-        <div class="cl info"><strong>Stream v3 is generic channels.</strong> The steps below use a single <code>players</code> channel. You can add more channels for bullets, vehicles, or any other high-frequency state — see <a href="./stream.html">Stream</a>.</div>
+        <div class="cl info"><strong>Stream uses generic channels.</strong> The steps below use a single <code>players</code> channel. You can add more channels for bullets, vehicles, or any other high-frequency state — see <a href="./stream.html">Stream</a>.</div>
 
         <h2>Server setup</h2>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Stream <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Stream"</span>)

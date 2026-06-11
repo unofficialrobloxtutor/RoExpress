@@ -118,7 +118,7 @@
               Stream v1 and v2 were purpose-built for broadcasting player positions every tick. The schema was hardcoded: x, y, z, rotY, health. This worked for FPS games but nothing else.
             </p>
             <p class="te-desc">
-              Stream v3 (shipped in v2.3) takes a schema at construction time — you declare field names and types, Stream handles packing and unpacking. The FPS use case still works, but now you can stream wheel rotation, economy ticks, weather, or any other high-frequency state. The batch-broadcast model (one buffer, one <code>FireAllClients</code> per tick) is retained regardless of schema.
+              Stream (shipped in v2.4) takes a schema at construction time — you declare field names and types, Stream handles packing and unpacking. The FPS use case still works, but now you can stream wheel rotation, economy ticks, weather, or any other high-frequency state. The batch-broadcast model (one buffer, one <code>FireAllClients</code> per tick) is retained regardless of schema.
             </p>
           </div>
 

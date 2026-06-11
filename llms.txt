@@ -9,7 +9,7 @@ RoExpress is the first complete networking stack for Roblox. It covers every lay
 - **Inbound** — typed route matching (GET/POST/PUT/DELETE), middleware pipeline, per-player rate limiting, exploit detection, named isolated ports
 - **Outbound** — Harpy HTTP client for server-to-external-API calls with retry and a consistent response shape
 - **Server push** — reliable server-initiated messages to individual players or all clients
-- **Real-time streaming** — Stream v3 schema-defined binary channels with delta compression and lag compensation; packets 40-90% smaller than JSON
+- **Real-time streaming** — Stream schema-defined binary channels with delta compression and lag compensation; packets 40-90% smaller than JSON
 - **Utilities** — Deflate compression (Codec), Promise-based async API, TypeCoercer, Bridge internal event bus, Benchmark latency tooling
 
 No other Roblox networking library covers all of these layers. Previous libraries (ByteNet, Warp, BridgeNet2) are single-layer transports; Zap is a serialisation code generator. RoExpress is a framework — it owns the complete request lifecycle from client call to server handler to external API.
@@ -40,7 +40,7 @@ No other Roblox networking library covers all of these layers. Previous librarie
 
 - **Deflate compression**: Codec upgraded from LZ77 to full Deflate (LZ77 sliding window + Huffman entropy coding). Better compression ratios on repetitive payloads, same opt-in API ({ compress = true }).
 - **Automatic retry**: Network requests automatically retry with exponential backoff (1s → 2s → 4s) on failure. Configurable max attempts globally or per-request. Transparent to the caller.
-- **Stream v3 — generic channels**: Stream rebuilt as schema-defined typed channels. Declare field names and types; Stream handles buffer pack/unpack automatically. Works for any high-frequency state (positions, economy, weather) — not only FPS shooters. Delta compression built in.
+- **Stream — generic channels**: Stream rebuilt as schema-defined typed channels. Declare field names and types; Stream handles buffer pack/unpack automatically. Works for any high-frequency state (positions, economy, weather) — not only FPS shooters. Delta compression built in.
 - **Typed accessors**: RoExpress.GetApp() and RoExpress.GetNetwork() return fully-typed instances. The existing RoExpress("App") / RoExpress("Network") call style still works and returns `any`.
 
 ## Modules

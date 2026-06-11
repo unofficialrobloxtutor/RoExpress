@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------
 --  <> Title:       RoExpress.Stream
---  <> Version:     3.0
+--  <> Version:     2.4
 --  <> Date:        09/06/2026
 --  <> Author:      DeathToTheStadium
 --  <> Description: Generic binary streaming channels for RoExpress.

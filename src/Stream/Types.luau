@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------
 --  <> Title:       RoExpress.Stream.Types
---  <> Version:     3.0
+--  <> Version:     2.4
 --  <> Date:        09/06/2026
 --  <> Author:      DeathToTheStadium
 --  <> Description: Binary type registry for Stream schemas.

@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------
 --  <> Title:       RoExpress.Stream.Schema
---  <> Version:     3.0
+--  <> Version:     2.4
 --  <> Date:        09/06/2026
 --  <> Author:      DeathToTheStadium
 --  <> Description: Schema compiler for Stream binary channels.

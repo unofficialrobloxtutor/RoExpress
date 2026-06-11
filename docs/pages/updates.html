@@ -43,7 +43,7 @@
               <li>New compact handler form: <code>function(req, res)</code> — <code>req.player</code> and <code>req.raw</code> hold the old first and second args</li>
               <li>Detection via <code>debug.info</code> parameter count — existing four-arg handlers continue working without any changes <span class="pill p-ok">backward compat</span></li>
               <li>Stream rebuilt as generic typed channels — <code>Stream.Channel(name, schema)</code>, <code>ch:Set</code>, <code>ch:Flush</code>, <code>ch:Rewind</code></li>
-              <li><span class="pill p-breaking">breaking</span> Stream v3 replaces the old FPS-only singleton API — see the <a href="./guide-stream.html">migration guide</a></li>
+              <li><span class="pill p-breaking">breaking</span> Stream (v2.4) replaces the old FPS-only singleton API — see the <a href="./guide-stream.html">migration guide</a></li>
               <li>Codec LZ77 window size increased from 128 to 512 bytes — better ratio on larger payloads, same API</li>
               <li>TypeCoercer: added <code>UDim</code>, <code>Rect</code>, <code>UDim2</code> support</li>
             </ul>

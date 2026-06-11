@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stream — RoExpress Docs</title>
-  <meta name="description" content="RoExpress Stream v3: schema-defined typed binary channels multiplexed over shared remotes. 20 built-in wire types, delta compression, rate limiting, sequence numbers.">
+  <meta name="description" content="RoExpress Stream: schema-defined typed binary channels multiplexed over shared remotes. 20 built-in wire types, delta compression, rate limiting, sequence numbers.">
   <meta name="keywords" content="roblox, luau, stream, binary, buffer, schema, channel, delta compression, unreliable remote, fps networking, roexpress">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
@@ -42,7 +42,7 @@
       <section class="doc">
 
         <div class="eyebrow">Shared Module</div>
-        <h1>Stream <em>v3.0</em></h1>
+        <h1>Stream</h1>
         <p class="lead">Schema-defined typed binary channels multiplexed over two shared remotes. No JSON, no Base64. Both server and client define identical channels — IDs are hash-derived, so there is no ordering dependency between registration calls.</p>
 
         <div class="cl new"><strong>Breaking change from v2.1.</strong> The old FPS-specific singleton API (<code>SendState</code>, <code>OnHit</code>, <code>EnableLagCompensation</code>, etc.) has been removed. Stream is now a general-purpose binary channel system.</div>

@@ -63,7 +63,7 @@
         ${nl(P + 'codec.html',       'codec',       'Codec'     + nb('v2'))}
         ${nl(P + 'bridge.html',      'bridge',      'Bridge'    + nb('v2'))}
         ${nl(P + 'port.html',        'port',        'Ports'     + nb('v2'))}
-        ${nl(P + 'stream.html',      'stream',      'Stream'    + nb('v3.0', 'background:#4ade9a;color:#0a2a1a'))}
+        ${nl(P + 'stream.html',      'stream',      'Stream'    + nb('v2.4', 'background:#b45309;color:#fef3c7'))}
         ${nl(P + 'typecoercer.html', 'typecoercer', 'TypeCoercer' + nb('v2.2'))}
         ${nl(P + 'promise.html',     'promise',     'Promise'   + nb('v2.2'))}
       </div>
@@ -201,7 +201,7 @@
     { s:'guide-tamper',url:P+'guide-tamper.html',           t:'guide',   n:'Exploit Detection',    x:'exploit tamper detection strike autokick version spoof' },
     { s:'guides-auth', url:P+'guides-auth.html',            t:'guide',   n:'Authentication',       x:'auth middleware role permission whitelist banlist 403' },
     { s:'guides-combat',url:P+'guides-combat.html',         t:'guide',   n:'Combat System',        x:'gun shoot hit damage port stream broadcast tokenbucket' },
-    { s:'guides-migration',url:P+'guides-migration.html',  t:'guide',   n:'Migration v2.3→2.4',   x:'upgrade breaking stream v3 typed accessor compact handler' },
+    { s:'guides-migration',url:P+'guides-migration.html',  t:'guide',   n:'Migration v2.3→2.4',   x:'upgrade breaking stream v2.4 typed accessor compact handler' },
     { s:'community-discord',url:P+'community-discord.html',t:'community',n:'Discord',             x:'discord chat community help server channel' },
     { s:'community-github',url:P+'community-github.html',  t:'community',n:'GitHub',              x:'github issues pull request contribute source code' },
     { s:'youtube',     url:P+'youtube.html',                t:'community',n:'YouTube',             x:'youtube video tutorial walkthrough gun framework showcase' },

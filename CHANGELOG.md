@@ -7,7 +7,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [2.4.0] — 2026-06-09
 
-### Added — Stream v3.0 (Breaking — old API fully replaced)
+### Added — Stream (Breaking — old API fully replaced)
 
 - `Stream.Channel(name, schema, options?)` — define a typed binary channel
 - `Stream.Schema(definition)` — compile schema from ordered field definitions; computes byte offsets at construction time for fixed-size schemas

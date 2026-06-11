@@ -155,14 +155,14 @@ app:<span class="fn">Listen</span>(<span class="str">"combat"</span>, <span clas
 
         <!-- ────────────────────────────────────────────── -->
         <h2>Why typed vs untyped matters</h2>
-        <p>In Luau, a variable typed as <code>any</code> provides no autocomplete and suppresses type errors. For a framework with dozens of methods, that matters:</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- This variable is typed 'any' — Studio won't autocomplete it</span>
+        <p>In Luau, a variable typed as <code>any</code> provides no autocomplete and suppresses type errors. For a framework with dozens of methods, that matters. The example below intentionally misspells <code>Post</code> as <code>Pots</code> to show what each form does with the mistake:</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Untyped — 'any' silences all method errors</span>
 <span class="kw">local</span> app <span class="op">=</span> RoExpress(<span class="str">"App"</span>)
-app:<span class="fn">Pots</span>(<span class="str">"player"</span>, handler)   <span class="cm">-- typo: no error until runtime</span>
+app:<span class="fn">Pots</span>(<span class="str">"player"</span>, handler)   <span class="cm">-- 'Post' misspelled as 'Pots' — no Studio error, fails at runtime</span>
 
-<span class="cm">-- This variable is typed App.Type — Studio catches the typo immediately</span>
+<span class="cm">-- Typed — Studio flags the misspelling before you ever run</span>
 <span class="kw">local</span> app <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
-app:<span class="fn">Pots</span>(<span class="str">"player"</span>, handler)   <span class="cm">-- error: 'Pots' is not a member of App.Type</span></code></pre>
+app:<span class="fn">Pots</span>(<span class="str">"player"</span>, handler)   <span class="cm">-- Type error: 'Pots' is not a member of App — did you mean 'Post'?</span></code></pre>
 
         <!-- ────────────────────────────────────────────── -->
         <h2>Instance caching</h2>

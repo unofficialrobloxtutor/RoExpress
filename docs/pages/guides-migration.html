@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Migration v2.3 → v2.4 — RoExpress Docs</title>
-  <meta name="description" content="Upgrade guide from RoExpress v2.3 to v2.4: Stream v3 schema migration, typed accessor adoption, compact handler form, breaking changes list.">
-  <meta name="keywords" content="roblox, luau, roexpress, migration, upgrade, v2.3, v2.4, breaking changes, stream v3, typed accessor">
+  <meta name="description" content="Upgrade guide from RoExpress v2.3 to v2.4: Stream v2.4 schema migration, typed accessor adoption, compact handler form, breaking changes list.">
+  <meta name="keywords" content="roblox, luau, roexpress, migration, upgrade, v2.3, v2.4, breaking changes, stream v2.4, typed accessor">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://roexpress.dev/docs/guides/migration/">
@@ -13,7 +13,7 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/guides/migration/">
   <meta property="og:title" content="Migration v2.3 → v2.4 — RoExpress Docs">
-  <meta property="og:description" content="Stream v3 schema migration, typed accessor adoption, breaking changes.">
+  <meta property="og:description" content="Stream v2.4 schema migration, typed accessor adoption, breaking changes.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -52,12 +52,12 @@
           </tbody>
         </table>
 
-        <h2>Stream v2 → v3 migration</h2>
-        <h3>Old (v2 — FPS tick model)</h3>
+        <h2>Stream migration (pre-v2.4 → v2.4)</h2>
+        <h3>Old (pre-v2.4 — FPS tick model)</h3>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- v2: FPS sender/receiver with tick accumulation</span>
 <span class="kw">local</span> sender <span class="op">=</span> Stream:<span class="fn">Sender</span>(<span class="str">"movement"</span>, <span class="num">20</span>)
 sender:<span class="fn">Send</span>({ x <span class="op">=</span> pos.X, y <span class="op">=</span> pos.Y, z <span class="op">=</span> pos.Z })</code></pre>
-        <h3>New (v3 — schema channels)</h3>
+        <h3>New (v2.4 — schema channels)</h3>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- v3: define schema once, create channel, send</span>
 <span class="kw">local</span> schema <span class="op">=</span> Stream:<span class="fn">Schema</span>({
     position <span class="op">=</span> <span class="str">"Vector3"</span>,
@@ -103,7 +103,7 @@ app:<span class="fn">Get</span>(<span class="str">"x"</span>, <span class="kw">f
 
         <h2>See also</h2>
         <p>
-          <a href="./stream/">Stream v3 API</a> &nbsp;·&nbsp;
+          <a href="./stream.html">Stream API</a> &nbsp;·&nbsp;
           <a href="./types/">Exported Types</a> &nbsp;·&nbsp;
           <a href="./changelog/">Changelog</a>
         </p>
