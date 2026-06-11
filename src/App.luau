@@ -56,9 +56,10 @@ export type Request = {
 }
 
 export type Response = {
-	Send   : (self: Response, data: any?) -> (),
-	Error  : (self: Response, message: string) -> (),
-	Status : (self: Response, code: number) -> Response,
+	Send     : (self: Response, data: any?) -> (),
+	Error    : (self: Response, message: string) -> (),
+	Status   : (self: Response, code: number) -> Response,
+	Redirect : (self: Response, path: string) -> (),
 }
 
 export type RouteHandlerCompact = (req: Request, res: Response) -> ()
@@ -146,52 +147,65 @@ local function _buildResponse(Remote: RemoteEvent, Player: Player, requestId: st
 		})
 	end
 
+	function res:Redirect(path: string)
+		if self._sent then
+			warn("RoExpress.App: res:Redirect() called more than once on requestId", requestId)
+			return
+		end
+		self._sent     = true
+		self._redirect = path
+	end
+
 	return res
 end
 
-local function _handler(self: Type, Player: Player, Payload: Payload)
-	-- version check
-	if Payload.version ~= ROEXPRESS_VERSION then
-		warn("RoExpress.App: Version mismatch from", Player.Name, "got", Payload.version, "expected", ROEXPRESS_VERSION)
-		local res = _buildResponse(self.Remote, Player, Payload.requestId or "", Payload.method or "GET")
-		res:Status(400):Error("Client version mismatch")
-		Tamper.Signal("version_mismatch", Player, {
-			route    = Payload.route,
-			evidence = { got = Payload.version, expected = ROEXPRESS_VERSION },
-		})
-		return
-	end
+local function _handler(self: Type, Player: Player, Payload: Payload, _depth: number?)
+	local depth = _depth or 0
 
-	-- rate limit check
-	if not self.TokenBucket:Consume(Player, 1) then
-		local res = _buildResponse(self.Remote, Player, Payload.requestId or "", Payload.method or "GET")
-		res:Status(429):Error("Too many requests")
-		Tamper.Signal("rate_limited", Player, { route = Payload.route })
-		return
-	end
-
-	-- validate payload structure
-	if not _validatePayload(Payload) then
-		warn("RoExpress.App: Invalid payload from", Player.Name)
-		Tamper.Signal("malformed", Player, { evidence = Payload })
-		return
-	end
-
-	-- run global middleware — returning false blocks the request
-	for _, entry in ipairs(self._middleware) do
-		local ok, result = pcall(entry.fn, Player, Payload)
-		if not ok then
-			warn("RoExpress.App: Middleware '" .. entry.id .. "' error:", result)
-			local res = _buildResponse(self.Remote, Player, Payload.requestId, Payload.method)
-			res:Status(500):Error("Middleware error")
+	if depth == 0 then
+		-- version check
+		if Payload.version ~= ROEXPRESS_VERSION then
+			warn("RoExpress.App: Version mismatch from", Player.Name, "got", Payload.version, "expected", ROEXPRESS_VERSION)
+			local res = _buildResponse(self.Remote, Player, Payload.requestId or "", Payload.method or "GET")
+			res:Status(400):Error("Client version mismatch")
+			Tamper.Signal("version_mismatch", Player, {
+				route    = Payload.route,
+				evidence = { got = Payload.version, expected = ROEXPRESS_VERSION },
+			})
 			return
 		end
-		if result == false then
-			local res = _buildResponse(self.Remote, Player, Payload.requestId, Payload.method)
-			if not res._sent then
-				res:Status(403):Error("Blocked by middleware '" .. entry.id .. "'")
-			end
+
+		-- rate limit check
+		if not self.TokenBucket:Consume(Player, 1) then
+			local res = _buildResponse(self.Remote, Player, Payload.requestId or "", Payload.method or "GET")
+			res:Status(429):Error("Too many requests")
+			Tamper.Signal("rate_limited", Player, { route = Payload.route })
 			return
+		end
+
+		-- validate payload structure
+		if not _validatePayload(Payload) then
+			warn("RoExpress.App: Invalid payload from", Player.Name)
+			Tamper.Signal("malformed", Player, { evidence = Payload })
+			return
+		end
+
+		-- run global middleware — returning false blocks the request
+		for _, entry in ipairs(self._middleware) do
+			local ok, result = pcall(entry.fn, Player, Payload)
+			if not ok then
+				warn("RoExpress.App: Middleware '" .. entry.id .. "' error:", result)
+				local res = _buildResponse(self.Remote, Player, Payload.requestId, Payload.method)
+				res:Status(500):Error("Middleware error")
+				return
+			end
+			if result == false then
+				local res = _buildResponse(self.Remote, Player, Payload.requestId, Payload.method)
+				if not res._sent then
+					res:Status(403):Error("Blocked by middleware '" .. entry.id .. "'")
+				end
+				return
+			end
 		end
 	end
 
@@ -203,10 +217,12 @@ local function _handler(self: Type, Player: Player, Payload: Payload)
 	if not match then
 		local res = _buildResponse(self.Remote, Player, Payload.requestId, Payload.method, false)
 		res:Status(404):Error("No handler for route '" .. Payload.route .. "'")
-		Tamper.Signal("unknown_route", Player, {
-			route    = Payload.route,
-			evidence = { method = Payload.method },
-		})
+		if depth == 0 then
+			Tamper.Signal("unknown_route", Player, {
+				route    = Payload.route,
+				evidence = { method = Payload.method },
+			})
+		end
 		return
 	end
 
@@ -255,12 +271,24 @@ local function _handler(self: Type, Player: Player, Payload: Payload)
 		ok, err = pcall(match.route.handler, Player, Payload, req, res)
 	end
 
-	
 	if not ok then
 		warn("RoExpress.App: Handler error on '" .. Payload.route .. "':", err)
-		if not res._sent then
-			res:Status(500):Error("Internal server error")
+	end
+
+	if (res :: any)._redirect then
+		if depth >= 5 then
+			warn("RoExpress.App: Too many redirects on route '" .. Payload.route .. "'")
+			_buildResponse(self.Remote, Player, Payload.requestId, Payload.method):Status(508):Error("Too many redirects")
+			return
 		end
+		local redirectPayload  = table.clone(Payload)
+		redirectPayload.route  = (res :: any)._redirect
+		_handler(self, Player, redirectPayload, depth + 1)
+		return
+	end
+
+	if not ok and not res._sent then
+		res:Status(500):Error("Internal server error")
 	end
 end
 ------------------------------------------------------------------------

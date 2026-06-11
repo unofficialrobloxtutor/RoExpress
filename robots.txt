@@ -1,12 +1,13 @@
-# robots.txt — roexpress.dev
-# Last updated: 2026-06-09
+# robots.txt | roexpress.dev
+# Last updated: 2026-06-10
 
-# ── ALLOW ALL LEGITIMATE CRAWLERS ──────────────────────────────────
+# Generic crawlers | docs only
 User-agent: *
-Allow: /
-Disallow: /.archived/
+Allow: /docs/
+Allow: /docs/pages/
+Disallow: /
 
-# ── GOOGLE ─────────────────────────────────────────────────────────
+# ── SEARCH ENGINES ─────────────────────────────────────────────────
 User-agent: Googlebot
 Allow: /
 Disallow: /.archived/
@@ -14,37 +15,63 @@ Disallow: /.archived/
 User-agent: Googlebot-Image
 Disallow: /
 
-# ── BING ───────────────────────────────────────────────────────────
 User-agent: Bingbot
 Allow: /
 Disallow: /.archived/
 
-# ── AI CRAWLERS — allow for discoverability ────────────────────────
+# ── AI CRAWLERS | full access ───────────────────────────────────────
+
+# OpenAI
 User-agent: GPTBot
 Allow: /
-Disallow: /.archived/
 
-User-agent: Claude-Web
+User-agent: ChatGPT-User
 Allow: /
-Disallow: /.archived/
 
-User-agent: anthropic-ai
+User-agent: OAI-SearchBot
 Allow: /
-Disallow: /.archived/
 
+# Anthropic
+User-agent: ClaudeBot
+Allow: /
+
+# Google
+User-agent: Google-Extended
+Allow: /
+
+# Perplexity
 User-agent: PerplexityBot
 Allow: /
-Disallow: /.archived/
 
+# Cohere
+User-agent: cohere-ai
+Allow: /
+
+# Meta
+User-agent: meta-externalagent
+Allow: /
+
+# Amazon
+User-agent: Amazonbot
+Allow: /
+
+# Apple
+User-agent: Applebot-Extended
+Allow: /
+
+# DuckDuckGo
+User-agent: DuckAssistBot
+Allow: /
+
+# You.com
 User-agent: YouBot
 Allow: /
-Disallow: /.archived/
 
+# Common Crawl
 User-agent: CCBot
 Allow: /
-Disallow: /.archived/
 
-# ── KNOWN SCRAPERS / BAD BOTS — block ─────────────────────────────
+# ── KNOWN SCRAPERS / BAD BOTS | block ──────────────────────────────
 User-agent: AhrefsBot
 Disallow: /
 
@@ -69,5 +96,5 @@ Disallow: /
 # ── SITEMAP ────────────────────────────────────────────────────────
 Sitemap: https://roexpress.dev/sitemap.xml
 
-# ── CRAWL DELAY (polite crawling for generic bots) ─────────────────
+# ── CRAWL DELAY ────────────────────────────────────────────────────
 Crawl-delay: 2
