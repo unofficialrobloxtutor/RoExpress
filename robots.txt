@@ -5,7 +5,7 @@
 User-agent: *
 Allow: /docs/
 Allow: /docs/pages/
-Disallow: /
+Allow: /
 
 # ── SEARCH ENGINES ─────────────────────────────────────────────────
 User-agent: Googlebot
