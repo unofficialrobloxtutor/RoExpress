@@ -48,6 +48,8 @@
 --
 --  HISTORY
 --  ---------------------------------------------------------------
+--  2.4.0   Stream rebuilt, Deflate, retry, res:Redirect, full typing, Router digit-type fix
+--  2.3.0   PUT/DELETE, compact (req,res) handler form
 --  2.2.3   Patch — wally.toml packaging fix (issue #6)
 --  2.2.0   TypeCoercer, Promise, new Router types, Version module
 --  2.1.0   Stream, Port, optional Network callbacks
@@ -61,7 +63,7 @@ local RunService  = game:GetService("RunService")
 ------------------------------------------------------------------------
 --  VERSION
 ------------------------------------------------------------------------
-local VERSION = "2.2.3"
+local VERSION = "2.4.0"
 
 -- Write once to shared — assert catches any accidental double-write
 assert(

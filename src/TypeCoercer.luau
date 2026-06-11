@@ -21,7 +21,7 @@
 --
 --  tc.ToString(Vector3.new(1,2,3))          -- "1,2,3"
 --  tc.ToString(Color3.fromRGB(255,0,128))   -- "255,0,128"
---  tc.ToString(Enum.HumanoidStateType.Running) -- "Running"
+--  tc.ToString(Enum.HumanoidStateType.Running) -- "Enum.HumanoidStateType.Running"
 --  tc.ToString(workspace.Baseplate)         -- "Part:Baseplate"
 --
 --  tc.FromString("1,2,3",  "vector3")       -- Vector3.new(1,2,3)
@@ -191,8 +191,11 @@ local function _makeEnumCoercer(enumTypeName: string)
         end)
         if not ok or not et then return false, nil end
 
+        -- strip "Enum.TypeName." prefix produced by tostring(EnumItem)
+        local name = raw:match("^Enum%.[^%.]+%.(.+)$") or raw
+
         -- try by name first
-        local ok2, val = pcall(function() return et[raw] end)
+        local ok2, val = pcall(function() return et[name] end)
         if ok2 and val then return true, val end
 
         -- try by numeric value
@@ -259,7 +262,7 @@ local function _toStringValue(value: any): (boolean, string)
     end
 
     if t == "EnumItem" then
-        return true, value.Name
+        return true, "Enum." .. tostring(value.EnumType) .. "." .. value.Name
     end
 
     if t == "Instance" then
@@ -281,7 +284,7 @@ end
 
     tc.ToString(Vector3.new(10, 5, -20))      -- "10,5,-20"
     tc.ToString(Color3.fromRGB(255, 0, 128))  -- "255,0,128"
-    tc.ToString(Enum.Material.Grass)          -- "Grass"
+    tc.ToString(Enum.Material.Grass)          -- "Enum.Material.Grass"
     tc.ToString(workspace.Baseplate)          -- "Part:Baseplate"
 ]]
 function TypeCoercer.ToString(value: any): string
@@ -302,6 +305,11 @@ end
     tc.FromString("Part:Baseplate", "Instance")    -- true, Instance
 ]]
 function TypeCoercer.FromString(raw: string, typeName: string): (boolean, any)
+    -- bare Enum — accept any EnumItem, wire format must be "Enum.TypeName.ValueName"
+    if typeName == "Enum" then
+        return _parseEnum(raw)
+    end
+
     -- handle Enum.TypeName syntax
     if typeName:sub(1, 5) == "Enum." then
         local enumTypeName = typeName:sub(6)
@@ -326,6 +334,7 @@ end
     Returns true if the type name is recognised.
 ]]
 function TypeCoercer.Supports(typeName: string): boolean
+    if typeName          == "Enum"       then return true end
     if typeName:sub(1, 5) == "Enum."     then return true end
     if typeName          == "Instance"   then return true end
     return _coercers[typeName] ~= nil

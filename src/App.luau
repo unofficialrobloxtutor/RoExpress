@@ -229,6 +229,7 @@ local function _handler(self: Type, Player: Player, Payload: Payload, _depth: nu
 	-- handle typed param failures
 	local typeFail = (match :: any)._typeFail
 	if typeFail then
+		warn("RoExpress.App: 400 param type failure — '" .. typeFail.name .. "' expected " .. typeFail.expectedType .. " on route '" .. Payload.route .. "' from " .. Player.Name)
 		local res = _buildResponse(self.Remote, Player, Payload.requestId, Payload.method, false)
 		if self._router._paramError then
 			self._router._paramError(Player, Payload, typeFail.name, typeFail.expectedType)

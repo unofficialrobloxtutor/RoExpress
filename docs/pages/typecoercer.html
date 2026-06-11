@@ -33,50 +33,71 @@
         <h1>TypeCoercer <span class="pill p-shared">shared</span></h1>
         <p class="lead">Serialize Roblox-specific types to plain strings so they can travel through RemoteEvent payloads and DataStore. Reconstruct them from strings on the other side.</p>
 
-        <div class="cl info"><strong>Opt-in, explicit.</strong> TypeCoercer is never called automatically. Call <code>TC.ToString</code> before sending and <code>TC.FromString</code> after receiving. This keeps the overhead only where you need it.</div>
+        <div class="cl info"><strong>Used automatically by the Router.</strong> When you declare a typed route param (<code>:id=number</code>, <code>:mode=Enum.CameraType</code>), the Router calls TypeCoercer internally to coerce and serialize values. You only need to call it directly when building URLs manually or working with DataStore.</div>
 
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> TC <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress.TypeCoercer)</code></pre>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> TC <span class="op">=</span> RoExpress.TypeCoercer
+<span class="cm">-- or: require(game.ReplicatedStorage.RoExpress.TypeCoercer)</span></code></pre>
 
         <h2>ToString</h2>
-        <div class="sig"><span class="pill p-get">GET</span> TC.<span class="fn">ToString</span>(value: any) → string</div>
-        <p>Encodes a Roblox type (or plain Lua primitive) to a string. Primitives (number, string, boolean) pass through unchanged.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code>TC.<span class="fn">ToString</span>(Vector3.<span class="fn">new</span>(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>))  <span class="cm">-- "Vector3|1|2|3"</span>
-TC.<span class="fn">ToString</span>(CFrame.<span class="fn">new</span>())             <span class="cm">-- "CFrame|0|0|0|1|0|0|0|1|0|0|0|1"</span>
-TC.<span class="fn">ToString</span>(Color3.<span class="fn">fromRGB</span>(<span class="num">255</span>,<span class="num">0</span>,<span class="num">0</span>))  <span class="cm">-- "Color3|1|0|0"</span>
-TC.<span class="fn">ToString</span>(<span class="num">42</span>)                         <span class="cm">-- 42 (unchanged)</span></code></pre>
+        <div class="sig">TC.<span class="fn">ToString</span>(value: any) → string</div>
+        <p>Serializes a value to its wire string. The Router calls this when building redirect URLs via <code>RouteBuilder.build()</code>.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>TC.<span class="fn">ToString</span>(Vector3.<span class="fn">new</span>(<span class="num">10</span>, <span class="num">5</span>, <span class="num">-20</span>))         <span class="cm">-- "10,5,-20"</span>
+TC.<span class="fn">ToString</span>(Color3.<span class="fn">fromRGB</span>(<span class="num">255</span>, <span class="num">0</span>, <span class="num">128</span>))     <span class="cm">-- "255,0,128"</span>
+TC.<span class="fn">ToString</span>(CFrame.<span class="fn">new</span>(<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>))              <span class="cm">-- "1,2,3,0,0,0"</span>
+TC.<span class="fn">ToString</span>(Enum.CameraType.Scriptable)      <span class="cm">-- "Enum.CameraType.Scriptable"</span>
+TC.<span class="fn">ToString</span>(workspace.Baseplate)            <span class="cm">-- "Part:Baseplate"</span>
+TC.<span class="fn">ToString</span>(<span class="num">42</span>)                              <span class="cm">-- "42"</span></code></pre>
 
         <h2>FromString</h2>
-        <div class="sig"><span class="pill p-get">GET</span> TC.<span class="fn">FromString</span>(s: string) → any</div>
-        <p>Decodes a TypeCoercer-encoded string back to the original type. Strings that don't match any encoding prefix pass through unchanged.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code>TC.<span class="fn">FromString</span>(<span class="str">"Vector3|10|5|3"</span>)   <span class="cm">-- Vector3.new(10, 5, 3)</span>
-TC.<span class="fn">FromString</span>(<span class="str">"hello"</span>)              <span class="cm">-- "hello" (unchanged)</span></code></pre>
+        <div class="sig">TC.<span class="fn">FromString</span>(raw: string, typeName: string) → (boolean, any)</div>
+        <p>Reconstructs a value from its wire string. Returns <code>(true, value)</code> on success, <code>(false, nil)</code> on failure. The Router calls this automatically for typed params — you only need it when coercing manually.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>TC.<span class="fn">FromString</span>(<span class="str">"10,5,-20"</span>, <span class="str">"vector3"</span>)                    <span class="cm">-- true, Vector3.new(10, 5, -20)</span>
+TC.<span class="fn">FromString</span>(<span class="str">"255,0,128"</span>, <span class="str">"color3"</span>)                    <span class="cm">-- true, Color3.fromRGB(255, 0, 128)</span>
+TC.<span class="fn">FromString</span>(<span class="str">"Scriptable"</span>, <span class="str">"Enum.CameraType"</span>)           <span class="cm">-- true, Enum.CameraType.Scriptable</span>
+TC.<span class="fn">FromString</span>(<span class="str">"Enum.CameraType.Scriptable"</span>, <span class="str">"Enum.CameraType"</span>) <span class="cm">-- true, same</span>
+TC.<span class="fn">FromString</span>(<span class="str">"Enum.CameraType.Scriptable"</span>, <span class="str">"Enum"</span>)        <span class="cm">-- true, any EnumItem</span>
+TC.<span class="fn">FromString</span>(<span class="str">"Part:Baseplate"</span>, <span class="str">"Instance"</span>)             <span class="cm">-- true, workspace.Baseplate</span>
+TC.<span class="fn">FromString</span>(<span class="str">"abc"</span>, <span class="str">"number"</span>)                          <span class="cm">-- false, nil</span></code></pre>
 
         <h2>RegisterInstanceRoot</h2>
-        <div class="sig">TC.<span class="fn">RegisterInstanceRoot</span>(root: Instance)</div>
-        <p>Required before encoding or decoding Instance references. Sets the root that <code>GetFullName()</code> and path resolution are relative to. Call on both server and client.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code>TC.<span class="fn">RegisterInstanceRoot</span>(game)        <span class="cm">-- use game as root</span>
-<span class="kw">local</span> s <span class="op">=</span> TC.<span class="fn">ToString</span>(workspace.Baseplate) <span class="cm">-- "Instance|Workspace.Baseplate"</span>
-<span class="kw">local</span> b <span class="op">=</span> TC.<span class="fn">FromString</span>(s)              <span class="cm">-- the Baseplate part</span></code></pre>
+        <div class="sig">TC.<span class="fn">RegisterInstanceRoot</span>(name: string, root: Instance)</div>
+        <p>Registers a search root for Instance coercion. Multiple roots can be registered and are searched in registration order. Required before using <code>"Instance"</code> as a route param type.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>TC.<span class="fn">RegisterInstanceRoot</span>(<span class="str">"Workspace"</span>, workspace)
+TC.<span class="fn">RegisterInstanceRoot</span>(<span class="str">"Players"</span>, game:<span class="fn">GetService</span>(<span class="str">"Players"</span>))
+
+TC.<span class="fn">ToString</span>(workspace.Baseplate)           <span class="cm">-- "Part:Baseplate"</span>
+TC.<span class="fn">FromString</span>(<span class="str">"Part:Baseplate"</span>, <span class="str">"Instance"</span>) <span class="cm">-- workspace.Baseplate</span></code></pre>
+
+        <h2>Supports</h2>
+        <div class="sig">TC.<span class="fn">Supports</span>(typeName: string) → boolean</div>
+        <p>Returns <code>true</code> if the type name is recognised. Used by the Router to validate param type annotations at registration time.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>TC.<span class="fn">Supports</span>(<span class="str">"vector3"</span>)          <span class="cm">-- true</span>
+TC.<span class="fn">Supports</span>(<span class="str">"Enum.CameraType"</span>)   <span class="cm">-- true</span>
+TC.<span class="fn">Supports</span>(<span class="str">"Enum"</span>)             <span class="cm">-- true</span>
+TC.<span class="fn">Supports</span>(<span class="str">"banana"</span>)           <span class="cm">-- false</span></code></pre>
 
         <h2>Supported types</h2>
         <table class="tbl">
-          <thead><tr><th>Type</th><th>Encoded format</th></tr></thead>
+          <thead><tr><th>Type name</th><th>Wire format</th><th>Notes</th></tr></thead>
           <tbody>
-            <tr><td><code>Vector3</code></td><td><code>Vector3|x|y|z</code></td></tr>
-            <tr><td><code>Vector2</code></td><td><code>Vector2|x|y</code></td></tr>
-            <tr><td><code>CFrame</code></td><td><code>CFrame|x|y|z|r00|r01|r02|r10|r11|r12|r20|r21|r22</code></td></tr>
-            <tr><td><code>Color3</code></td><td><code>Color3|r|g|b</code> (0–1 range)</td></tr>
-            <tr><td><code>UDim2</code></td><td><code>UDim2|xScale|xOffset|yScale|yOffset</code></td></tr>
-            <tr><td><code>UDim</code></td><td><code>UDim|scale|offset</code></td></tr>
-            <tr><td><code>Rect</code></td><td><code>Rect|minX|minY|maxX|maxY</code></td></tr>
-            <tr><td><code>Instance</code></td><td><code>Instance|full.path</code> | requires <code>RegisterInstanceRoot</code></td></tr>
-            <tr><td><code>number</code>, <code>string</code>, <code>boolean</code></td><td>Pass through unchanged</td></tr>
+            <tr><td><code>string</code></td><td>as-is</td><td></td></tr>
+            <tr><td><code>boolean</code></td><td><code>"true"</code> / <code>"false"</code></td><td>also accepts <code>"1"</code> / <code>"0"</code></td></tr>
+            <tr><td><code>number</code></td><td><code>"42"</code> / <code>"3.14"</code></td><td></td></tr>
+            <tr><td><code>int</code></td><td><code>"42"</code></td><td>rejects decimals</td></tr>
+            <tr><td><code>vector2</code></td><td><code>"x,y"</code></td><td></td></tr>
+            <tr><td><code>vector3</code></td><td><code>"x,y,z"</code></td><td></td></tr>
+            <tr><td><code>color3</code></td><td><code>"r,g,b"</code></td><td>auto-detects 0–255 vs 0–1 on input; always outputs 0–255</td></tr>
+            <tr><td><code>cframe</code></td><td><code>"x,y,z,rx,ry,rz"</code></td><td>rotation as Euler degrees; position-only <code>"x,y,z"</code> also accepted</td></tr>
+            <tr><td><code>Enum.TypeName</code></td><td><code>"ValueName"</code> or <code>"Enum.TypeName.ValueName"</code> or numeric value</td><td>exact enum type required</td></tr>
+            <tr><td><code>Enum</code></td><td><code>"Enum.TypeName.ValueName"</code></td><td>accepts any EnumItem; wire must carry the type</td></tr>
+            <tr><td><code>Instance</code></td><td><code>"ClassName:Name"</code></td><td>requires <code>RegisterInstanceRoot</code></td></tr>
           </tbody>
         </table>
 
         <h2>See also</h2>
         <p>
           <a href="./guide-typecoercer.html">TypeCoercer Guide</a> | usage patterns with routes and DataStore &nbsp;·&nbsp;
+          <a href="./router.html">Router</a> | typed route params and RouteBuilder &nbsp;·&nbsp;
           <a href="./types.html">Types</a> | Luau type definitions &nbsp;·&nbsp;
           <a href="./codec.html">Codec</a> | binary serialization for Stream channels
         </p>

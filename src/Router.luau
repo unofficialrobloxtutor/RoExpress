@@ -133,13 +133,16 @@ local function _parseSegment(token: string): Segment
 	-- extract optional =type suffix
 	local paramType: ParamType? = nil
 	-- support "=Enum.TypeName", "=Instance", and base types
-	local typeMatch = rest:match("=(Enum%.[%a%.]+)$") or rest:match("=(Instance)$") or rest:match("=(%a+)$")
+	local typeMatch = rest:match("=(Enum%.[%a%.]+)$") or rest:match("=(Instance)$") or rest:match("=(%a%w*)$")
 	if typeMatch then
+		-- normalise to lowercase so :id=Vector3 and :id=vector3 are equivalent
+		-- Enum, Enum.TypeName and Instance are left as-is (TypeCoercer requires exact casing)
+		local normalised = (typeMatch:sub(1, 5) == "Enum." or typeMatch == "Enum" or typeMatch == "Instance") and typeMatch or typeMatch:lower()
 		assert(
-			TypeCoercer.Supports(typeMatch),
+			TypeCoercer.Supports(normalised),
 			"RoExpress.Router: Unknown param type '" .. typeMatch .. "' in segment '" .. token .. "'"
 		)
-		paramType = typeMatch :: ParamType
+		paramType = normalised :: ParamType
 		rest = rest:sub(1, -(#typeMatch + 2)) -- strip "=type"
 	end
 
@@ -249,6 +252,7 @@ local function _match(incomingParts : { string },segments      : { Segment }): (
 			if ok then
 				params[seg.name] = value
 			else
+				warn("RoExpress.Router: param '" .. seg.name .. "' expected " .. seg.paramType .. ", got '" .. tostring(raw) .. "'")
 				params[seg.name] = raw
 				params["__typeFail_" .. seg.name] = seg.paramType
 			end
@@ -263,6 +267,7 @@ local function _match(incomingParts : { string },segments      : { Segment }): (
 				if ok then
 					params[seg.name] = value
 				else
+					warn("RoExpress.Router: param '" .. seg.name .. "' expected " .. seg.paramType .. ", got '" .. tostring(raw) .. "'")
 					params[seg.name] = raw
 					params["__typeFail_" .. seg.name] = seg.paramType
 				end
@@ -384,6 +389,56 @@ end
 function Router:Destroy()
 	table.clear(self._routes)
 	self._paramError = nil
+end
+
+-- ─────────────────────────────────────────────────────────────────
+-- TYPED ROUTE BUILDER
+-- ─────────────────────────────────────────────────────────────────
+
+export type RouteBuilder<T> = {
+	pattern : string,
+	build   : (params: T) -> string,
+}
+
+--[[
+	Route<T>(pattern) -> RouteBuilder<T>
+
+	Creates a type-safe URL builder for a route pattern.
+	T is the params record — the compiler enforces that every field
+	passed to build() matches what you declared.
+
+	Because Luau cannot extract param names from string literals at
+	the type level, you annotate T manually once and get full
+	type-checking everywhere else.
+
+	local SendToServer = Router.Route("/server/:Value=number/:Value2=Enum.CameraType") :: Router.RouteBuilder<{
+		Value  : number,
+		Value2 : Enum.CameraType,
+	}>
+
+	res:Redirect(SendToServer.build({ Value = 100, Value2 = Enum.CameraType.Scriptable }))
+	-- "/server/100/Enum.CameraType.Scriptable"
+]]
+function Router.Route<T>(pattern: string): RouteBuilder<T>
+	local segments = _parseRoute(pattern)
+	return {
+		pattern = pattern,
+		build = function(params: T): string
+			local parts = {}
+			for _, seg in ipairs(segments) do
+				if seg.kind == "literal" then
+					table.insert(parts, seg.literal)
+				elseif seg.kind == "param" or seg.kind == "typed" or seg.kind == "constrained" then
+					local val = (params :: any)[seg.name]
+					assert(val ~= nil, "RouteBuilder.build: missing param '" .. tostring(seg.name) .. "'")
+					table.insert(parts, TypeCoercer.ToString(val))
+				else
+					error("RouteBuilder.build: pattern '" .. pattern .. "' contains a wildcard or glob — cannot build a stable URL")
+				end
+			end
+			return "/" .. table.concat(parts, "/")
+		end,
+	}
 end
 
 return Router

@@ -196,6 +196,7 @@ RoExpress.Bridge      = Bridge
 RoExpress.TypeCoercer = TypeCoercer
 RoExpress.Tamper      = Tamper
 RoExpress.Harpy       = Harpy
+RoExpress.Router      = Router
 
 ------------------------------------------------------------------------
 --	Typed accessors
@@ -262,9 +263,10 @@ export type Benchmark   = typeof(Benchmark)
 export type Harpy       = typeof(Harpy)
 
 -- Router sub-types
-export type ParamType   = Router.ParamType
-export type SegmentKind = Router.SegmentKind
-export type MatchResult = Router.MatchResult
+export type ParamType      = Router.ParamType
+export type SegmentKind    = Router.SegmentKind
+export type MatchResult    = Router.MatchResult
+export type RouteBuilder<T> = Router.RouteBuilder<T>
 
 
 
