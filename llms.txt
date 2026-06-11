@@ -59,7 +59,7 @@ No other Roblox networking library covers all of these layers. Previous librarie
 - **TypeCoercer**: Shared type serialisation singleton. TC.ToString converts Luau/Roblox types to wire strings; TC.FromString coerces them back. Supports: number, int, boolean, string, Vector2, Vector3, CFrame, Color3, UDim, UDim2, Rect, BrickColor, Enum member, Instance path. Powers Router param coercion.
 - **Promise**: Lightweight chainable async API for Network. Then/Catch/Finally/Cancel. Returned by GetAsync and PostAsync.
 - **TokenBucket**: Per-instance RFC 2697 token bucket rate limiter. App and Broadcast own independent instances. Grant/GrantAll/Reset utilities for rewarding active players.
-- **Benchmark**: Client-side round-trip latency measurement. Run(route, config?), results include min/avg/median/p95/p99/max/errors/throughput. Print and Compare helpers.
+- **Benchmark**: Client-side latency measurement. Targets: RoExpress main channel (Run), named port channel (RunOnPort), vanilla RemoteFunction round-trip (RunRemoteFunction), vanilla RemoteEvent fire-only (RunRemoteEvent). All four HTTP methods supported (GET/POST/PUT/DELETE). Results: min/avg/median/p95/p99/max/errors/throughput/target. Print and Compare helpers produce labelled columnar output.
 - **Base64**: Shared encode/decode utility. Used internally for binary POST responses.
 
 ## Request pipeline (in order)

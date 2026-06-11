@@ -56,6 +56,8 @@ export type Request = {
     query    : { [string]: string },
     data     : any,
     port     : string,
+    player   : Player?,
+    raw      : Payload?,
 }
 
 export type Response = {
@@ -64,8 +66,10 @@ export type Response = {
     Status : (self: Response, code: number) -> Response,
 }
 
-export type MiddlewareFn = (Player: Player, Payload: Payload) -> (boolean?)
-export type RouteHandler = (Player: Player, Payload: Payload, req: Request, res: Response) -> ()
+export type MiddlewareFn         = (Player: Player, Payload: Payload) -> (boolean?)
+export type RouteHandlerCompact  = (req: Request, res: Response) -> ()
+export type RouteHandlerLegacy   = (Player: Player, Payload: Payload, req: Request, res: Response) -> ()
+export type RouteHandler         = RouteHandlerCompact | RouteHandlerLegacy
 
 export type Type = typeof(setmetatable({}, Port)) & {
     Name             : string,
@@ -240,15 +244,30 @@ local function _handler(self: Type, Player, Payload)
     local algo     = (match.route :: any).algo
     local res      = _buildResponse(self.Remote, Player, Payload.requestId, Payload.method, compress, algo)
 
-    local req = {
-        params   = match.params,
-        captures = match.captures,
-        query    = query,
-        data     = Payload.data,
-        port     = self.Name,
-    }
-
-    local ok, err = pcall(match.route.handler, Player, Payload, req, res)
+    local argcount = debug.info(match.route.handler, "a")
+    local req: Request
+    local ok, err
+    if argcount and argcount == 2 then
+        req = {
+            player   = Player,
+            params   = match.params,
+            captures = match.captures,
+            query    = query,
+            data     = Payload.data,
+            port     = self.Name,
+            raw      = Payload,
+        }
+        ok, err = pcall(match.route.handler, req, res)
+    else
+        req = {
+            params   = match.params,
+            captures = match.captures,
+            query    = query,
+            data     = Payload.data,
+            port     = self.Name,
+        }
+        ok, err = pcall(match.route.handler, Player, Payload, req, res)
+    end
     if not ok then
         warn("RoExpress.Port[" .. self.Name .. "]: Handler error on '" .. Payload.route .. "':", err)
         if not res._sent then
@@ -316,6 +335,14 @@ end
 
 function Port:Post(route: string, handler: RouteHandler, options: { compress: boolean?, algo: ("lz77" | "lzh")? }?): ()
     self._router:Add("POST", route, handler, options)
+end
+
+function Port:Put(route: string, handler: RouteHandler, options: { compress: boolean?, algo: ("lz77" | "lzh")? }?): ()
+    self._router:Add("PUT", route, handler, options)
+end
+
+function Port:Delete(route: string, handler: RouteHandler, options: { compress: boolean?, algo: ("lz77" | "lzh")? }?): ()
+    self._router:Add("DELETE", route, handler, options)
 end
 
 function Port:OnParamError(fn: (Player: Player, Payload: Payload, paramName: string, expectedType: string) -> ()): ()
