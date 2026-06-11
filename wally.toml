@@ -1,6 +1,6 @@
 [package]
 name = "unofficialrobloxtutor/roexpress"
-version = "2.2.3"
+version = "2.4.0"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 description = "Express.js-style structured networking for Roblox. One remote, typed routes, server push, LZ77 compression, exploit detection, named ports, and 60hz binary FPS streaming."
