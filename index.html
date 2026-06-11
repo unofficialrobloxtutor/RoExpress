@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RoExpress — The Complete Roblox Networking Stack</title>
+  <title>RoExpress | The Complete Roblox Networking Stack</title>
 
-  <meta name="description" content="The first complete networking stack for Roblox. Typed routing, server push, binary streaming, outbound HTTP, exploit detection, and compression — one framework, every direction.">
+  <meta name="description" content="The first complete networking stack for Roblox. Typed routing, server push, binary streaming, outbound HTTP, exploit detection, and compression | one framework, every direction.">
   <meta name="keywords" content="roblox, luau, networking, remoteevent, framework, roexpress, typed routes, server push, rate limiting, binary stream, exploit detection, http client">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
@@ -14,7 +14,7 @@
 
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev">
-  <meta property="og:title" content="RoExpress — The Complete Roblox Networking Stack">
+  <meta property="og:title" content="RoExpress | The Complete Roblox Networking Stack">
   <meta property="og:description" content="The first complete networking stack for Roblox. Every direction, every layer, one framework. MIT licensed and free forever.">
   <meta property="og:image" content="https://roexpress.dev/og-image.png">
   <meta property="og:image:width" content="1200">
@@ -31,7 +31,7 @@
     "@type": "SoftwareApplication",
     "name": "RoExpress",
     "version": "2.4.0",
-    "description": "The first complete networking stack for Roblox — typed routing, middleware, server push, binary streaming, outbound HTTP, exploit detection, and compression in one framework.",
+    "description": "The first complete networking stack for Roblox | typed routing, middleware, server push, binary streaming, outbound HTTP, exploit detection, and compression in one framework.",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Roblox",
     "programmingLanguage": "Luau",
@@ -369,11 +369,11 @@
   <div class="hero">
     <a class="hero-badge" href="/docs/pages/updates.html">
       <span class="hero-badge-dot"></span>
-      v2.4 — Deflate compression &amp; automatic retry
+      v2.4 | Deflate compression &amp; automatic retry
     </a>
     <a class="journey-link" href="/docs/pages/story.html">Read the journey to get here ↗</a>
     <h1>The complete networking<br>stack for <em>Roblox</em></h1>
-    <p>Every direction covered — client requests in, server push out, real-time binary channels, and outbound HTTP to external APIs. Every layer built in — routing, rate limiting, exploit detection, compression, and automatic retry. No other Roblox library does all of this.</p>
+    <p>Every direction covered | client requests in, server push out, real-time binary channels, and outbound HTTP to external APIs. Every layer built in | routing, rate limiting, exploit detection, compression, and automatic retry. No other Roblox library does all of this.</p>
     <div class="hero-ctas">
       <a class="btn btn-primary" href="/docs/">Read the docs →</a>
       <a class="btn btn-ghost" href="https://create.roblox.com/store/asset/94926286357335" target="_blank" rel="noopener">Get on Roblox</a>
@@ -404,7 +404,7 @@
   <!-- QUICK START CODE -->
   <section>
     <h2>Less boilerplate. More structure.</h2>
-    <div class="sub">Typed routes, middleware guards, and reliable push — wired up in the same lines it used to take just to create a RemoteEvent.</div>
+    <div class="sub">Typed routes, middleware guards, and reliable push | wired up in the same lines it used to take just to create a RemoteEvent.</div>
     <div class="code-wrap">
       <div class="code-bar">
         <div class="code-dots"><span></span><span></span><span></span></div>
@@ -418,12 +418,12 @@
     res:<span class="fn">Send</span>(PlayerData[req.params.userId])
 <span class="kw">end</span>)
 
-<span class="cm">-- middleware — return false to reject with 403</span>
+<span class="cm">-- middleware | return false to reject with 403</span>
 <span class="hi">app</span>:<span class="fn">Use</span>(<span class="str">"auth"</span>, <span class="kw">function</span>(Player, Payload)
     <span class="kw">if</span> BanList[Player.UserId] <span class="kw">then return false end</span>
 <span class="kw">end</span>)
 
-<span class="cm">-- reliable server push — same remote, zero extra setup</span>
+<span class="cm">-- reliable server push | same remote, zero extra setup</span>
 <span class="hi">app</span>:<span class="fn">PushAll</span>(<span class="str">"round.start"</span>, { duration = <span class="num">120</span> })
 
 <span class="cm">-- Deflate compression opt-in per route (v2.4)</span>
@@ -434,7 +434,7 @@
   <!-- FEATURE GRID -->
   <section>
     <h2>Why should I use RoExpress?</h2>
-    <div class="sub">Fifteen modules, every networking layer covered. Use one or all fifteen — each does one job and stays out of your way.</div>
+    <div class="sub">Fifteen modules, every networking layer covered. Use one or all fifteen | each does one job and stays out of your way.</div>
     <div class="grid">
       <div class="card">
         <div class="card-icon">⬡</div>
@@ -444,7 +444,7 @@
       <div class="card">
         <div class="card-icon">◈</div>
         <h3>Network + Listener <span class="card-tag">client</span></h3>
-        <p>Client-side request with callbacks and query strings. Listener subscribes to push events and broadcasts — zero boilerplate.</p>
+        <p>Client-side request with callbacks and query strings. Listener subscribes to push events and broadcasts | zero boilerplate.</p>
       </div>
       <div class="card">
         <div class="card-icon">⌁</div>
@@ -454,7 +454,7 @@
       <div class="card">
         <div class="card-icon">⊞</div>
         <h3>Codec <span class="card-tag">shared</span></h3>
-        <p>Deflate compression (LZ77 + Huffman) for route payloads. Opt-in per route with <code>{ compress = true }</code> — no API change for callers.</p>
+        <p>Deflate compression (LZ77 + Huffman) for route payloads. Opt-in per route with <code>{ compress = true }</code> | no API change for callers.</p>
       </div>
       <div class="card">
         <div class="card-icon">◉</div>
@@ -469,7 +469,7 @@
       <div class="card">
         <div class="card-icon">⌥</div>
         <h3>Bridge <span class="card-tag">server</span></h3>
-        <p>Named internal event bus for server modules. Decouples your controllers and services — no circular requires.</p>
+        <p>Named internal event bus for server modules. Decouples your controllers and services | no circular requires.</p>
       </div>
       <div class="card">
         <div class="card-icon">◫</div>
@@ -484,7 +484,7 @@
       <div class="card">
         <div class="card-icon">⇡</div>
         <h3>Harpy <span class="card-tag">outbound</span></h3>
-        <p>Server-to-external HTTP client. Set a base URL and headers once — GET, POST, PUT, DELETE with automatic retry and a chainable Promise API.</p>
+        <p>Server-to-external HTTP client. Set a base URL and headers once | GET, POST, PUT, DELETE with automatic retry and a chainable Promise API.</p>
       </div>
     </div>
   </section>
@@ -492,7 +492,7 @@
   <!-- COMPARISON -->
   <section>
     <h2>How it compares.</h2>
-    <div class="sub">The only Roblox library that covers every layer — routing, security, streaming, compression, and outbound HTTP in one place.</div>
+    <div class="sub">The only Roblox library that covers every layer | routing, security, streaming, compression, and outbound HTTP in one place.</div>
     <div style="overflow-x:auto; border: 1px solid var(--border); border-radius: 10px">
       <table class="cmp">
         <thead>
@@ -525,15 +525,15 @@
   <!-- BLOG -->
   <section>
     <h2>From the blog.</h2>
-    <div class="sub">Design notes, release breakdowns, and guides — written alongside the code.</div>
+    <div class="sub">Design notes, release breakdowns, and guides | written alongside the code.</div>
     <div class="blog-grid">
       <a class="blog-card" href="/docs/pages/updates.html">
         <div class="blog-meta">
           <span class="blog-tag release">Release</span>
           <span>June 2026</span>
         </div>
-        <h3>What's new in v2.4 — Deflate &amp; automatic retry</h3>
-        <p>Codec upgraded to full Deflate (LZ77 + Huffman). Network requests now back off and retry automatically on failure — no developer intervention needed.</p>
+        <h3>What's new in v2.4 | Deflate &amp; automatic retry</h3>
+        <p>Codec upgraded to full Deflate (LZ77 + Huffman). Network requests now back off and retry automatically on failure | no developer intervention needed.</p>
         <span class="blog-read">Read the changelog →</span>
       </a>
       <a class="blog-card" href="/docs/pages/design-consensus.html">
@@ -542,7 +542,7 @@
           <span>Design notes</span>
         </div>
         <h3>Why RoExpress uses a single RemoteEvent</h3>
-        <p>Every non-obvious decision behind the framework — single remote, token bucket, HTTP verbs, and why middleware returns <code>false</code> instead of <code>nil</code>.</p>
+        <p>Every non-obvious decision behind the framework | single remote, token bucket, HTTP verbs, and why middleware returns <code>false</code> instead of <code>nil</code>.</p>
         <span class="blog-read">Read the design notes →</span>
       </a>
       <a class="blog-card" href="/docs/pages/guide-middleware.html">
@@ -551,7 +551,7 @@
           <span>Patterns</span>
         </div>
         <h3>Route-scoped middleware: auth guards without boilerplate</h3>
-        <p>How to lock down admin routes, log analytics, and validate payloads in a few lines — without repeating yourself in every handler.</p>
+        <p>How to lock down admin routes, log analytics, and validate payloads in a few lines | without repeating yourself in every handler.</p>
         <span class="blog-read">Read the guide →</span>
       </a>
     </div>
@@ -581,7 +581,7 @@
         <circle cx="204" cy="162" r="7" fill="#0d0d1f"/>
         <circle cx="204" cy="222" r="7" fill="#0d0d1f"/>
       </svg>
-      RoExpress v2.4 — MIT License — by DeathToTheStadium
+      RoExpress v2.4 | MIT License | by DeathToTheStadium
     </div>
     <div class="links">
       <a href="/docs/">Docs</a>

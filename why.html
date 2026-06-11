@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Why RoExpress — The Networking Problems Every Roblox Developer Hits</title>
-  <meta name="description" content="Scattered RemoteEvents. No rate limiting. Silent failures. Exploiters firing whatever they want. These are the networking problems every Roblox developer hits — and why RoExpress exists.">
+  <title>Why RoExpress | The Networking Problems Every Roblox Developer Hits</title>
+  <meta name="description" content="Scattered RemoteEvents. No rate limiting. Silent failures. Exploiters firing whatever they want. These are the networking problems every Roblox developer hits | and why RoExpress exists.">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://roexpress.dev/why.html">
@@ -237,7 +237,7 @@
       <div class="pain-num">Problem 01</div>
       <h2>Your RemoteEvent folder<br>is a graveyard.</h2>
       <p class="pain-lead">
-        It starts with one remote. <strong>PlayerDataRequest.</strong> Fine. Then you need shop purchases — <strong>ShopBuyRequest.</strong> Then combat hits. Then admin commands. Then leaderboard sync. Three months later you have thirty-seven RemoteEvents, half of them are named things like <strong>RemoteEvent14</strong>, and you genuinely cannot remember what six of them do.
+        It starts with one remote. <strong>PlayerDataRequest.</strong> Fine. Then you need shop purchases | <strong>ShopBuyRequest.</strong> Then combat hits. Then admin commands. Then leaderboard sync. Three months later you have thirty-seven RemoteEvents, half of them are named things like <strong>RemoteEvent14</strong>, and you genuinely cannot remember what six of them do.
         <br><br>
         There is no index. There is no routing. Changing a route means hunting through every script that references that string. Adding logging to all requests means touching every handler individually.
       </p>
@@ -284,7 +284,7 @@ app:<span class="fn">Use</span>(<span class="str">"logger"</span>, <span class="
 <span class="kw">end</span>)</pre>
         </div>
       </div>
-      <div class="pain-note"><strong>One RemoteEvent.</strong> Every route is a string. Adding logging, auth, or rate limiting means one <code>app:Use()</code> call that covers everything — not editing thirty files.</div>
+      <div class="pain-note"><strong>One RemoteEvent.</strong> Every route is a string. Adding logging, auth, or rate limiting means one <code>app:Use()</code> call that covers everything | not editing thirty files.</div>
     </div>
 
     <!-- 2 -->
@@ -292,7 +292,7 @@ app:<span class="fn">Use</span>(<span class="str">"logger"</span>, <span class="
       <div class="pain-num">Problem 02</div>
       <h2>You have zero protection<br>against exploiters.</h2>
       <p class="pain-lead">
-        RemoteEvents fire from any client, with any data, at any rate, with no validation. A single exploiter with a script executor can call <strong>ShopBuyRequest</strong> ten thousand times a second with crafted arguments your handler never expected. If you forgot to validate one field — and you will forget, because there's no framework reminding you — the economy breaks.
+        RemoteEvents fire from any client, with any data, at any rate, with no validation. A single exploiter with a script executor can call <strong>ShopBuyRequest</strong> ten thousand times a second with crafted arguments your handler never expected. If you forgot to validate one field | and you will forget, because there's no framework reminding you | the economy breaks.
         <br><br>
         Rate limiting is not optional. It is not something to add later. And writing it from scratch for every remote is how bugs slip through.
       </p>
@@ -338,7 +338,7 @@ app:<span class="fn">Post</span>(<span class="str">"shop/buy/:itemId=string"</sp
 <span class="kw">end</span>)</pre>
         </div>
       </div>
-      <div class="pain-note"><strong>Token bucket rate limiting runs before your handler sees the request.</strong> Tamper tracks malformed payloads and version spoofs automatically. Strike thresholds are configurable. You write the business logic — RoExpress handles the surface area.</div>
+      <div class="pain-note"><strong>Token bucket rate limiting runs before your handler sees the request.</strong> Tamper tracks malformed payloads and version spoofs automatically. Strike thresholds are configurable. You write the business logic | RoExpress handles the surface area.</div>
     </div>
 
     <!-- 3 -->
@@ -389,7 +389,7 @@ app:<span class="fn">Post</span>(<span class="str">"admin/ban/:userId=number"</s
 app:<span class="fn">Post</span>(<span class="str">"admin/announce"</span>,              announceHandler)</pre>
         </div>
       </div>
-      <div class="pain-note"><strong>Middleware runs before the handler, every time, for every matching route.</strong> Return <code>false</code> to reject with 403. New routes added later are protected automatically — no extra work.</div>
+      <div class="pain-note"><strong>Middleware runs before the handler, every time, for every matching route.</strong> Return <code>false</code> to reject with 403. New routes added later are protected automatically | no extra work.</div>
     </div>
 
     <!-- 4 -->
@@ -397,7 +397,7 @@ app:<span class="fn">Post</span>(<span class="str">"admin/announce"</span>,     
       <div class="pain-num">Problem 04</div>
       <h2>When a request fails,<br>the client finds out by accident.</h2>
       <p class="pain-lead">
-        Fire-and-forget is not a request/response pattern. You fire a RemoteEvent, the server does something, and if it fails — network hiccup, server overload, script error — the client has no idea. No timeout. No retry. No callback. The player just sits there wondering why nothing happened.
+        Fire-and-forget is not a request/response pattern. You fire a RemoteEvent, the server does something, and if it fails | network hiccup, server overload, script error | the client has no idea. No timeout. No retry. No callback. The player just sits there wondering why nothing happened.
         <br><br>
         Worse: without response semantics, you cannot tell the difference between "server received this and said no" and "server never received it at all."
       </p>
@@ -437,7 +437,7 @@ network:<span class="fn">PostAsync</span>(<span class="str">"shop/buy/sword"</sp
     :<span class="fn">Catch</span>(<span class="kw">function</span>(err) UI:<span class="fn">ShowError</span>(err.message) <span class="kw">end</span>)</pre>
         </div>
       </div>
-      <div class="pain-note"><strong>Every request gets a response.</strong> Status codes, error messages, typed data. Failed requests retry automatically with exponential backoff — 1s, 2s, 4s. You find out when it worked and when it did not.</div>
+      <div class="pain-note"><strong>Every request gets a response.</strong> Status codes, error messages, typed data. Failed requests retry automatically with exponential backoff | 1s, 2s, 4s. You find out when it worked and when it did not.</div>
     </div>
 
     <!-- 5 -->
@@ -445,7 +445,7 @@ network:<span class="fn">PostAsync</span>(<span class="str">"shop/buy/sword"</sp
       <div class="pain-num">Problem 05</div>
       <h2>Sending game state every frame<br>is destroying your bandwidth.</h2>
       <p class="pain-lead">
-        Player positions. Health bars. Economy values. Anything that changes frequently gets sent as a RemoteEvent payload — usually a table, usually serialised to a format Roblox's replication layer was not designed for. At 20 players and 20 ticks per second, that is four hundred FireAllClients calls per second carrying JSON-shaped tables.
+        Player positions. Health bars. Economy values. Anything that changes frequently gets sent as a RemoteEvent payload | usually a table, usually serialised to a format Roblox's replication layer was not designed for. At 20 players and 20 ticks per second, that is four hundred FireAllClients calls per second carrying JSON-shaped tables.
         <br><br>
         The packets are large. The bandwidth adds up. And you are not getting delta compression or lag compensation for free.
       </p>
@@ -492,7 +492,7 @@ RunService.Heartbeat:<span class="fn">Connect</span>(<span class="kw">function</
 <span class="kw">end</span>)</pre>
         </div>
       </div>
-      <div class="pain-note"><strong>Stream packs all records into one binary buffer per tick.</strong> Delta compression means only changed values go over the wire. Built-in lag compensation lets you rewind channel state for hit validation — no separate history table to maintain.</div>
+      <div class="pain-note"><strong>Stream packs all records into one binary buffer per tick.</strong> Delta compression means only changed values go over the wire. Built-in lag compensation lets you rewind channel state for hit validation | no separate history table to maintain.</div>
     </div>
 
     <!-- 6 -->
@@ -500,7 +500,7 @@ RunService.Heartbeat:<span class="fn">Connect</span>(<span class="kw">function</
       <div class="pain-num">Problem 06</div>
       <h2>Calling a webhook from your<br>game server is a fifty-line adventure.</h2>
       <p class="pain-lead">
-        Discord webhook for round results. External leaderboard API. Analytics endpoint. Score submission. Every game eventually needs to talk to something outside of Roblox. And every time, you write the same boilerplate — <strong>GetService, GetAsync, JSONEncode, pcall, retry logic, header management</strong> — from scratch, in a different script, with slightly different error handling each time.
+        Discord webhook for round results. External leaderboard API. Analytics endpoint. Score submission. Every game eventually needs to talk to something outside of Roblox. And every time, you write the same boilerplate | <strong>GetService, GetAsync, JSONEncode, pcall, retry logic, header management</strong> | from scratch, in a different script, with slightly different error handling each time.
       </p>
       <div class="split">
         <div class="split-panel">
@@ -546,7 +546,7 @@ webhook:<span class="fn">Post</span>(<span class="str">""</span>, { content <spa
 scores:<span class="fn">SetHeader</span>(<span class="str">"X-Api-Key"</span>, API_KEY)</pre>
         </div>
       </div>
-      <div class="pain-note"><strong>Harpy wraps HttpService with a clean client API.</strong> Base URL, shared headers, automatic JSON encoding, and retry with exponential backoff — set up once, use everywhere. Multiple external APIs each get their own client with independent config.</div>
+      <div class="pain-note"><strong>Harpy wraps HttpService with a clean client API.</strong> Base URL, shared headers, automatic JSON encoding, and retry with exponential backoff | set up once, use everywhere. Multiple external APIs each get their own client with independent config.</div>
     </div>
 
   </div>
@@ -563,7 +563,7 @@ scores:<span class="fn">SetHeader</span>(<span class="str">"X-Api-Key"</span>, A
 
   <!-- FOOTER -->
   <footer>
-    <div class="left">RoExpress v2.4 &mdash; MIT License &mdash; by DeathToTheStadium</div>
+    <div class="left">RoExpress v2.4 | MIT License | by DeathToTheStadium</div>
     <div class="links">
       <a href="/docs/">Docs</a>
       <a href="https://github.com/unofficialrobloxtutor/RoExpress" target="_blank" rel="noopener">GitHub</a>
