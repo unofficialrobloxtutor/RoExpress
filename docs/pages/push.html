@@ -1,17 +1,17 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Server Push — RoExpress Docs</title>
-  <meta name="description" content="RoExpress Server Push: reliable one-way server-to-client events. Push, PushAll, PushTo. No request needed — the server initiates. Compare Push vs Broadcast.">
+  <title>Server Push | RoExpress Docs</title>
+  <meta name="description" content="RoExpress Server Push: reliable one-way server-to-client events. Push, PushAll, PushTo. No request needed | the server initiates. Compare Push vs Broadcast.">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://roexpress.dev/docs/pages/push.html">
   <meta name="theme-color" content="#8b78ff">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/pages/push.html">
-  <meta property="og:title" content="Server Push — RoExpress Docs">
+  <meta property="og:title" content="Server Push | RoExpress Docs">
   <meta property="og:description" content="Reliable one-way server-to-client events via Push, PushAll, PushTo.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
@@ -31,7 +31,7 @@
       <section class="doc">
         <div class="eyebrow">New in v2</div>
         <h1>Server Push <span class="pill p-new">v2</span></h1>
-        <p class="lead">Reliable one-way server-to-client communication. No request needed — the server initiates. The client receives via the existing Listener.</p>
+        <p class="lead">Reliable one-way server-to-client communication. No request needed | the server initiates. The client receives via the existing Listener.</p>
 
         <h2>API</h2>
         <div class="sig"><span class="pill p-push">PUSH</span> app:<span class="fn">Push</span>(player, event, data)</div>
@@ -46,7 +46,7 @@
           <tbody>
             <tr><td>Remote</td><td>Reliable RemoteEvent</td><td>UnreliableRemoteEvent</td></tr>
             <tr><td>Delivery</td><td>Guaranteed</td><td>May drop under load</td></tr>
-            <tr><td>Rate limited</td><td>No (server-initiated)</td><td>Yes — per-event + per-player</td></tr>
+            <tr><td>Rate limited</td><td>No (server-initiated)</td><td>Yes | per-event + per-player</td></tr>
             <tr><td>Use for</td><td>Inventory, state sync, round events</td><td>HUD pings, position hints</td></tr>
           </tbody>
         </table>
@@ -57,7 +57,7 @@ app:<span class="fn">Push</span>(player, <span class="str">"inventoryUpdate"</sp
 app:<span class="fn">PushAll</span>(<span class="str">"roundEnd"</span>, { winner = <span class="str">"PlayerA"</span> })
 app:<span class="fn">PushTo</span>({ p1, p2 }, <span class="str">"zoneAlert"</span>, { zoneId = <span class="num">3</span> })
 
-<span class="cm">-- client — same listener, zero API change</span>
+<span class="cm">-- client | same listener, zero API change</span>
 listener:<span class="fn">On</span>(<span class="str">"inventoryUpdate"</span>, <span class="kw">function</span>(data) <span class="fn">print</span>(data.item) <span class="kw">end</span>)
 listener:<span class="fn">Once</span>(<span class="str">"roundEnd"</span>, <span class="kw">function</span>(data) UI:<span class="fn">ShowWinner</span>(data.winner) <span class="kw">end</span>)</code></pre>
 
@@ -65,11 +65,11 @@ listener:<span class="fn">Once</span>(<span class="str">"roundEnd"</span>, <span
 
         <h2>See also</h2>
         <p>
-          <a href="./app.html">App</a> — Push/PushAll/PushTo methods &nbsp;·&nbsp;
-          <a href="./broadcast.html">Broadcast</a> — unreliable alternative &nbsp;·&nbsp;
-          <a href="./listener.html">Listener</a> — client subscription &nbsp;·&nbsp;
-          <a href="./ex-round.html">Round Manager</a> — push in practice &nbsp;·&nbsp;
-          <a href="./ex-playerdata.html">Player Data</a> — push on join pattern
+          <a href="./app.html">App</a> | Push/PushAll/PushTo methods &nbsp;·&nbsp;
+          <a href="./broadcast.html">Broadcast</a> | unreliable alternative &nbsp;·&nbsp;
+          <a href="./listener.html">Listener</a> | client subscription &nbsp;·&nbsp;
+          <a href="./ex-round.html">Round Manager</a> | push in practice &nbsp;·&nbsp;
+          <a href="./ex-playerdata.html">Player Data</a> | push on join pattern
         </p>
       </section>
     </main>

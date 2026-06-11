@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Authentication Guide — RoExpress Docs</title>
+  <title>Authentication Guide | RoExpress Docs</title>
   <meta name="description" content="How to implement authentication in RoExpress: global middleware, per-route role checks, token verification, whitelist/banlist, and blocking with 403.">
   <meta name="keywords" content="roblox, luau, roexpress, authentication, auth, middleware, role, permission, banlist, whitelist, 403 forbid">
   <meta name="author" content="DeathToTheStadium">
@@ -12,7 +12,7 @@
   <meta name="theme-color" content="#8b78ff">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/guides/auth/">
-  <meta property="og:title" content="Authentication Guide — RoExpress Docs">
+  <meta property="og:title" content="Authentication Guide | RoExpress Docs">
   <meta property="og:description" content="Global middleware, per-route role checks, token verification, ban lists. Complete auth walkthrough.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
@@ -32,7 +32,7 @@
       <section class="doc">
         <div class="eyebrow">Guide</div>
         <h1>Authentication</h1>
-        <p class="lead">RoExpress authentication is built on the <a href="./app/#middleware">middleware system</a>. Every request goes through middleware before the handler runs — return <code>false</code> to block with <span class="pill p-err">403</span>, return nothing to continue.</p>
+        <p class="lead">RoExpress authentication is built on the <a href="./app/#middleware">middleware system</a>. Every request goes through middleware before the handler runs | return <code>false</code> to block with <span class="pill p-err">403</span>, return nothing to continue.</p>
 
         <h2>Global ban check</h2>
         <p>The simplest auth: block banned players from every route. Register this first so it runs before any other middleware.</p>
@@ -108,10 +108,10 @@ app:<span class="fn">Listen</span>(<span class="str">"modtools"</span>, <span cl
 
         <h2>See also</h2>
         <p>
-          <a href="./app/">App</a> — full middleware API &nbsp;·&nbsp;
-          <a href="./pipeline/">Request Pipeline</a> — where middleware sits in the pipeline &nbsp;·&nbsp;
-          <a href="./tamper/">Tamper</a> — passive exploit detection &nbsp;·&nbsp;
-          <a href="./port/">Ports</a> — per-port middleware isolation
+          <a href="./app/">App</a> | full middleware API &nbsp;·&nbsp;
+          <a href="./pipeline/">Request Pipeline</a> | where middleware sits in the pipeline &nbsp;·&nbsp;
+          <a href="./tamper/">Tamper</a> | passive exploit detection &nbsp;·&nbsp;
+          <a href="./port/">Ports</a> | per-port middleware isolation
         </p>
 
       </section>

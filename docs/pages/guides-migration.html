@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Migration v2.3 → v2.4 — RoExpress Docs</title>
+  <title>Migration v2.3 → v2.4 | RoExpress Docs</title>
   <meta name="description" content="Upgrade guide from RoExpress v2.3 to v2.4: Stream v2.4 schema migration, typed accessor adoption, compact handler form, breaking changes list.">
   <meta name="keywords" content="roblox, luau, roexpress, migration, upgrade, v2.3, v2.4, breaking changes, stream v2.4, typed accessor">
   <meta name="author" content="DeathToTheStadium">
@@ -12,7 +12,7 @@
   <meta name="theme-color" content="#8b78ff">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/guides/migration/">
-  <meta property="og:title" content="Migration v2.3 → v2.4 — RoExpress Docs">
+  <meta property="og:title" content="Migration v2.3 → v2.4 | RoExpress Docs">
   <meta property="og:description" content="Stream v2.4 schema migration, typed accessor adoption, breaking changes.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
@@ -32,17 +32,17 @@
       <section class="doc">
         <div class="eyebrow">Guide</div>
         <h1>Migration v2.3 → v2.4</h1>
-        <p class="lead">v2.4 is mostly additive. The only breaking changes are in <a href="./stream/">Stream</a> — the old FPS-based API is removed. Everything else is backwards-compatible.</p>
+        <p class="lead">v2.4 is mostly additive. The only breaking changes are in <a href="./stream/">Stream</a> | the old FPS-based API is removed. Everything else is backwards-compatible.</p>
 
         <h2>Breaking changes</h2>
-        <div class="cl new"><strong>Wally</strong> — update your <code>wally.toml</code>: <code>RoExpress = "unofficialrobloxtutor/roexpress@2.4.0"</code></div>
+        <div class="cl new"><strong>Wally</strong> | update your <code>wally.toml</code>: <code>RoExpress = "unofficialrobloxtutor/roexpress@2.4.0"</code></div>
         <table class="tbl">
           <thead><tr><th>Area</th><th>What changed</th><th>Action</th></tr></thead>
           <tbody>
             <tr>
               <td>Stream v2 API</td>
               <td><span class="pill p-breaking">removed</span> <code>Stream:Sender()</code>, <code>Stream:Receiver()</code>, FPS-tick model</td>
-              <td>Migrate to <code>Stream:Channel()</code> — see below</td>
+              <td>Migrate to <code>Stream:Channel()</code> | see below</td>
             </tr>
             <tr>
               <td>Stream v2 types</td>
@@ -53,11 +53,11 @@
         </table>
 
         <h2>Stream migration (pre-v2.4 → v2.4)</h2>
-        <h3>Old (pre-v2.4 — FPS tick model)</h3>
+        <h3>Old (pre-v2.4 | FPS tick model)</h3>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- v2: FPS sender/receiver with tick accumulation</span>
 <span class="kw">local</span> sender <span class="op">=</span> Stream:<span class="fn">Sender</span>(<span class="str">"movement"</span>, <span class="num">20</span>)
 sender:<span class="fn">Send</span>({ x <span class="op">=</span> pos.X, y <span class="op">=</span> pos.Y, z <span class="op">=</span> pos.Z })</code></pre>
-        <h3>New (v2.4 — schema channels)</h3>
+        <h3>New (v2.4 | schema channels)</h3>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- v3: define schema once, create channel, send</span>
 <span class="kw">local</span> schema <span class="op">=</span> Stream:<span class="fn">Schema</span>({
     position <span class="op">=</span> <span class="str">"Vector3"</span>,
@@ -76,7 +76,7 @@ channel:<span class="fn">Subscribe</span>(<span class="kw">function</span>(playe
 
         <h2>New in v2.4 (non-breaking)</h2>
         <h3>Typed accessors</h3>
-        <p><code>RoExpress.GetApp()</code> and <code>RoExpress.GetNetwork()</code> are new — they return fully-typed instances. Your existing <code>RoExpress("App")</code> calls still work, but switch to the typed form to get autocomplete and type checking:</p>
+        <p><code>RoExpress.GetApp()</code> and <code>RoExpress.GetNetwork()</code> are new | they return fully-typed instances. Your existing <code>RoExpress("App")</code> calls still work, but switch to the typed form to get autocomplete and type checking:</p>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Before</span>
 <span class="kw">local</span> app = RoExpress(<span class="str">"App"</span>)  <span class="cm">-- returns any</span>
 
@@ -88,7 +88,7 @@ channel:<span class="fn">Subscribe</span>(<span class="kw">function</span>(playe
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Legacy (still works)</span>
 app:<span class="fn">Get</span>(<span class="str">"x"</span>, <span class="kw">function</span>(Player, Payload, req, res) end)
 
-<span class="cm">-- Modern (recommended) — req.player is now populated</span>
+<span class="cm">-- Modern (recommended) | req.player is now populated</span>
 app:<span class="fn">Get</span>(<span class="str">"x"</span>, <span class="kw">function</span>(req, res)
     <span class="fn">print</span>(req.player.Name)  <span class="cm">-- available in modern form</span>
 <span class="kw">end</span>)</code></pre>

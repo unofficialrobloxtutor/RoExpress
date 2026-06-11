@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live Streaming Example — RoExpress Docs</title>
+  <title>Live Streaming Example | RoExpress Docs</title>
   <meta name="description" content="Player movement replication using RoExpress Stream: 20 Hz CFrame sync, delta compression, server distribution via Broadcast, smooth client interpolation.">
   <meta name="keywords" content="roblox, luau, roexpress, stream, movement, replication, 20hz, delta, cframe, broadcast, interpolation">
   <meta name="author" content="DeathToTheStadium">
@@ -12,7 +12,7 @@
   <meta name="theme-color" content="#8b78ff">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/examples/streaming/">
-  <meta property="og:title" content="Live Streaming Example — RoExpress Docs">
+  <meta property="og:title" content="Live Streaming Example | RoExpress Docs">
   <meta property="og:description" content:"Player movement at 20 Hz with binary delta compression and smooth interpolation.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
@@ -37,7 +37,7 @@
         <h2>How it works</h2>
         <div class="pipe">
           <div class="ps"><div class="pn">1</div><div class="pl">Client sends CFrame + velocity at 20 Hz over UnreliableRemoteEvent via <code>channel:Send()</code></div></div>
-          <div class="ps"><div class="pn">2</div><div class="pl">Stream delta-compresses the packet — only changed fields are sent in full</div></div>
+          <div class="ps"><div class="pn">2</div><div class="pl">Stream delta-compresses the packet | only changed fields are sent in full</div></div>
           <div class="ps"><div class="pn">3</div><div class="pl">Server receives via <code>channel:Subscribe()</code>, stores position, re-broadcasts to other players</div></div>
           <div class="ps"><div class="pn">4</div><div class="pl">Other clients receive via <code>listener:On("pos")</code>, push to interpolation buffer</div></div>
           <div class="ps"><div class="pn">5</div><div class="pl">Client interpolates between buffered frames on RunService.Heartbeat</div></div>
@@ -117,9 +117,9 @@ RunService.Heartbeat:<span class="fn">Connect</span>(<span class="kw">function</
 
         <h2>See also</h2>
         <p>
-          <a href="./stream/">Stream</a> — schema, channels, delta compression &nbsp;·&nbsp;
-          <a href="./broadcast/">Broadcast</a> — unreliable fan-out &nbsp;·&nbsp;
-          <a href="./listener/">Listener</a> — client subscription
+          <a href="./stream/">Stream</a> | schema, channels, delta compression &nbsp;·&nbsp;
+          <a href="./broadcast/">Broadcast</a> | unreliable fan-out &nbsp;·&nbsp;
+          <a href="./listener/">Listener</a> | client subscription
         </p>
 
       </section>

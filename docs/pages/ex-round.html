@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Round Manager Example — RoExpress Docs</title>
+  <title>Round Manager Example | RoExpress Docs</title>
   <meta name="description" content="RoExpress Round Manager example: countdown via broadcast, start/end via reliable push, Bridge for internal module coordination.">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#8b78ff">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/pages/ex-round.html">
-  <meta property="og:title" content="Round Manager Example — RoExpress Docs">
+  <meta property="og:title" content="Round Manager Example | RoExpress Docs">
   <meta property="og:description" content="Countdown via broadcast, start/end via push, Bridge for module coordination.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
@@ -71,10 +71,10 @@ bridge.<span class="fn">Bind</span>(<span class="str">"round.began"</span>, <spa
         <table class="tbl">
           <thead><tr><th>Pattern</th><th>How it's used</th></tr></thead>
           <tbody>
-            <tr><td>Reliable push</td><td><code>app:PushAll("round.start")</code> — guaranteed delivery</td></tr>
-            <tr><td>Unreliable broadcast</td><td><code>broadcast:EmitAll("round.tick")</code> — drops ok, next tick follows</td></tr>
-            <tr><td>Bridge decoupling</td><td><code>bridge.Fire("round.began")</code> — SpawnService doesn't import App</td></tr>
-            <tr><td>Token grant</td><td><code>app.TokenBucket:GrantAll(5)</code> — reward tokens on round end</td></tr>
+            <tr><td>Reliable push</td><td><code>app:PushAll("round.start")</code> | guaranteed delivery</td></tr>
+            <tr><td>Unreliable broadcast</td><td><code>broadcast:EmitAll("round.tick")</code> | drops ok, next tick follows</td></tr>
+            <tr><td>Bridge decoupling</td><td><code>bridge.Fire("round.began")</code> | SpawnService doesn't import App</td></tr>
+            <tr><td>Token grant</td><td><code>app.TokenBucket:GrantAll(5)</code> | reward tokens on round end</td></tr>
           </tbody>
         </table>
 
@@ -84,7 +84,7 @@ bridge.<span class="fn">Bind</span>(<span class="str">"round.began"</span>, <spa
           <a href="./broadcast.html">Broadcast</a> &nbsp;·&nbsp;
           <a href="./bridge.html">Bridge</a> &nbsp;·&nbsp;
           <a href="./tokenbucket.html">TokenBucket</a> &nbsp;·&nbsp;
-          <a href="./ex-matchmaking.html">Matchmaking Queue</a> — similar Bridge + push pattern
+          <a href="./ex-matchmaking.html">Matchmaking Queue</a> | similar Bridge + push pattern
         </p>
       </section>
     </main>

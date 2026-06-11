@@ -1,18 +1,18 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Route Organisation — RoExpress Guides</title>
-  <meta name="description" content="How to keep your RoExpress routes and handlers clean as your project grows — routes module, handler modules, table style, function style.">
+  <title>Route Organisation | RoExpress Guides</title>
+  <meta name="description" content="How to keep your RoExpress routes and handlers clean as your project grows | routes module, handler modules, table style, function style.">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://roexpress.dev/docs/pages/guide-routes.html">
   <meta name="theme-color" content="#8b78ff">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/pages/guide-routes.html">
-  <meta property="og:title" content="Route Organisation — RoExpress Guides">
-  <meta property="og:description" content="Routes module, handler modules, table style, function style — keeping things clean as your project grows.">
+  <meta property="og:title" content="Route Organisation | RoExpress Guides">
+  <meta property="og:description" content="Routes module, handler modules, table style, function style | keeping things clean as your project grows.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,7 +31,7 @@
       <section class="doc">
         <div class="eyebrow">Guides</div>
         <h1>Route Organisation</h1>
-        <p class="lead">As a project grows, putting every route and handler in one script becomes hard to read and harder to maintain. This guide shows several ways to split them out — a routes module for strings, handler modules per system, and two styles for writing the handlers themselves.</p>
+        <p class="lead">As a project grows, putting every route and handler in one script becomes hard to read and harder to maintain. This guide shows several ways to split them out | a routes module for strings, handler modules per system, and two styles for writing the handlers themselves.</p>
 
         <div class="cl info">None of these patterns require any changes to how RoExpress works. They are purely about how you organise your own files.</div>
 
@@ -56,7 +56,7 @@ app:<span class="fn">Get</span>(<span class="str">"player/:userId=number/stats"<
 
         <p>Once you have more than a handful of routes the file becomes a scrolling wall. Finding a specific handler means searching. Changing a route string means hoping you got every reference.</p>
 
-        <h2>Step 1 &mdash; a routes module</h2>
+        <h2>Step 1 | a routes module</h2>
         <p>Move every route string into one module. Every other file imports from here instead of using raw strings.</p>
 
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- ReplicatedStorage/Routes.luau</span>
@@ -75,7 +75,7 @@ app:<span class="fn">Get</span>(<span class="str">"player/:userId=number/stats"<
     COMBAT_RELOAD <span class="op">=</span> <span class="str">"combat/reload"</span>,
 }</code></pre>
 
-        <div class="cl tip">Keeping routes in <code>ReplicatedStorage</code> means both the server and client can require the same module. The client uses the same constants when calling <code>network:Get(Routes.SHOP_ITEMS)</code> &mdash; no string duplication, no typos.</div>
+        <div class="cl tip">Keeping routes in <code>ReplicatedStorage</code> means both the server and client can require the same module. The client uses the same constants when calling <code>network:Get(Routes.SHOP_ITEMS)</code> | no string duplication, no typos.</div>
 
         <p>The server now registers against constants:</p>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Routes <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.Routes)
@@ -84,10 +84,10 @@ app:<span class="fn">Get</span>(Routes.SHOP_ITEMS, <span class="kw">function</sp
     res:<span class="fn">Send</span>(ShopData.<span class="fn">GetItems</span>())
 <span class="kw">end</span>)</code></pre>
 
-        <h2>Step 2 &mdash; handler modules</h2>
+        <h2>Step 2 | handler modules</h2>
         <p>Move the logic for each system into its own module. There are two common styles.</p>
 
-        <h3>Style A &mdash; table of handlers</h3>
+        <h3>Style A | table of handlers</h3>
         <p>Export a table where each key maps to a handler function. Clean to iterate, easy to see the full surface of a system at once.</p>
 
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- ServerScriptService/Handlers/ShopHandlers.luau</span>
@@ -130,8 +130,8 @@ app:<span class="fn">Get</span>(Routes.SHOP_ITEMS, <span class="kw">function</sp
     app[entry.method](app, route, entry.handler)
 <span class="kw">end</span></code></pre>
 
-        <h3>Style B &mdash; register function</h3>
-        <p>Export a single <code>Register(app)</code> function. The module owns its own registration — the server script just calls it. Simpler to write, slightly less flexible to inspect.</p>
+        <h3>Style B | register function</h3>
+        <p>Export a single <code>Register(app)</code> function. The module owns its own registration | the server script just calls it. Simpler to write, slightly less flexible to inspect.</p>
 
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- ServerScriptService/Handlers/CombatHandlers.luau</span>
 <span class="kw">local</span> Routes     <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.Routes)
@@ -188,7 +188,7 @@ ReplicatedStorage/
 StarterPlayerScripts/
 &#9492;&#9472;&#9472; Client.luau              <span class="cm">-- requires Routes, calls network:Get(Routes.SHOP_ITEMS)</span></code></pre>
 
-        <div class="cl tip">There is no single right style. Style A (table) works well when you want to inspect or iterate all routes for a system programmatically. Style B (Register function) works well when a system needs setup work before registering &mdash; opening a DataStore, connecting a Bridge listener, etc.</div>
+        <div class="cl tip">There is no single right style. Style A (table) works well when you want to inspect or iterate all routes for a system programmatically. Style B (Register function) works well when a system needs setup work before registering | opening a DataStore, connecting a Bridge listener, etc.</div>
 
         <h2>Which style should I use?</h2>
         <table class="tbl">
@@ -196,19 +196,19 @@ StarterPlayerScripts/
             <tr><th>Situation</th><th>Recommended</th></tr>
           </thead>
           <tbody>
-            <tr><td>Small project, a few routes total</td><td>Inline in Server.luau &mdash; no split needed</td></tr>
+            <tr><td>Small project, a few routes total</td><td>Inline in Server.luau | no split needed</td></tr>
             <tr><td>Multiple systems, routes shared between server and client</td><td>Routes module in ReplicatedStorage</td></tr>
-            <tr><td>System needs setup before registering (DataStore, Bridge)</td><td>Style B &mdash; Register(app)</td></tr>
-            <tr><td>You want to enumerate or test routes programmatically</td><td>Style A &mdash; table of handlers</td></tr>
-            <tr><td>Large team, each person owns a system</td><td>Style B per system &mdash; each module is self-contained</td></tr>
+            <tr><td>System needs setup before registering (DataStore, Bridge)</td><td>Style B | Register(app)</td></tr>
+            <tr><td>You want to enumerate or test routes programmatically</td><td>Style A | table of handlers</td></tr>
+            <tr><td>Large team, each person owns a system</td><td>Style B per system | each module is self-contained</td></tr>
           </tbody>
         </table>
 
         <h2>See also</h2>
         <p>
-          <a href="./guide-mvc.html">MVC Pattern</a> &mdash; taking organisation further with models and controllers &nbsp;&middot;&nbsp;
-          <a href="./guide-middleware.html">Middleware</a> &mdash; adding guards without touching handlers &nbsp;&middot;&nbsp;
-          <a href="./app.html">App</a> &mdash; full route registration API
+          <a href="./guide-mvc.html">MVC Pattern</a> | taking organisation further with models and controllers &nbsp;&middot;&nbsp;
+          <a href="./guide-middleware.html">Middleware</a> | adding guards without touching handlers &nbsp;&middot;&nbsp;
+          <a href="./app.html">App</a> | full route registration API
         </p>
 
       </section>

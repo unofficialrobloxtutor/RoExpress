@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Harpy — RoExpress Server API</title>
+  <title>Harpy | RoExpress Server API</title>
   <meta name="description" content="Harpy is RoExpress's outbound HTTP client. Set a base URL and shared headers once, then call Get/Post/Put/Delete with retry, backoff, and a chainable Promise API.">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#8b78ff">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/pages/harpy.html">
-  <meta property="og:title" content="Harpy — RoExpress Server API">
+  <meta property="og:title" content="Harpy | RoExpress Server API">
   <meta property="og:description" content="Outbound HTTP client with base URL, shared headers, retry, and chainable Promise API.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
@@ -33,10 +33,10 @@
         <h1>Harpy <span class="nb nb-green">NEW</span></h1>
         <p class="lead">Outbound HTTP client for server-to-external-API calls. Set a base URL and shared headers once; every subsequent request uses them automatically. Failed requests retry with exponential backoff. Every method returns a consistent response shape, and async variants return a chainable <a href="./promise.html">Promise</a>.</p>
 
-        <div class="cl warn"><strong>Server only</strong> &mdash; <code>HttpService:RequestAsync</code> is not available on the client. Harpy will error if called from a LocalScript.</div>
+        <div class="cl warn"><strong>Server only</strong> | <code>HttpService:RequestAsync</code> is not available on the client. Harpy will error if called from a LocalScript.</div>
 
         <h2>Setup</h2>
-        <p>Harpy is a factory &mdash; create one client per external API and configure it once:</p>
+        <p>Harpy is a factory | create one client per external API and configure it once:</p>
 
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
 <span class="kw">local</span> Harpy     <span class="op">=</span> RoExpress.Harpy
@@ -69,7 +69,7 @@ client:<span class="fn">Get</span>(<span class="str">"/players/123"</span>, <spa
     <span class="kw">end</span>
 <span class="kw">end</span>)
 
-<span class="cm">-- POST — body table is JSON-encoded automatically</span>
+<span class="cm">-- POST | body table is JSON-encoded automatically</span>
 client:<span class="fn">Post</span>(<span class="str">"/events"</span>, {
     type   <span class="op">=</span> <span class="str">"round_end"</span>,
     winner <span class="op">=</span> <span class="str">"Player1"</span>,
@@ -120,13 +120,13 @@ client:<span class="fn">PostAsync</span>(<span class="str">"/scores"</span>, { u
         <table class="tbl">
           <thead><tr><th>Attempt</th><th>Wait before retry</th></tr></thead>
           <tbody>
-            <tr><td>1 (first try)</td><td>&mdash;</td></tr>
+            <tr><td>1 (first try)</td><td>|</td></tr>
             <tr><td>2</td><td>1 s</td></tr>
             <tr><td>3</td><td>2 s</td></tr>
             <tr><td>4 (default max)</td><td>4 s</td></tr>
           </tbody>
         </table>
-        <p>4xx responses (client errors) are <em>not</em> retried &mdash; they are returned immediately.</p>
+        <p>4xx responses (client errors) are <em>not</em> retried | they are returned immediately.</p>
 
         <h2>API reference</h2>
 
@@ -210,7 +210,7 @@ api:<span class="fn">SetHeader</span>(<span class="str">"X-Api-Key"</span>, API_
 <span class="kw">end</span></code></pre>
 
         <h3>Multiple APIs in the same game</h3>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Each client is independent — different base URL, different headers</span>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Each client is independent | different base URL, different headers</span>
 <span class="kw">local</span> analyticsClient <span class="op">=</span> Harpy.<span class="fn">New</span>({ base <span class="op">=</span> <span class="str">"https://analytics.example.com"</span> })
 <span class="kw">local</span> webhookClient   <span class="op">=</span> Harpy.<span class="fn">New</span>({ base <span class="op">=</span> DISCORD_WEBHOOK_URL, retries <span class="op">=</span> <span class="num">1</span> })
 <span class="kw">local</span> scoresClient    <span class="op">=</span> Harpy.<span class="fn">New</span>({ base <span class="op">=</span> <span class="str">"https://scores.example.com"</span> })
@@ -222,9 +222,9 @@ scoresClient:<span class="fn">SetHeader</span>(<span class="str">"X-Api-Key"</sp
 
         <h2>See also</h2>
         <p>
-          <a href="./promise.html">Promise</a> &mdash; the chainable async API returned by <code>*Async</code> methods &nbsp;&middot;&nbsp;
-          <a href="./app.html">App</a> &mdash; inbound routing (server receives requests from clients) &nbsp;&middot;&nbsp;
-          <a href="./network.html">Network</a> &mdash; client-to-server requests (the other direction)
+          <a href="./promise.html">Promise</a> | the chainable async API returned by <code>*Async</code> methods &nbsp;&middot;&nbsp;
+          <a href="./app.html">App</a> | inbound routing (server receives requests from clients) &nbsp;&middot;&nbsp;
+          <a href="./network.html">Network</a> | client-to-server requests (the other direction)
         </p>
 
       </section>

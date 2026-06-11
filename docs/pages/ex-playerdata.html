@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Player Data Example — RoExpress Docs</title>
+  <title>Player Data Example | RoExpress Docs</title>
   <meta name="description" content="RoExpress Player Data example: load from DataStore on join, push to client reliably, save on route request or on leave.">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#8b78ff">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/pages/ex-playerdata.html">
-  <meta property="og:title" content="Player Data Example — RoExpress Docs">
+  <meta property="og:title" content="Player Data Example | RoExpress Docs">
   <meta property="og:description" content="Load from DataStore on join, push to client, save on route or leave.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
@@ -75,18 +75,18 @@ app:<span class="fn">Get</span>(<span class="str">"player/data"</span>, <span cl
         <table class="tbl">
           <thead><tr><th>Pattern</th><th>Detail</th></tr></thead>
           <tbody>
-            <tr><td>Push on join</td><td>Server pushes data immediately after load — client doesn't have to poll</td></tr>
+            <tr><td>Push on join</td><td>Server pushes data immediately after load | client doesn't have to poll</td></tr>
             <tr><td><code>listener:Once</code></td><td>Subscribe exactly once, disconnect automatically after receipt</td></tr>
-            <tr><td>Error status</td><td><code>res:Status(500):Error(err)</code> — proper HTTP-style errors</td></tr>
+            <tr><td>Error status</td><td><code>res:Status(500):Error(err)</code> | proper HTTP-style errors</td></tr>
           </tbody>
         </table>
 
         <h2>See also</h2>
         <p>
           <a href="./push.html">Server Push</a> &nbsp;·&nbsp;
-          <a href="./listener.html">Listener</a> — <code>Once</code> API &nbsp;·&nbsp;
+          <a href="./listener.html">Listener</a> | <code>Once</code> API &nbsp;·&nbsp;
           <a href="./app.html">App</a> &nbsp;·&nbsp;
-          <a href="./guide-mvc.html">MVC Pattern</a> — clean PlayerModel architecture
+          <a href="./guide-mvc.html">MVC Pattern</a> | clean PlayerModel architecture
         </p>
       </section>
     </main>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stream — RoExpress Docs</title>
+  <title>Stream | RoExpress Docs</title>
   <meta name="description" content="RoExpress Stream: schema-defined typed binary channels multiplexed over shared remotes. 20 built-in wire types, delta compression, rate limiting, sequence numbers.">
   <meta name="keywords" content="roblox, luau, stream, binary, buffer, schema, channel, delta compression, unreliable remote, fps networking, roexpress">
   <meta name="author" content="DeathToTheStadium">
@@ -12,7 +12,7 @@
   <meta name="theme-color" content="#8b78ff">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/stream/">
-  <meta property="og:title" content="Stream — RoExpress Docs">
+  <meta property="og:title" content="Stream | RoExpress Docs">
   <meta property="og:description" content="Schema-defined typed binary channels. 20 built-in wire types, delta compression, sequence numbers.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
@@ -43,7 +43,7 @@
 
         <div class="eyebrow">Shared Module</div>
         <h1>Stream</h1>
-        <p class="lead">Schema-defined typed binary channels multiplexed over two shared remotes. No JSON, no Base64. Both server and client define identical channels — IDs are hash-derived, so there is no ordering dependency between registration calls.</p>
+        <p class="lead">Schema-defined typed binary channels multiplexed over two shared remotes. No JSON, no Base64. Both server and client define identical channels | IDs are hash-derived, so there is no ordering dependency between registration calls.</p>
 
         <div class="cl new"><strong>Breaking change from v2.1.</strong> The old FPS-specific singleton API (<code>SendState</code>, <code>OnHit</code>, <code>EnableLagCompensation</code>, etc.) has been removed. Stream is now a general-purpose binary channel system.</div>
 
@@ -91,8 +91,8 @@ move:<span class="fn">Send</span>({
           <thead><tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
           <tbody>
             <tr><td><code>reliable</code></td><td>boolean?</td><td>false</td><td>Use RemoteEvent instead of UnreliableRemoteEvent</td></tr>
-            <tr><td><code>maxRate</code></td><td>number?</td><td>—</td><td>Max incoming fires/sec per player (server-side)</td></tr>
-            <tr><td><code>onDrop</code></td><td>fn?</td><td>—</td><td>Called when a packet is rate-limited</td></tr>
+            <tr><td><code>maxRate</code></td><td>number?</td><td>|</td><td>Max incoming fires/sec per player (server-side)</td></tr>
+            <tr><td><code>onDrop</code></td><td>fn?</td><td>|</td><td>Called when a packet is rate-limited</td></tr>
             <tr><td><code>deltaInterval</code></td><td>number?</td><td>10</td><td>Force a full resync every N delta packets</td></tr>
           </tbody>
         </table>
@@ -100,14 +100,14 @@ move:<span class="fn">Send</span>({
         <h2>Stream.Schema()</h2>
         <div class="sig"><span class="fn">Stream.Schema</span>(<span class="tp">definition</span>: {{ string | {any} }}) → Schema</div>
         <p>Compiles a schema from an ordered array of field definitions. Fixed-size schemas (no <code>string</code> fields) pre-compute byte offsets and are eligible for delta compression.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Fixed-size — all fields have known byte widths</span>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Fixed-size | all fields have known byte widths</span>
 <span class="kw">local</span> posSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>({
     { <span class="str">"pos"</span>,     <span class="str">"Vector3"</span> },   <span class="cm">-- 12 bytes</span>
     { <span class="str">"health"</span>,  <span class="str">"u16"</span>     },   <span class="cm">--  2 bytes</span>
     { <span class="str">"alive"</span>,   <span class="str">"bool"</span>    },   <span class="cm">--  1 byte</span>
 })
 
-<span class="cm">-- Variable-size — string field makes it non-fixed</span>
+<span class="cm">-- Variable-size | string field makes it non-fixed</span>
 <span class="kw">local</span> chatSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>({
     { <span class="str">"name"</span>,    <span class="str">"string"</span>  },
     { <span class="str">"message"</span>, <span class="str">"string"</span>  },
@@ -119,7 +119,7 @@ move:<span class="fn">Send</span>({
           <tbody>
             <tr><td><code>channel:SendTo(player, data)</code></td><td>Send to one player</td></tr>
             <tr><td><code>channel:SendExcept(except, data)</code></td><td>Send to all players except one</td></tr>
-            <tr><td><code>channel:Broadcast(data)</code></td><td>FireAllClients — one remote call</td></tr>
+            <tr><td><code>channel:Broadcast(data)</code></td><td>FireAllClients | one remote call</td></tr>
             <tr><td><code>channel:SendToList(players, data)</code></td><td>Send to a specific list</td></tr>
             <tr><td><code>channel:SendToDelta(player, data)</code></td><td>Delta-compressed to one player</td></tr>
             <tr><td><code>channel:BroadcastDelta(data)</code></td><td>Delta-compressed to all players</td></tr>
@@ -128,17 +128,17 @@ move:<span class="fn">Send</span>({
 
         <h2>Client send API</h2>
         <div class="sig"><span class="fn">channel:Send</span>(<span class="tp">data</span>: table)</div>
-        <p>Fires to the server. Client-only — will assert if called on the server.</p>
+        <p>Fires to the server. Client-only | will assert if called on the server.</p>
 
         <h2>Subscribe API</h2>
         <p>Works identically on both server and client.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Persistent subscription — fires every time</span>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Persistent subscription | fires every time</span>
 <span class="kw">local</span> unsub <span class="op">=</span> channel:<span class="fn">On</span>(<span class="kw">function</span>(data, sender)
     <span class="cm">-- sender is a Player on the server, nil on the client</span>
     <span class="fn">print</span>(data.pos)
 <span class="kw">end</span>)
 
-<span class="cm">-- One-shot — auto-unsubscribes after first fire</span>
+<span class="cm">-- One-shot | auto-unsubscribes after first fire</span>
 <span class="kw">local</span> unsub <span class="op">=</span> channel:<span class="fn">Once</span>(<span class="kw">function</span>(data, sender)
     <span class="fn">print</span>(<span class="str">"first packet from"</span>, sender)
 <span class="kw">end</span>)
@@ -146,11 +146,11 @@ move:<span class="fn">Send</span>({
 unsub()  <span class="cm">-- unsubscribe at any time</span></code></pre>
 
         <h2>Delta compression</h2>
-        <p>Only changed fields are sent. Requires a <strong>fixed-size schema</strong> (no <code>string</code> fields). Fields are compared at compile-time byte offsets — no per-field overhead at runtime.</p>
+        <p>Only changed fields are sent. Requires a <strong>fixed-size schema</strong> (no <code>string</code> fields). Fields are compared at compile-time byte offsets | no per-field overhead at runtime.</p>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Per-player delta (each player has its own last-known state)</span>
 channel:<span class="fn">SendToDelta</span>(player, newData)
 
-<span class="cm">-- All-players delta (each player may differ — joined at different times)</span>
+<span class="cm">-- All-players delta (each player may differ | joined at different times)</span>
 channel:<span class="fn">BroadcastDelta</span>(newData)</code></pre>
         <p>A full packet is forced on the first send and every <code>deltaInterval</code> packets (default 10). This ensures clients resync even after unreliable packet loss.</p>
 
@@ -204,7 +204,7 @@ channel:<span class="fn">BroadcastDelta</span>(newData)</code></pre>
     <span class="kw">end</span>,
 })</code></pre>
 
-        <h2>Full example — player movement</h2>
+        <h2>Full example | player movement</h2>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- shared.luau (required on both server and client)</span>
 <span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
 <span class="kw">local</span> Stream    <span class="op">=</span> RoExpress.Stream
@@ -259,20 +259,20 @@ channels.move:<span class="fn">On</span>(<span class="kw">function</span>(data, 
           <tbody>
             <tr><td><code>Stream.GetChannel(name)</code></td><td>Returns the Channel for <code>name</code>, or nil if not defined</td></tr>
             <tr><td><code>Stream.GetChannels()</code></td><td>Returns the full channel registry table (read-only)</td></tr>
-            <tr><td><code>Stream.Destroy()</code></td><td>Disconnects all remotes and clears state — useful for tests</td></tr>
+            <tr><td><code>Stream.Destroy()</code></td><td>Disconnects all remotes and clears state | useful for tests</td></tr>
             <tr><td><code>channel:Destroy()</code></td><td>Cleans up a single channel's subscriptions and rate-limit state</td></tr>
           </tbody>
         </table>
 
         <h2>See also</h2>
         <p>
-          <a href="./broadcast.html">Broadcast</a> — simpler unreliable events when binary encoding isn't needed &nbsp;·&nbsp;
-          <a href="./listener.html">Listener</a> — receive Broadcast fan-out on the client &nbsp;·&nbsp;
-          <a href="./codec.html">Codec</a> — LZH compression for large non-binary payloads &nbsp;·&nbsp;
-          <a href="./tokenbucket.html">TokenBucket</a> — rate limiting (Stream has per-channel limits built in) &nbsp;·&nbsp;
-          <a href="./guides-migration.html">Migration Guide</a> — v2 → v3 schema changes &nbsp;·&nbsp;
-          <a href="./examples-streaming.html">Streaming Example</a> — player movement replication &nbsp;·&nbsp;
-          <a href="./guides-combat.html">Combat Guide</a> — Stream for movement in a gun system
+          <a href="./broadcast.html">Broadcast</a> | simpler unreliable events when binary encoding isn't needed &nbsp;·&nbsp;
+          <a href="./listener.html">Listener</a> | receive Broadcast fan-out on the client &nbsp;·&nbsp;
+          <a href="./codec.html">Codec</a> | LZH compression for large non-binary payloads &nbsp;·&nbsp;
+          <a href="./tokenbucket.html">TokenBucket</a> | rate limiting (Stream has per-channel limits built in) &nbsp;·&nbsp;
+          <a href="./guides-migration.html">Migration Guide</a> | v2 → v3 schema changes &nbsp;·&nbsp;
+          <a href="./examples-streaming.html">Streaming Example</a> | player movement replication &nbsp;·&nbsp;
+          <a href="./guides-combat.html">Combat Guide</a> | Stream for movement in a gun system
         </p>
 
       </section>

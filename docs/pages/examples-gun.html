@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gun Framework Example — RoExpress Docs</title>
+  <title>Gun Framework Example | RoExpress Docs</title>
   <meta name="description" content="Full gun framework example using RoExpress: Port for combat, Stream for movement, Broadcast for effects, server-side hit validation, rate limiting per weapon.">
   <meta name="keywords" content="roblox, luau, roexpress, gun, framework, example, combat, port, stream, broadcast, hit validation">
   <meta name="author" content="DeathToTheStadium">
@@ -12,7 +12,7 @@
   <meta name="theme-color" content="#8b78ff">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/examples/gun/">
-  <meta property="og:title" content="Gun Framework Example — RoExpress Docs">
+  <meta property="og:title" content="Gun Framework Example | RoExpress Docs">
   <meta property="og:description" content="Complete semi-auto rifle with Ports, Stream movement, Broadcast FX, server-side validation.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
@@ -140,14 +140,14 @@ UserInput.InputBegan:<span class="fn">Connect</span>(<span class="kw">function</
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> listener <span class="op">=</span> RoExpress(<span class="str">"Listener"</span>)
 
 listener:<span class="fn">On</span>(<span class="str">"hitFX"</span>, <span class="kw">function</span>(data)
-    <span class="cm">-- Unreliable — a missed packet just means no particle</span>
+    <span class="cm">-- Unreliable | a missed packet just means no particle</span>
     <span class="fn">spawnBloodParticle</span>(data.pos)
     <span class="fn">showDamageNumber</span>(data.pos, data.dmg)
 <span class="kw">end</span>)</code></pre>
 
         <h2>See also</h2>
         <p>
-          <a href="./guides/combat/">Combat Guide</a> — explanation of the architecture &nbsp;·&nbsp;
+          <a href="./guides/combat/">Combat Guide</a> | explanation of the architecture &nbsp;·&nbsp;
           <a href="./port/">Ports</a> &nbsp;·&nbsp;
           <a href="./stream/">Stream</a> &nbsp;·&nbsp;
           <a href="./broadcast/">Broadcast</a>

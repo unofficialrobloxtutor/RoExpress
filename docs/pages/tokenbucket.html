@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TokenBucket — RoExpress Docs</title>
+  <title>TokenBucket | RoExpress Docs</title>
   <meta name="description" content="RoExpress TokenBucket: per-player rate limiting. Consume, HasTokens, Grant, GrantAll, GrantExact, Reset, Destroy. Configurable max, refill rate, cost.">
   <meta name="keywords" content="roblox, luau, roexpress, tokenbucket, rate limit, consume, grant, refill, per-player, throttle">
   <meta name="author" content="DeathToTheStadium">
@@ -12,7 +12,7 @@
   <meta name="theme-color" content="#8b78ff">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/tokenbucket/">
-  <meta property="og:title" content="TokenBucket — RoExpress Docs">
+  <meta property="og:title" content="TokenBucket | RoExpress Docs">
   <meta property="og:description" content="Per-player token bucket rate limiter. Used internally by App and Port; also available standalone.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
@@ -54,7 +54,7 @@
 
         <h2>API</h2>
         <div class="sig">bucket:<span class="fn">Consume</span>(player) → boolean</div>
-        <p>Attempts to consume <code>cost</code> tokens from the player's bucket. Returns <code>true</code> on success, <code>false</code> if empty (rate limit hit). This is what the request pipeline calls automatically — you don't usually need to call it directly.</p>
+        <p>Attempts to consume <code>cost</code> tokens from the player's bucket. Returns <code>true</code> on success, <code>false</code> if empty (rate limit hit). This is what the request pipeline calls automatically | you don't usually need to call it directly.</p>
         <div class="sig">bucket:<span class="fn">HasTokens</span>(player) → boolean</div>
         <p>Check without consuming. Useful for preemptive UI feedback.</p>
         <div class="sig">bucket:<span class="fn">Grant</span>(player, amount)</div>
@@ -76,10 +76,10 @@ app:<span class="fn">Listen</span>(<span class="str">"economy"</span>, <span cla
 
         <h2>See also</h2>
         <p>
-          <a href="./pipeline.html">Request Pipeline</a> — TokenBucket is stage 2 (<span class="pill p-warn">429</span> on empty) &nbsp;·&nbsp;
-          <a href="./app.html">App</a> — <code>app.TokenBucket</code> direct access &nbsp;·&nbsp;
-          <a href="./port.html">Port</a> — per-port rate limiting settings &nbsp;·&nbsp;
-          <a href="./tamper.html">Tamper</a> — flood detection using TokenBucket exhaustion signals
+          <a href="./pipeline.html">Request Pipeline</a> | TokenBucket is stage 2 (<span class="pill p-warn">429</span> on empty) &nbsp;·&nbsp;
+          <a href="./app.html">App</a> | <code>app.TokenBucket</code> direct access &nbsp;·&nbsp;
+          <a href="./port.html">Port</a> | per-port rate limiting settings &nbsp;·&nbsp;
+          <a href="./tamper.html">Tamper</a> | flood detection using TokenBucket exhaustion signals
         </p>
 
       </section>

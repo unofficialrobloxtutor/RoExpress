@@ -1,4 +1,4 @@
-/* RoExpress Docs — shared navigation, search, and UI
+﻿/* RoExpress Docs | shared navigation, search, and UI
    Pages at /docs/index.html use: css/styles.css  nav.js
    Pages at /docs/pages/*.html use: ../css/styles.css  ../nav.js
 */

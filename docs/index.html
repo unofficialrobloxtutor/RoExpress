@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RoExpress Docs — The Complete Roblox Networking Stack</title>
-  <meta name="description" content="RoExpress: the first complete networking stack for Roblox. Typed routing, server push, binary streaming, outbound HTTP, exploit detection, and compression — every layer, one framework.">
+  <title>RoExpress Docs | The Complete Roblox Networking Stack</title>
+  <meta name="description" content="RoExpress: the first complete networking stack for Roblox. Typed routing, server push, binary streaming, outbound HTTP, exploit detection, and compression | every layer, one framework.">
   <meta name="keywords" content="roblox, luau, networking, remoteevent, framework, express, roexpress, typed routes, server push, rate limiting, binary stream">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
@@ -21,7 +21,7 @@
     "@type": "SoftwareApplication",
     "name": "RoExpress",
     "version": "2.4.0",
-    "description": "The first complete networking stack for Roblox — typed routing, middleware, server push, binary streaming, outbound HTTP, exploit detection, and compression in one framework.",
+    "description": "The first complete networking stack for Roblox | typed routing, middleware, server push, binary streaming, outbound HTTP, exploit detection, and compression in one framework.",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Roblox",
     "programmingLanguage": "Luau",
@@ -50,36 +50,36 @@
       <section class="doc" id="overview">
 
         <div class="eyebrow">Getting Started</div>
-        <h1>RoExpress &mdash; <em>the complete networking stack</em> for Roblox</h1>
+        <h1>RoExpress | <em>the complete networking stack</em> for Roblox</h1>
         <p class="lead">The first Roblox framework that covers every layer of networking in one place: inbound routing with typed params and middleware, reliable server push, tick-rate binary streaming, outbound HTTP to external APIs, built-in exploit detection, per-player rate limiting, and Deflate compression. Stop patching together RemoteEvents. Start with a stack that is already complete.</p>
 
         <div class="cl new"><strong>v2.4 is here.</strong> Deflate compression (LZ77 + Huffman), automatic retry with exponential backoff, Stream generic channels, and fully typed <code>GetApp()</code> / <code>GetNetwork()</code> accessors.</div>
 
         <h2>Module tree</h2>
         <div class="mt"><span class="mt-r">RoExpress</span>
-<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">App</span>           <span class="mt-d">server  &mdash; routing, middleware, server push</span>
-<span class="mt-m">&#9474;   &#9500;&#9472;&#9472;</span> <span class="mt-n">Router</span>        <span class="mt-d">&mdash; typed params, wildcards, globs, constraints</span>
-<span class="mt-m">&#9474;   &#9492;&#9472;&#9472;</span> <span class="mt-n">TokenBucket</span>   <span class="mt-d">&mdash; per-instance rate limiter</span>
-<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Network</span>       <span class="mt-d">client  &mdash; request/response, retry, Promise API</span>
-<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Broadcast</span>     <span class="mt-d">server  &mdash; unreliable fire-and-forget</span>
-<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Listener</span>      <span class="mt-d">client  &mdash; broadcast + reliable push subscriptions</span>
-<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Bridge</span>        <span class="mt-d">shared  &mdash; internal server-side event bus</span>
-<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Tamper</span>        <span class="mt-d">server  &mdash; passive exploit detection &amp; strike system</span>
-<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Codec</span>         <span class="mt-d">shared  &mdash; Deflate compression (LZ77 + Huffman)</span>
-<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Port</span>          <span class="mt-d">server  &mdash; named isolated pipelines</span>
-<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Stream</span>        <span class="mt-d">shared  &mdash; schema-defined typed binary channels</span>
-<span class="mt-m">&#9474;   &#9500;&#9472;&#9472;</span> <span class="mt-n">Types</span>         <span class="mt-d">&mdash; 20 built-in wire types + custom extension</span>
-<span class="mt-m">&#9474;   &#9500;&#9472;&#9472;</span> <span class="mt-n">Schema</span>        <span class="mt-d">&mdash; compile-time offsets, pack/unpack, delta</span>
-<span class="mt-m">&#9474;   &#9492;&#9472;&#9472;</span> <span class="mt-n">Channel</span>       <span class="mt-d">&mdash; instance, rate limiting, sequence numbers</span>
-<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">TypeCoercer</span>   <span class="mt-d">shared  &mdash; Roblox type serialisation utility</span>
-<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Promise</span>       <span class="mt-d">client  &mdash; chainable async Network API</span>
-<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Benchmark</span>     <span class="mt-d">client  &mdash; round-trip latency measurement</span>
-<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Harpy</span>         <span class="mt-d">server  &mdash; outbound HTTP client (base URL, headers, retry)</span>
-<span class="mt-m">&#9492;&#9472;&#9472;</span> <span class="mt-n">Base64</span>        <span class="mt-d">shared  &mdash; encode/decode utility</span></div>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">App</span>           <span class="mt-d">server  | routing, middleware, server push</span>
+<span class="mt-m">&#9474;   &#9500;&#9472;&#9472;</span> <span class="mt-n">Router</span>        <span class="mt-d">| typed params, wildcards, globs, constraints</span>
+<span class="mt-m">&#9474;   &#9492;&#9472;&#9472;</span> <span class="mt-n">TokenBucket</span>   <span class="mt-d">| per-instance rate limiter</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Network</span>       <span class="mt-d">client  | request/response, retry, Promise API</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Broadcast</span>     <span class="mt-d">server  | unreliable fire-and-forget</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Listener</span>      <span class="mt-d">client  | broadcast + reliable push subscriptions</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Bridge</span>        <span class="mt-d">shared  | internal server-side event bus</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Tamper</span>        <span class="mt-d">server  | passive exploit detection &amp; strike system</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Codec</span>         <span class="mt-d">shared  | Deflate compression (LZ77 + Huffman)</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Port</span>          <span class="mt-d">server  | named isolated pipelines</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Stream</span>        <span class="mt-d">shared  | schema-defined typed binary channels</span>
+<span class="mt-m">&#9474;   &#9500;&#9472;&#9472;</span> <span class="mt-n">Types</span>         <span class="mt-d">| 20 built-in wire types + custom extension</span>
+<span class="mt-m">&#9474;   &#9500;&#9472;&#9472;</span> <span class="mt-n">Schema</span>        <span class="mt-d">| compile-time offsets, pack/unpack, delta</span>
+<span class="mt-m">&#9474;   &#9492;&#9472;&#9472;</span> <span class="mt-n">Channel</span>       <span class="mt-d">| instance, rate limiting, sequence numbers</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">TypeCoercer</span>   <span class="mt-d">shared  | Roblox type serialisation utility</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Promise</span>       <span class="mt-d">client  | chainable async Network API</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Benchmark</span>     <span class="mt-d">client  | round-trip latency measurement</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Harpy</span>         <span class="mt-d">server  | outbound HTTP client (base URL, headers, retry)</span>
+<span class="mt-m">&#9492;&#9472;&#9472;</span> <span class="mt-n">Base64</span>        <span class="mt-d">shared  | encode/decode utility</span></div>
 
         <h2 id="installation">Installation</h2>
 
-        <p>The fastest way is the Studio command bar &mdash; paste one line and you're done. <a href="pages/installation.html">Full install guide &rarr;</a></p>
+        <p>The fastest way is the Studio command bar | paste one line and you're done. <a href="pages/installation.html">Full install guide &rarr;</a></p>
 
         <pre><button class="cb" onclick="cp(this)">copy</button><code>local H=game:GetService"HttpService";loadstring(H:GetAsync"https://raw.githubusercontent.com/unofficialrobloxtutor/RoExpress/main/install.lua")()</code></pre>
 
@@ -93,7 +93,7 @@ RoExpress = "unofficialrobloxtutor/roexpress@2.4.0"</code></pre>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
 <span class="kw">local</span> app       <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
 
-<span class="cm">-- global middleware — runs before every handler</span>
+<span class="cm">-- global middleware | runs before every handler</span>
 app:<span class="fn">Use</span>(<span class="str">"logger"</span>, <span class="kw">function</span>(Player, Payload)
     <span class="fn">print</span>(Player.Name, Payload.method, Payload.route)
 <span class="kw">end</span>)
@@ -131,19 +131,19 @@ listener:<span class="fn">On</span>(<span class="str">"round.end"</span>, <span 
 <span class="kw">end</span>)</code></pre>
 
         <h2 id="accessors">Context accessors</h2>
-        <p>There are three access forms. Use <strong>typed accessors</strong> for App and Network — Luau infers the full type automatically so autocomplete and type checking work without an annotation. The call form (<code>RoExpress("Name")</code>) returns <code>any</code>. Property access (<code>RoExpress.Name</code>) is used for utility modules that don't need instantiation.</p>
+        <p>There are three access forms. Use <strong>typed accessors</strong> for App and Network | Luau infers the full type automatically so autocomplete and type checking work without an annotation. The call form (<code>RoExpress("Name")</code>) returns <code>any</code>. Property access (<code>RoExpress.Name</code>) is used for utility modules that don't need instantiation.</p>
         <table class="tbl">
           <thead>
             <tr><th>Call</th><th>Context</th><th>Returns</th></tr>
           </thead>
           <tbody>
             <tr style="background:rgba(139,120,255,.04)">
-              <td colspan="3" style="color:var(--text3);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px">Typed accessors — use these</td>
+              <td colspan="3" style="color:var(--text3);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px">Typed accessors | use these</td>
             </tr>
-            <tr><td><code>RoExpress.GetApp()</code></td>      <td>Server</td><td>App — fully typed, autocomplete works</td></tr>
-            <tr><td><code>RoExpress.GetNetwork()</code></td>  <td>Client</td><td>Network — fully typed, autocomplete works</td></tr>
+            <tr><td><code>RoExpress.GetApp()</code></td>      <td>Server</td><td>App | fully typed, autocomplete works</td></tr>
+            <tr><td><code>RoExpress.GetNetwork()</code></td>  <td>Client</td><td>Network | fully typed, autocomplete works</td></tr>
             <tr style="background:rgba(139,120,255,.04)">
-              <td colspan="3" style="color:var(--text3);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px">Named ports — client side</td>
+              <td colspan="3" style="color:var(--text3);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px">Named ports | client side</td>
             </tr>
             <tr><td><code>RoExpress("Network", "portName")</code></td> <td>Client</td><td>Network wired to the named port's RemoteEvent</td></tr>
             <tr><td><code>RoExpress("Listener", "portName")</code></td><td>Client</td><td>Listener wired to the named port's RemoteEvent</td></tr>
@@ -159,20 +159,20 @@ listener:<span class="fn">On</span>(<span class="str">"round.end"</span>, <span 
             <tr><td><code>RoExpress.Tamper</code></td>        <td>Server</td><td>Tamper singleton</td></tr>
           </tbody>
         </table>
-        <p>Calling a server-only module on the client (or vice versa) throws an assertion with the context name. Port names on the server side are ignored — ports are created via <code>app:Listen()</code>, not via the accessor.</p>
+        <p>Calling a server-only module on the client (or vice versa) throws an assertion with the context name. Port names on the server side are ignored | ports are created via <code>app:Listen()</code>, not via the accessor.</p>
 
         <h2 id="pipeline">Request pipeline</h2>
         <p>Every incoming request passes through the same stages in order:</p>
         <table class="tbl">
           <thead><tr><th>#</th><th>Stage</th><th>Rejects with</th></tr></thead>
           <tbody>
-            <tr><td>1</td><td>Version check &mdash; Tamper discards packets with a mismatched framework version</td><td>silent drop</td></tr>
-            <tr><td>2</td><td>TokenBucket &mdash; per-player rate limiter consumes one token</td><td>429</td></tr>
-            <tr><td>3</td><td>Payload validation &mdash; method, route, and body shape checked</td><td>400 / Tamper strike</td></tr>
-            <tr><td>4</td><td>Global middleware &mdash; each registered handler runs in order; <code>return false</code> stops the chain</td><td>403</td></tr>
-            <tr><td>5</td><td>Route match &mdash; Router finds the first matching pattern and extracts typed params</td><td>404</td></tr>
-            <tr><td>6</td><td>Route middleware &mdash; any <code>:Use</code> scoped to this route</td><td>403</td></tr>
-            <tr><td>7</td><td>Handler &mdash; your code runs; <code>res:Send()</code> or <code>res:Error()</code> fires the response</td><td>500 on unhandled error</td></tr>
+            <tr><td>1</td><td>Version check | Tamper discards packets with a mismatched framework version</td><td>silent drop</td></tr>
+            <tr><td>2</td><td>TokenBucket | per-player rate limiter consumes one token</td><td>429</td></tr>
+            <tr><td>3</td><td>Payload validation | method, route, and body shape checked</td><td>400 / Tamper strike</td></tr>
+            <tr><td>4</td><td>Global middleware | each registered handler runs in order; <code>return false</code> stops the chain</td><td>403</td></tr>
+            <tr><td>5</td><td>Route match | Router finds the first matching pattern and extracts typed params</td><td>404</td></tr>
+            <tr><td>6</td><td>Route middleware | any <code>:Use</code> scoped to this route</td><td>403</td></tr>
+            <tr><td>7</td><td>Handler | your code runs; <code>res:Send()</code> or <code>res:Error()</code> fires the response</td><td>500 on unhandled error</td></tr>
           </tbody>
         </table>
 
@@ -182,10 +182,10 @@ listener:<span class="fn">On</span>(<span class="str">"round.end"</span>, <span 
           <tbody>
             <tr><td>2.4.0</td><td><span class="pill p-new">current</span></td><td>Deflate compression &middot; Automatic retry &middot; Stream generic channels &middot; Typed accessors</td></tr>
             <tr><td>2.3.0</td><td>shipped</td><td>PUT &amp; DELETE &middot; Compact handler args &middot; Codec LZ77 upgrade &middot; TypeCoercer: UDim, Rect, UDim2</td></tr>
-            <tr><td>2.2.3</td><td>shipped</td><td>Issue #6 fix &mdash; listener:Once race condition under rapid events</td></tr>
+            <tr><td>2.2.3</td><td>shipped</td><td>Issue #6 fix | listener:Once race condition under rapid events</td></tr>
             <tr><td>2.2.0</td><td>shipped</td><td>TypeCoercer &middot; Promise &middot; Server Push &middot; Tamper &middot; TokenBucket Grant</td></tr>
             <tr><td>2.1.0</td><td>shipped</td><td>Stream v2 &middot; Named Ports &middot; Benchmark &middot; Bridge.BindOnce</td></tr>
-            <tr><td>2.0.0</td><td>shipped</td><td>Full rewrite &mdash; App, Router, Network, Listener, Bridge, Codec, Broadcast</td></tr>
+            <tr><td>2.0.0</td><td>shipped</td><td>Full rewrite | App, Router, Network, Listener, Bridge, Codec, Broadcast</td></tr>
           </tbody>
         </table>
         <p>Next: YouTube gun framework showcase, then awesome-roblox submission. See the <a href="pages/roadmap.html">Roadmap</a> for the full picture.</p>

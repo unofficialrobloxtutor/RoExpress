@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Codec — RoExpress Docs</title>
+  <title>Codec | RoExpress Docs</title>
   <meta name="description" content="RoExpress Codec module: LZ77 and LZH (Deflate) compression. Compress large payloads, check if data is already compressed, auto-decompress on receive.">
   <meta name="keywords" content="roblox, luau, roexpress, codec, lz77, lzh, deflate, compress, decompress, iscompressed">
   <meta name="author" content="DeathToTheStadium">
@@ -12,7 +12,7 @@
   <meta name="theme-color" content="#8b78ff">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/codec/">
-  <meta property="og:title" content="Codec — RoExpress Docs">
+  <meta property="og:title" content="Codec | RoExpress Docs">
   <meta property="og:description" content="LZ77 and LZH (Deflate) compression for large Roblox payloads.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
@@ -62,13 +62,13 @@
 <span class="kw">local</span> table <span class="op">=</span> game:GetService(<span class="str">"HttpService"</span>):<span class="fn">JSONDecode</span>(back)</code></pre>
 
         <h2>Automatic compression via App</h2>
-        <p>Pass <code>compress = true</code> in route options. The client receives the response decompressed automatically — <code>NetworkResponse.compressed</code> is set to <code>true</code> so you know it was applied:</p>
+        <p>Pass <code>compress = true</code> in route options. The client receives the response decompressed automatically | <code>NetworkResponse.compressed</code> is set to <code>true</code> so you know it was applied:</p>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Server</span>
 app:<span class="fn">Get</span>(<span class="str">"map/data"</span>, <span class="kw">function</span>(req, res)
     res:<span class="fn">Send</span>(largeMapTable)
 <span class="kw">end</span>, { compress <span class="op">=</span> <span class="kw">true</span> })
 
-<span class="cm">-- Client — data is already decompressed</span>
+<span class="cm">-- Client | data is already decompressed</span>
 network:<span class="fn">Get</span>(<span class="str">"map/data"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res)
     <span class="fn">print</span>(res.compressed)  <span class="cm">-- true</span>
     <span class="fn">loadMap</span>(res.data)
@@ -78,8 +78,8 @@ network:<span class="fn">Get</span>(<span class="str">"map/data"</span>, <span c
         <table class="tbl">
           <thead><tr><th>Scenario</th><th>Recommendation</th></tr></thead>
           <tbody>
-            <tr><td>Large repeated-structure data (map tiles, inventories)</td><td>LZH — better ratio</td></tr>
-            <tr><td>High frequency small updates</td><td>Don't compress — overhead not worth it</td></tr>
+            <tr><td>Large repeated-structure data (map tiles, inventories)</td><td>LZH | better ratio</td></tr>
+            <tr><td>High frequency small updates</td><td>Don't compress | overhead not worth it</td></tr>
             <tr><td>Binary buffer data</td><td>Use <a href="./stream.html">Stream</a> instead</td></tr>
             <tr><td>Need to check before decompress</td><td><code>Codec:IsCompressed(data)</code></td></tr>
           </tbody>
@@ -87,10 +87,10 @@ network:<span class="fn">Get</span>(<span class="str">"map/data"</span>, <span c
 
         <h2>See also</h2>
         <p>
-          <a href="./stream.html">Stream</a> — binary typed channels (better for structured high-frequency data) &nbsp;·&nbsp;
-          <a href="./base64.html">Base64</a> — encoding utility used internally by Codec &nbsp;·&nbsp;
-          <a href="./app.html">App</a> — <code>options.compress</code> route flag &nbsp;·&nbsp;
-          <a href="./examples-inventory.html">Inventory Example</a> — large payload compression
+          <a href="./stream.html">Stream</a> | binary typed channels (better for structured high-frequency data) &nbsp;·&nbsp;
+          <a href="./base64.html">Base64</a> | encoding utility used internally by Codec &nbsp;·&nbsp;
+          <a href="./app.html">App</a> | <code>options.compress</code> route flag &nbsp;·&nbsp;
+          <a href="./examples-inventory.html">Inventory Example</a> | large payload compression
         </p>
 
       </section>

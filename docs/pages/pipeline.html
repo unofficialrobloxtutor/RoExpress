@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Request Pipeline — RoExpress Docs</title>
+  <title>Request Pipeline | RoExpress Docs</title>
   <meta name="description" content="RoExpress request pipeline: version check, token bucket rate limiting, middleware, route matching, handler dispatch. Status codes 400, 403, 404, 429, 500 explained.">
   <meta name="keywords" content="roblox, luau, roexpress, pipeline, request, middleware, rate limit, 400, 403, 404, 429, 500, version check">
   <meta name="author" content="DeathToTheStadium">
@@ -12,7 +12,7 @@
   <meta name="theme-color" content="#8b78ff">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/pipeline/">
-  <meta property="og:title" content="Request Pipeline — RoExpress Docs">
+  <meta property="og:title" content="Request Pipeline | RoExpress Docs">
   <meta property="og:description" content="How RoExpress processes every incoming request: version, rate limit, middleware, route, handler.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
@@ -37,28 +37,28 @@
         <div class="pipe">
           <div class="ps">
             <div class="pn">1</div>
-            <div class="pl"><strong>Version check</strong> <span class="pc">— mismatch → silent reject + Tamper strike</span></div>
+            <div class="pl"><strong>Version check</strong> <span class="pc">| mismatch → silent reject + Tamper strike</span></div>
           </div>
           <div class="ps">
             <div class="pn">2</div>
-            <div class="pl"><strong>TokenBucket</strong> <span class="pill">429</span> <span class="pc">— empty bucket → 429 Too Many Requests</span></div>
+            <div class="pl"><strong>TokenBucket</strong> <span class="pill">429</span> <span class="pc">| empty bucket → 429 Too Many Requests</span></div>
           </div>
           <div class="ps">
             <div class="pn">3</div>
-            <div class="pl"><strong>Middleware</strong> <span class="pill">403</span> <span class="pill">500</span> <span class="pc">— return false → 403 · unhandled error → 500</span></div>
+            <div class="pl"><strong>Middleware</strong> <span class="pill">403</span> <span class="pill">500</span> <span class="pc">| return false → 403 · unhandled error → 500</span></div>
           </div>
           <div class="ps">
             <div class="pn">4</div>
-            <div class="pl"><strong>Route matching</strong> <span class="pill">404</span> <span class="pill">400</span> <span class="pc">— no match → 404 · coercion failure → 400</span></div>
+            <div class="pl"><strong>Route matching</strong> <span class="pill">404</span> <span class="pill">400</span> <span class="pc">| no match → 404 · coercion failure → 400</span></div>
           </div>
           <div class="ps">
             <div class="pn">5</div>
-            <div class="pl"><strong>Handler dispatch</strong> <span class="pill">500</span> <span class="pc">— unhandled error → 500 · no Send() → implicit 200</span></div>
+            <div class="pl"><strong>Handler dispatch</strong> <span class="pill">500</span> <span class="pc">| unhandled error → 500 · no Send() → implicit 200</span></div>
           </div>
         </div>
 
         <h2>Expanded detail</h2>
-        <p><strong>Version check:</strong> The payload is validated against the expected RoExpress protocol version. A version mismatch is recorded as a <a href="./tamper.html">Tamper</a> strike and the request is rejected silently — no response is sent to the client.</p>
+        <p><strong>Version check:</strong> The payload is validated against the expected RoExpress protocol version. A version mismatch is recorded as a <a href="./tamper.html">Tamper</a> strike and the request is rejected silently | no response is sent to the client.</p>
         <p><strong>TokenBucket:</strong> The player's token bucket is checked. If empty, the request is rejected immediately with 429. Tokens refill continuously at the configured <code>refillRate</code> per second.</p>
         <p><strong>Middleware:</strong> Each registered middleware runs in registration order. Return <code>false</code> to send 403 and stop processing. An unhandled error sends 500.</p>
         <p><strong>Route matching:</strong> The Router finds the best matching pattern. No match → 404 (also a Tamper signal). Typed param coercion failure → 400, or your custom <code>app:OnParamError()</code> handler.</p>
@@ -78,14 +78,14 @@
         </table>
 
         <h2>Ports run the same pipeline</h2>
-        <p>Each <a href="./port.html">Port</a> has its own independent pipeline instance — its own <a href="./tokenbucket.html">TokenBucket</a>, its own middleware stack, its own <a href="./router.html">Router</a>. A <span class="pill p-warn">429</span> on the combat port does not affect the inventory port.</p>
+        <p>Each <a href="./port.html">Port</a> has its own independent pipeline instance | its own <a href="./tokenbucket.html">TokenBucket</a>, its own middleware stack, its own <a href="./router.html">Router</a>. A <span class="pill p-warn">429</span> on the combat port does not affect the inventory port.</p>
 
         <h2>See also</h2>
         <p>
-          <a href="./app.html">App</a> — middleware and routing &nbsp;·&nbsp;
-          <a href="./tokenbucket.html">TokenBucket</a> — rate limiting &nbsp;·&nbsp;
-          <a href="./tamper.html">Tamper</a> — version check &amp; exploit detection &nbsp;·&nbsp;
-          <a href="./router.html">Router</a> — route matching &nbsp;·&nbsp;
+          <a href="./app.html">App</a> | middleware and routing &nbsp;·&nbsp;
+          <a href="./tokenbucket.html">TokenBucket</a> | rate limiting &nbsp;·&nbsp;
+          <a href="./tamper.html">Tamper</a> | version check &amp; exploit detection &nbsp;·&nbsp;
+          <a href="./router.html">Router</a> | route matching &nbsp;·&nbsp;
           <a href="./reference.html">Reference Overview</a>
         </p>
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Exported Types — RoExpress Docs</title>
+  <title>Exported Types | RoExpress Docs</title>
   <meta name="description" content="All exported Luau types from RoExpress: Payload, Request, Response, NetworkPayload, NetworkResponse, RouteHandler, MiddlewareHandler, App, Network, Port, Stream, TokenBucket.">
   <meta name="keywords" content="roblox, luau, roexpress, types, export, payload, request, response, routehandler, middlewarehandler, typecoercer">
   <meta name="author" content="DeathToTheStadium">
@@ -12,7 +12,7 @@
   <meta name="theme-color" content="#8b78ff">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/types/">
-  <meta property="og:title" content="Exported Types — RoExpress Docs">
+  <meta property="og:title" content="Exported Types | RoExpress Docs">
   <meta property="og:description" content="All exported Luau types from RoExpress v2.4.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
@@ -32,7 +32,7 @@
       <section class="doc">
         <div class="eyebrow">Reference</div>
         <h1>Exported Types</h1>
-        <p class="lead">All types are exported from the root <code>RoExpress</code> module. Import them with <code>require(RoExpress).TypeName</code>. All types forward directly from their source module — they can never drift out of sync.</p>
+        <p class="lead">All types are exported from the root <code>RoExpress</code> module. Import them with <code>require(RoExpress).TypeName</code>. All types forward directly from their source module | they can never drift out of sync.</p>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
 <span class="kw">type</span> Request <span class="op">=</span> RoExpress.Request
 <span class="kw">type</span> Response <span class="op">=</span> RoExpress.Response</code></pre>
@@ -84,7 +84,7 @@
 <span class="kw">export type</span> RouteHandlerLegacy  <span class="op">=</span>
     (Player: Player, Payload: Payload, req: Request, res: Response) -> ()
 
-<span class="cm">-- Union — accepted by app:Get() / app:Post() etc.</span>
+<span class="cm">-- Union | accepted by app:Get() / app:Post() etc.</span>
 <span class="kw">export type</span> RouteHandler <span class="op">=</span> RouteHandlerCompact | RouteHandlerLegacy
 
 <span class="kw">export type</span> MiddlewareHandler <span class="op">=</span>
@@ -104,20 +104,20 @@
         </table>
 
         <h2>Typed accessors</h2>
-        <p>Prefer <code>RoExpress.GetApp()</code> and <code>RoExpress.GetNetwork()</code> over <code>RoExpress("App")</code> and <code>RoExpress("Network")</code> — the typed accessors return fully-typed instances without requiring an explicit type annotation.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Returns RoExpress.App — no annotation needed</span>
+        <p>Prefer <code>RoExpress.GetApp()</code> and <code>RoExpress.GetNetwork()</code> over <code>RoExpress("App")</code> and <code>RoExpress("Network")</code> | the typed accessors return fully-typed instances without requiring an explicit type annotation.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Returns RoExpress.App | no annotation needed</span>
 <span class="kw">local</span> app <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
 
-<span class="cm">-- Returns RoExpress.Network — no annotation needed</span>
+<span class="cm">-- Returns RoExpress.Network | no annotation needed</span>
 <span class="kw">local</span> network <span class="op">=</span> RoExpress.<span class="fn">GetNetwork</span>()</code></pre>
 
         <h2>See also</h2>
         <p>
-          <a href="./app.html">App</a> — Request, Response, RouteHandler in use &nbsp;·&nbsp;
-          <a href="./network.html">Network</a> — NetworkResponse in use &nbsp;·&nbsp;
-          <a href="./pipeline.html">Request Pipeline</a> — how Payload flows through stages &nbsp;·&nbsp;
-          <a href="./reference.html">Reference Overview</a> — module context matrix &nbsp;·&nbsp;
-          <a href="./guides-migration.html">Migration Guide</a> — how types changed in v2.4
+          <a href="./app.html">App</a> | Request, Response, RouteHandler in use &nbsp;·&nbsp;
+          <a href="./network.html">Network</a> | NetworkResponse in use &nbsp;·&nbsp;
+          <a href="./pipeline.html">Request Pipeline</a> | how Payload flows through stages &nbsp;·&nbsp;
+          <a href="./reference.html">Reference Overview</a> | module context matrix &nbsp;·&nbsp;
+          <a href="./guides-migration.html">Migration Guide</a> | how types changed in v2.4
         </p>
 
       </section>

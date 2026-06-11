@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MVC Pattern — RoExpress Docs</title>
+  <title>MVC Pattern | RoExpress Docs</title>
   <meta name="description" content="Structure RoExpress with a Model-View-Controller pattern: PlayerModel handles data, ShopController handles routes, Bridge wires them together without coupling.">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
@@ -11,8 +11,8 @@
   <meta name="theme-color" content="#8b78ff">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/pages/guide-mvc.html">
-  <meta property="og:title" content="MVC Pattern — RoExpress Docs">
-  <meta property="og:description" content="PlayerModel + ShopController + Bridge — MVC without coupling.">
+  <meta property="og:title" content="MVC Pattern | RoExpress Docs">
+  <meta property="og:description" content="PlayerModel + ShopController + Bridge | MVC without coupling.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -90,7 +90,7 @@ Players.PlayerRemoving:<span class="fn">Connect</span>(<span class="kw">function
 
 <span class="kw">return</span> M</code></pre>
 
-        <h2>App.luau — wire it together</h2>
+        <h2>App.luau | wire it together</h2>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> app            <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"App"</span>)
 <span class="kw">local</span> ShopController <span class="op">=</span> <span class="fn">require</span>(Controllers.ShopController)
 ShopController.<span class="fn">Register</span>(app)
@@ -101,15 +101,15 @@ bridge.<span class="fn">Bind</span>(<span class="str">"player.loaded"</span>, <s
     app:<span class="fn">Push</span>(player, <span class="str">"player.data"</span>, PlayerModel.<span class="fn">Get</span>(player.UserId))
 <span class="kw">end</span>)</code></pre>
 
-        <div class="cl tip"><strong>Decoupling rule.</strong> Controllers never import each other — only models and Bridge. This means you can add a new controller without touching any existing file.</div>
+        <div class="cl tip"><strong>Decoupling rule.</strong> Controllers never import each other | only models and Bridge. This means you can add a new controller without touching any existing file.</div>
 
         <h2>See also</h2>
         <p>
           <a href="./app.html">App</a> &nbsp;·&nbsp;
-          <a href="./bridge.html">Bridge</a> — decoupling event bus &nbsp;·&nbsp;
+          <a href="./bridge.html">Bridge</a> | decoupling event bus &nbsp;·&nbsp;
           <a href="./push.html">Server Push</a> &nbsp;·&nbsp;
-          <a href="./ex-playerdata.html">Player Data</a> — flat version of this pattern &nbsp;·&nbsp;
-          <a href="./ex-shop.html">Shop</a> — flat version
+          <a href="./ex-playerdata.html">Player Data</a> | flat version of this pattern &nbsp;·&nbsp;
+          <a href="./ex-shop.html">Shop</a> | flat version
         </p>
       </section>
     </main>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inventory System Example — RoExpress Docs</title>
+  <title>Inventory System Example | RoExpress Docs</title>
   <meta name="description" content="Full inventory system using RoExpress: GET all items, POST add item, PUT update slot, DELETE remove item. Compressed responses, DataStore persistence.">
   <meta name="keywords" content="roblox, luau, roexpress, inventory, example, datastore, get, post, put, delete, codec, compress">
   <meta name="author" content="DeathToTheStadium">
@@ -12,7 +12,7 @@
   <meta name="theme-color" content="#8b78ff">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/examples/inventory/">
-  <meta property="og:title" content="Inventory System Example — RoExpress Docs">
+  <meta property="og:title" content="Inventory System Example | RoExpress Docs">
   <meta property="og:description" content="GET/POST/PUT/DELETE inventory with compressed responses and DataStore.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
@@ -66,7 +66,7 @@ game.Players.PlayerRemoving:<span class="fn">Connect</span>(<span class="kw">fun
     cache[p.UserId] <span class="op">=</span> <span class="kw">nil</span>
 <span class="kw">end</span>)
 
-<span class="cm">-- GET all items (large table — compress it)</span>
+<span class="cm">-- GET all items (large table | compress it)</span>
 app:<span class="fn">Get</span>(<span class="str">"inventory"</span>, <span class="kw">function</span>(req, res)
     res:<span class="fn">Send</span>(<span class="fn">getInv</span>(req.player))
 <span class="kw">end</span>, { compress <span class="op">=</span> <span class="kw">true</span> })
@@ -132,10 +132,10 @@ network:<span class="fn">GetAsync</span>(<span class="str">"inventory"</span>)
 
         <h2>See also</h2>
         <p>
-          <a href="./app/">App</a> — routing API &nbsp;·&nbsp;
-          <a href="./network/">Network</a> — client requests &nbsp;·&nbsp;
-          <a href="./codec/">Codec</a> — compression &nbsp;·&nbsp;
-          <a href="./router/">Router</a> — typed params &amp; range constraints
+          <a href="./app/">App</a> | routing API &nbsp;·&nbsp;
+          <a href="./network/">Network</a> | client requests &nbsp;·&nbsp;
+          <a href="./codec/">Codec</a> | compression &nbsp;·&nbsp;
+          <a href="./router/">Router</a> | typed params &amp; range constraints
         </p>
 
       </section>

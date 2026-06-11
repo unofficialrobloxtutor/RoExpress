@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tamper — RoExpress Docs</title>
+  <title>Tamper | RoExpress Docs</title>
   <meta name="description" content="RoExpress Tamper module: passive exploit detection. Detects version spoofing, malformed payloads, route scanning, and rate flooding. Configurable strike-based autokick.">
   <meta name="keywords" content="roblox, luau, roexpress, tamper, exploit, detection, autokick, strike, version spoof, rate flood, route scan">
   <meta name="author" content="DeathToTheStadium">
@@ -12,7 +12,7 @@
   <meta name="theme-color" content="#8b78ff">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/tamper/">
-  <meta property="og:title" content="Tamper — RoExpress Docs">
+  <meta property="og:title" content="Tamper | RoExpress Docs">
   <meta property="og:description" content="Passive exploit detection: version spoofing, malformed payloads, route scanning, rate flooding. Strike-based autokick.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
@@ -32,7 +32,7 @@
       <section class="doc">
         <div class="eyebrow">Server API</div>
         <h1>Tamper</h1>
-        <p class="lead">Passive exploit detection layer. Tamper observes the request pipeline and accumulates strikes against players who show suspicious behaviour. It never blocks requests itself — blocking is done by the rate limiter and middleware. Tamper is a singleton.</p>
+        <p class="lead">Passive exploit detection layer. Tamper observes the request pipeline and accumulates strikes against players who show suspicious behaviour. It never blocks requests itself | blocking is done by the rate limiter and middleware. Tamper is a singleton.</p>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Tamper <span class="op">=</span> RoExpress(<span class="str">"Tamper"</span>)</code></pre>
 
         <h2>What it detects</h2>
@@ -42,7 +42,7 @@
             <tr><td>Version spoofing</td><td>Client claims a version not matching the server expectation</td></tr>
             <tr><td>Malformed payload</td><td>Missing required fields, wrong types, or invalid method strings</td></tr>
             <tr><td>Route scanning</td><td>Repeated requests to non-existent routes in a short window</td></tr>
-            <tr><td>Rate flooding</td><td>Token bucket exhaustion attempts — firing far beyond the allowed rate</td></tr>
+            <tr><td>Rate flooding</td><td>Token bucket exhaustion attempts | firing far beyond the allowed rate</td></tr>
           </tbody>
         </table>
 
@@ -51,9 +51,9 @@
         <div class="sig">Tamper:<span class="fn">AddStrike</span>(player)</div>
         <div class="sig">Tamper:<span class="fn">ClearStrikes</span>(player)</div>
         <div class="sig">Tamper:<span class="fn">OnStrike</span>(callback)</div>
-        <p>Subscribe to <code>OnStrike</code> to implement custom logic — log to DataStore, kick immediately, or apply a temp ban. If you don't set a custom handler, the default behaviour kicks the player at 3 strikes.</p>
+        <p>Subscribe to <code>OnStrike</code> to implement custom logic | log to DataStore, kick immediately, or apply a temp ban. If you don't set a custom handler, the default behaviour kicks the player at 3 strikes.</p>
         <pre><button class="cb" onclick="cp(this)">copy</button><code>Tamper:<span class="fn">OnStrike</span>(<span class="kw">function</span>(player, strikes, reason)
-    <span class="fn">warn</span>(<span class="str">"Strike"</span>, strikes, <span class="str">"for"</span>, player.Name, <span class="str">"— reason:"</span>, reason)
+    <span class="fn">warn</span>(<span class="str">"Strike"</span>, strikes, <span class="str">"for"</span>, player.Name, <span class="str">"| reason:"</span>, reason)
     <span class="kw">if</span> strikes <span class="op">>=</span> <span class="num">3</span> <span class="kw">then</span>
         player:<span class="fn">Kick</span>(<span class="str">"Exploit detected."</span>)
     <span class="kw">end</span>
@@ -71,14 +71,14 @@
         </table>
 
         <h2>Important note</h2>
-        <div class="cl">Tamper is a <strong>detection</strong> tool, not a prevention tool. Every request still passes through the full rate-limiting and middleware pipeline regardless of strike count. Use <code>OnStrike</code> to take enforcement action — Tamper will not do it automatically unless you rely on the default 3-strike kick.</div>
+        <div class="cl">Tamper is a <strong>detection</strong> tool, not a prevention tool. Every request still passes through the full rate-limiting and middleware pipeline regardless of strike count. Use <code>OnStrike</code> to take enforcement action | Tamper will not do it automatically unless you rely on the default 3-strike kick.</div>
 
         <h2>See also</h2>
         <p>
-          <a href="./pipeline.html">Request Pipeline</a> — where version check fits in the pipeline &nbsp;·&nbsp;
-          <a href="./app.html">App Middleware</a> — block requests with <span class="pill p-err">403</span> &nbsp;·&nbsp;
-          <a href="./tokenbucket.html">TokenBucket</a> — rate limiting (<span class="pill p-warn">429</span>) &nbsp;·&nbsp;
-          <a href="./guides-auth.html">Auth Guide</a> — combining middleware with Tamper
+          <a href="./pipeline.html">Request Pipeline</a> | where version check fits in the pipeline &nbsp;·&nbsp;
+          <a href="./app.html">App Middleware</a> | block requests with <span class="pill p-err">403</span> &nbsp;·&nbsp;
+          <a href="./tokenbucket.html">TokenBucket</a> | rate limiting (<span class="pill p-warn">429</span>) &nbsp;·&nbsp;
+          <a href="./guides-auth.html">Auth Guide</a> | combining middleware with Tamper
         </p>
 
       </section>
