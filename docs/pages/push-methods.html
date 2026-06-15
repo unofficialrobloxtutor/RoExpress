@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Push Methods | RoExpress Docs</title>
+  <meta name="description" content="RoExpress Push methods: app:Push, app:PushAll, app:PushTo. Reliable server-initiated events received by listener:On on the client.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow"><a href="./push.html">Push</a> → Push Methods</div>
+        <h1>Push Methods</h1>
+        <p class="lead">Three server-initiated methods to deliver reliable events to one player, all players, or a subset. The client receives them via the existing Listener with no API changes required.</p>
+
+        <h2>Signatures</h2>
+        <div class="sig"><span class="pill p-push">PUSH</span> app:<span class="fn">Push</span>(player: Player, event: string, data: any)</div>
+        <div class="sig"><span class="pill p-push">PUSH</span> app:<span class="fn">PushAll</span>(event: string, data: any)</div>
+        <div class="sig"><span class="pill p-push">PUSH</span> app:<span class="fn">PushTo</span>(players: {Player}, event: string, data: any)</div>
+
+        <h2>Parameters</h2>
+        <table class="tbl">
+          <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>player</code></td><td>Player</td><td>Target player for <code>Push</code></td></tr>
+            <tr><td><code>players</code></td><td><code>{Player}</code></td><td>Target subset for <code>PushTo</code></td></tr>
+            <tr><td><code>event</code></td><td>string</td><td>Event name — matched by <code>listener:On(event)</code> on the client</td></tr>
+            <tr><td><code>data</code></td><td>any</td><td>Payload. Sent over reliable RemoteEvent. No 900-byte cap.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Usage</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- server</span>
+app:<span class="fn">Push</span>(player, <span class="str">"inventoryUpdate"</span>, { item <span class="op">=</span> <span class="str">"sword"</span> })
+app:<span class="fn">PushAll</span>(<span class="str">"roundEnd"</span>, { winner <span class="op">=</span> <span class="str">"PlayerA"</span> })
+app:<span class="fn">PushTo</span>({ p1, p2 }, <span class="str">"zoneAlert"</span>, { zoneId <span class="op">=</span> <span class="num">3</span> })
+
+<span class="cm">-- client | same listener, zero API change</span>
+listener:<span class="fn">On</span>(<span class="str">"inventoryUpdate"</span>, <span class="kw">function</span>(data) <span class="fn">print</span>(data.item) <span class="kw">end</span>)
+listener:<span class="fn">Once</span>(<span class="str">"roundEnd"</span>, <span class="kw">function</span>(data) UI:<span class="fn">ShowWinner</span>(data.winner) <span class="kw">end</span>)</code></pre>
+
+        <h2>Round start example</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Server: fire round.start to all players</span>
+<span class="kw">local</span> <span class="kw">function</span> <span class="fn">startRound</span>(roundData)
+    app:<span class="fn">PushAll</span>(<span class="str">"round.start"</span>, {
+        map      <span class="op">=</span> roundData.map,
+        duration <span class="op">=</span> roundData.duration,
+    })
+<span class="kw">end</span>
+
+<span class="cm">-- Client: listen for it</span>
+<span class="kw">local</span> listener <span class="op">=</span> RoExpress(<span class="str">"Listener"</span>)
+
+listener:<span class="fn">On</span>(<span class="str">"round.start"</span>, <span class="kw">function</span>(data)
+    <span class="fn">showCountdown</span>(data.duration)
+    <span class="fn">loadMap</span>(data.map)
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Port push</h2>
+        <p>Ports expose the same push interface. A push from a port is received by a Listener on the same port name.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Server: push from a port</span>
+<span class="kw">local</span> combatPort <span class="op">=</span> app:<span class="fn">GetPort</span>(<span class="str">"combat"</span>)
+combatPort:<span class="fn">Push</span>(player, <span class="str">"hit.confirmed"</span>, { damage <span class="op">=</span> <span class="num">50</span> })
+
+<span class="cm">-- Client: listener on the same port name</span>
+<span class="kw">local</span> combatListener <span class="op">=</span> RoExpress(<span class="str">"Listener"</span>, <span class="str">"combat"</span>)
+combatListener:<span class="fn">On</span>(<span class="str">"hit.confirmed"</span>, <span class="kw">function</span>(data)
+    <span class="fn">print</span>(<span class="str">"damage:"</span>, data.damage)
+<span class="kw">end</span>)</code></pre>
+
+        <div class="cl info"><strong>Internal packet type.</strong> Push packets carry <code>type = "push"</code> internally. Listener filters them so Network response packets on the same RemoteEvent are never intercepted.</div>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./push.html">← Push</a> &nbsp;·&nbsp;
+          <a href="./push-reliable.html">Reliability</a> | why Push guarantees delivery &nbsp;·&nbsp;
+          <a href="./broadcast.html">Broadcast</a> | unreliable alternative &nbsp;·&nbsp;
+          <a href="./listener.html">Listener</a> | client-side event subscription
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

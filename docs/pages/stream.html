@@ -1,33 +1,14 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stream | RoExpress Docs</title>
   <meta name="description" content="RoExpress Stream: schema-defined typed binary channels multiplexed over shared remotes. 20 built-in wire types, delta compression, rate limiting, sequence numbers.">
-  <meta name="keywords" content="roblox, luau, stream, binary, buffer, schema, channel, delta compression, unreliable remote, fps networking, roexpress">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://roexpress.dev/docs/stream/">
   <meta name="theme-color" content="#8b78ff">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://roexpress.dev/docs/stream/">
-  <meta property="og:title" content="Stream | RoExpress Docs">
-  <meta property="og:description" content="Schema-defined typed binary channels. 20 built-in wire types, delta compression, sequence numbers.">
-  <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "TechArticle",
-    "name": "RoExpress Stream",
-    "description": "Schema-defined typed binary channels for RoExpress. Multiplex over shared remotes with delta compression, rate limiting, and sequence numbers.",
-    "url": "https://roexpress.dev/docs/stream/",
-    "isPartOf": { "@type": "WebSite", "name": "RoExpress", "url": "https://roexpress.dev" }
-  }
-  </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../public/css/styles.css">
   <script src="../nav.js"></script>
@@ -36,247 +17,103 @@
   <div id="overlay" onclick="toggleSidebar()"></div>
   <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
   <header id="hdr"></header>
-  <div id="lay">
-    <nav id="sb"></nav>
-    <main id="ct">
-      <section class="doc">
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
 
-        <div class="eyebrow">Shared Module</div>
-        <h1>Stream</h1>
-        <p class="lead">Schema-defined typed binary channels multiplexed over two shared remotes. No JSON, no Base64. Both server and client define identical channels | IDs are hash-derived, so there is no ordering dependency between registration calls.</p>
+    <div class="eyebrow">Stream</div>
+    <h1>Stream</h1>
+    <p class="lead">Schema-defined typed binary channels multiplexed over two shared remotes. No JSON, no Base64. Both server and client define identical channels — IDs are hash-derived from the channel name so there is no ordering dependency between registration calls.</p>
 
-        <div class="cl new"><strong>Breaking change from v2.1.</strong> The old FPS-specific singleton API (<code>SendState</code>, <code>OnHit</code>, <code>EnableLagCompensation</code>, etc.) has been removed. Stream is now a general-purpose binary channel system.</div>
+    <div class="import-block">
+      <span>Import</span>
+      <code><span class="kw">local</span> Stream <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Stream"</span>)</code>
+      <button class="cb" onclick="cp(this)" style="position:relative;top:0;right:0">copy</button>
+    </div>
 
-        <h2>Wire format</h2>
-        <p>All channels share two remotes in <code>ReplicatedStorage/RoExpressStream/</code>:</p>
-        <table class="tbl">
-          <thead><tr><th>Remote</th><th>Type</th><th>Wire format</th></tr></thead>
-          <tbody>
-            <tr><td><code>StreamUnreliable</code></td><td>UnreliableRemoteEvent</td><td><code>[channelId:u16][seq:u16][payload]</code></td></tr>
-            <tr><td><code>StreamReliable</code></td><td>RemoteEvent</td><td><code>[channelId:u16][payload]</code></td></tr>
-          </tbody>
-        </table>
-        <p>Bit 15 of <code>channelId</code> is the delta flag. Bits 0–14 are the channel ID derived from a djb2 hash of the channel name.</p>
+    <div class="dir-grid">
 
-        <h2>Quick start</h2>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Both server and client define the same channels</span>
-<span class="kw">local</span> Stream <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Stream"</span>)
+      <a class="dir-card" href="./stream-schema.html">
+        <div class="dir-pills">
+          <span class="rtag">definition</span>
+        </div>
+        <div class="dir-title">Schema</div>
+        <div class="dir-desc">Compile a typed binary schema from an ordered field list. Fixed-size schemas enable delta compression. 20+ built-in wire types from u8 to CFrame.</div>
+        <div class="dir-foot">
+          <span class="dir-methods">Stream.Schema.New · field types</span>
+          <span class="dir-arrow">→</span>
+        </div>
+      </a>
 
-<span class="kw">local</span> move <span class="op">=</span> Stream.<span class="fn">Channel</span>(<span class="str">"playerMove"</span>, Stream.<span class="fn">Schema</span>.<span class="fn">New</span>({
-    { <span class="str">"pos"</span>,   <span class="str">"Vector3"</span> },
-    { <span class="str">"vel"</span>,   <span class="str">"Vector3"</span> },
-    { <span class="str">"state"</span>, { <span class="str">"flags"</span>, <span class="str">"jumping"</span>, <span class="str">"sprinting"</span> } },
-}))
+      <a class="dir-card" href="./stream-channels.html">
+        <div class="dir-pills">
+          <span class="rtag">channels</span>
+        </div>
+        <div class="dir-title">Channels</div>
+        <div class="dir-desc">Define typed channels with optional rate limiting and reliability. Subscribe with <code>On</code> or <code>Once</code> — both return an unsubscribe function.</div>
+        <div class="dir-foot">
+          <span class="dir-methods">Stream.Channel · Stream.Init · channel:On · channel:Once</span>
+          <span class="dir-arrow">→</span>
+        </div>
+      </a>
 
-Stream.<span class="fn">Init</span>()  <span class="cm">-- call once after all Channel() definitions</span>
+      <a class="dir-card" href="./guide-stream-server.html">
+        <div class="dir-pills">
+          <span class="rtag">server</span>
+        </div>
+        <div class="dir-title">Server Side</div>
+        <div class="dir-desc">Send to one player, exclude a player, broadcast to all, or use delta compression to send only changed bytes. Per-channel rate limiting is server-side only.</div>
+        <div class="dir-foot">
+          <span class="dir-methods">SendTo · SendExcept · Broadcast · SendToDelta</span>
+          <span class="dir-arrow">→</span>
+        </div>
+      </a>
 
-<span class="cm">-- Server: subscribe</span>
-move:<span class="fn">On</span>(<span class="kw">function</span>(data, player)
-    <span class="fn">print</span>(player.Name, data.pos, data.state.jumping)
-<span class="kw">end</span>)
+      <a class="dir-card" href="./guide-stream-client.html">
+        <div class="dir-pills">
+          <span class="rtag">client</span>
+        </div>
+        <div class="dir-title">Client Side</div>
+        <div class="dir-desc">Fire typed binary packets to the server and subscribe to server-broadcast state. Built-in sequence numbers drop out-of-order unreliable packets automatically.</div>
+        <div class="dir-foot">
+          <span class="dir-methods">channel:Send · channel:On · throttling</span>
+          <span class="dir-arrow">→</span>
+        </div>
+      </a>
 
-<span class="cm">-- Client: send</span>
-move:<span class="fn">Send</span>({
-    pos   <span class="op">=</span> hrp.Position,
-    vel   <span class="op">=</span> hrp.AssemblyLinearVelocity,
-    state <span class="op">=</span> { jumping <span class="op">=</span> <span class="kw">false</span>, sprinting <span class="op">=</span> <span class="kw">true</span> },
-})</code></pre>
+      <a class="dir-card" href="./guide-stream.html">
+        <div class="dir-pills">
+          <span class="rtag">guide</span>
+        </div>
+        <div class="dir-title">FPS Guide</div>
+        <div class="dir-desc">End-to-end walkthrough for building a movement replication system with lag compensation, history buffers, and delta-compressed broadcasts at 30 Hz.</div>
+        <div class="dir-foot">
+          <span class="dir-methods">lag compensation · history buffer</span>
+          <span class="dir-arrow">→</span>
+        </div>
+      </a>
 
-        <div class="cl info"><strong>Order matters.</strong> <code>Stream.Channel()</code> must be called before <code>Stream.Init()</code>. Define all channels first, then init once on both server and client.</div>
+      <a class="dir-card" href="./benchmark-stream.html">
+        <div class="dir-pills">
+          <span class="rtag" style="background:rgba(180,83,9,.15);color:#fbbf24">soon</span>
+        </div>
+        <div class="dir-title">Benchmarks</div>
+        <div class="dir-desc">Wire-size comparison across schema types, delta savings over repeated sends, and bandwidth vs vanilla RemoteEvent at various update rates.</div>
+        <div class="dir-foot">
+          <span class="dir-methods">bandwidth · delta savings</span>
+          <span class="dir-arrow">→</span>
+        </div>
+      </a>
 
-        <h2>Stream.Channel()</h2>
-        <div class="sig"><span class="fn">Stream.Channel</span>(<span class="tp">name</span>: string, <span class="tp">schema</span>: Schema, <span class="tp">options</span>?: Options) → Channel</div>
-        <p>Defines a typed binary channel. Returns a Channel object used to send and subscribe.</p>
-        <table class="tbl">
-          <thead><tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td><code>reliable</code></td><td>boolean?</td><td>false</td><td>Use RemoteEvent instead of UnreliableRemoteEvent</td></tr>
-            <tr><td><code>maxRate</code></td><td>number?</td><td>|</td><td>Max incoming fires/sec per player (server-side)</td></tr>
-            <tr><td><code>onDrop</code></td><td>fn?</td><td>|</td><td>Called when a packet is rate-limited</td></tr>
-            <tr><td><code>deltaInterval</code></td><td>number?</td><td>10</td><td>Force a full resync every N delta packets</td></tr>
-          </tbody>
-        </table>
+    </div>
 
-        <h2>Stream.Schema()</h2>
-        <div class="sig"><span class="fn">Stream.Schema</span>(<span class="tp">definition</span>: {{ string | {any} }}) → Schema</div>
-        <p>Compiles a schema from an ordered array of field definitions. Fixed-size schemas (no <code>string</code> fields) pre-compute byte offsets and are eligible for delta compression.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Fixed-size | all fields have known byte widths</span>
-<span class="kw">local</span> posSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>.<span class="fn">New</span>({
-    { <span class="str">"pos"</span>,     <span class="str">"Vector3"</span> },   <span class="cm">-- 12 bytes</span>
-    { <span class="str">"health"</span>,  <span class="str">"u16"</span>     },   <span class="cm">--  2 bytes</span>
-    { <span class="str">"alive"</span>,   <span class="str">"bool"</span>    },   <span class="cm">--  1 byte</span>
-})
+    <h2>See also</h2>
+    <p>
+      <a href="./broadcast.html">Broadcast</a> | simpler unreliable events when binary encoding isn't needed &nbsp;·&nbsp;
+      <a href="./listener.html">Listener</a> | receive Broadcast fan-out on the client &nbsp;·&nbsp;
+      <a href="./codec.html">Codec</a> | LZH compression for large non-binary payloads &nbsp;·&nbsp;
+      <a href="./tokenbucket.html">TokenBucket</a> | rate limiting (Stream has per-channel limits built in) &nbsp;·&nbsp;
+      <a href="./guides-migration.html">Migration Guide</a> | v2 → v3 schema changes
+    </p>
 
-<span class="cm">-- Variable-size | string field makes it non-fixed</span>
-<span class="kw">local</span> chatSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>.<span class="fn">New</span>({
-    { <span class="str">"name"</span>,    <span class="str">"string"</span>  },
-    { <span class="str">"message"</span>, <span class="str">"string"</span>  },
-})</code></pre>
-
-        <h2>Server send API</h2>
-        <table class="tbl">
-          <thead><tr><th>Method</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td><code>channel:SendTo(player, data)</code></td><td>Send to one player</td></tr>
-            <tr><td><code>channel:SendExcept(except, data)</code></td><td>Send to all players except one</td></tr>
-            <tr><td><code>channel:Broadcast(data)</code></td><td>FireAllClients | one remote call</td></tr>
-            <tr><td><code>channel:SendToList(players, data)</code></td><td>Send to a specific list</td></tr>
-            <tr><td><code>channel:SendToDelta(player, data)</code></td><td>Delta-compressed to one player</td></tr>
-            <tr><td><code>channel:BroadcastDelta(data)</code></td><td>Delta-compressed to all players</td></tr>
-          </tbody>
-        </table>
-
-        <h2>Client send API</h2>
-        <div class="sig"><span class="fn">channel:Send</span>(<span class="tp">data</span>: table)</div>
-        <p>Fires to the server. Client-only | will assert if called on the server.</p>
-
-        <h2>Subscribe API</h2>
-        <p>Works identically on both server and client.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Persistent subscription | fires every time</span>
-<span class="kw">local</span> unsub <span class="op">=</span> channel:<span class="fn">On</span>(<span class="kw">function</span>(data, sender)
-    <span class="cm">-- sender is a Player on the server, nil on the client</span>
-    <span class="fn">print</span>(data.pos)
-<span class="kw">end</span>)
-
-<span class="cm">-- One-shot | auto-unsubscribes after first fire</span>
-<span class="kw">local</span> unsub <span class="op">=</span> channel:<span class="fn">Once</span>(<span class="kw">function</span>(data, sender)
-    <span class="fn">print</span>(<span class="str">"first packet from"</span>, sender)
-<span class="kw">end</span>)
-
-unsub()  <span class="cm">-- unsubscribe at any time</span></code></pre>
-
-        <h2>Delta compression</h2>
-        <p>Only changed fields are sent. Requires a <strong>fixed-size schema</strong> (no <code>string</code> fields). Fields are compared at compile-time byte offsets | no per-field overhead at runtime.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Per-player delta (each player has its own last-known state)</span>
-channel:<span class="fn">SendToDelta</span>(player, newData)
-
-<span class="cm">-- All-players delta (each player may differ | joined at different times)</span>
-channel:<span class="fn">BroadcastDelta</span>(newData)</code></pre>
-        <p>A full packet is forced on the first send and every <code>deltaInterval</code> packets (default 10). This ensures clients resync even after unreliable packet loss.</p>
-
-        <h2>Built-in types</h2>
-        <table class="tbl">
-          <thead><tr><th>Type name</th><th>Wire size</th><th>Notes</th></tr></thead>
-          <tbody>
-            <tr><td><code>u8</code> / <code>u16</code> / <code>u32</code></td><td>1 / 2 / 4 B</td><td>Unsigned integers</td></tr>
-            <tr><td><code>i8</code> / <code>i16</code> / <code>i32</code></td><td>1 / 2 / 4 B</td><td>Signed integers</td></tr>
-            <tr><td><code>f32</code> / <code>f64</code></td><td>4 / 8 B</td><td>Floats</td></tr>
-            <tr><td><code>bool</code></td><td>1 B</td><td></td></tr>
-            <tr><td><code>string</code></td><td>2 + len B</td><td>u16 length-prefixed. Makes schema variable-size.</td></tr>
-            <tr><td><code>Vector3</code></td><td>12 B</td><td>3× f32</td></tr>
-            <tr><td><code>Vector2</code></td><td>8 B</td><td>2× f32</td></tr>
-            <tr><td><code>Vector3int16</code></td><td>6 B</td><td>3× i16</td></tr>
-            <tr><td><code>Vector2int16</code></td><td>4 B</td><td>2× i16</td></tr>
-            <tr><td><code>CFrame</code></td><td>28 B</td><td>Position + quaternion (Shepperd method, all 4 degenerate cases)</td></tr>
-            <tr><td><code>CFrameLight</code></td><td>16 B</td><td>Position + Y-yaw only. Cheaper for humanoids.</td></tr>
-            <tr><td><code>Color3</code></td><td>3 B</td><td>RGB u8 (0–255)</td></tr>
-            <tr><td><code>Color3float</code></td><td>12 B</td><td>RGB f32 (full precision)</td></tr>
-            <tr><td><code>BrickColor</code></td><td>2 B</td><td>u16 palette value</td></tr>
-            <tr><td><code>UDim</code></td><td>8 B</td><td>Scale f32 + Offset i32</td></tr>
-            <tr><td><code>UDim2</code></td><td>16 B</td><td>2× UDim</td></tr>
-            <tr><td><code>Rect</code></td><td>16 B</td><td>Min + Max as Vector2</td></tr>
-            <tr><td><code>NumberRange</code></td><td>8 B</td><td>Min f32 + Max f32</td></tr>
-            <tr><td><code>Ray</code></td><td>24 B</td><td>Origin + Direction as Vector3</td></tr>
-            <tr><td><code>PhysicalProperties</code></td><td>20 B</td><td>5 fields as f32</td></tr>
-            <tr><td><code>{ "flags", ... }</code></td><td>1 B</td><td>Up to 8 named booleans packed into one byte</td></tr>
-            <tr><td><code>{ "enum", EnumType }</code></td><td>2 B</td><td>EnumItem → u16 value</td></tr>
-          </tbody>
-        </table>
-
-        <h2>Custom types</h2>
-        <p>Register additional types before calling <code>Stream.Init()</code>.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code>Stream.Types.<span class="fn">Register</span>(<span class="str">"hp"</span>, {
-    size  <span class="op">=</span> <span class="num">2</span>,
-    write <span class="op">=</span> <span class="kw">function</span>(buf, offset, value)
-        buffer.<span class="fn">writeu16</span>(buf, offset, value)
-    <span class="kw">end</span>,
-    read  <span class="op">=</span> <span class="kw">function</span>(buf, offset)
-        <span class="kw">return</span> buffer.<span class="fn">readu16</span>(buf, offset)
-    <span class="kw">end</span>,
-})</code></pre>
-
-        <h2>Rate limiting</h2>
-        <p>Per-channel rate limiting applies on the server for client→server packets only.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> move <span class="op">=</span> Stream.<span class="fn">Channel</span>(<span class="str">"playerMove"</span>, schema, {
-    maxRate <span class="op">=</span> <span class="num">30</span>,  <span class="cm">-- max 30 fires/sec per player</span>
-    onDrop  <span class="op">=</span> <span class="kw">function</span>(player, reason)
-        <span class="fn">warn</span>(player.Name, <span class="str">"dropped:"</span>, reason)
-    <span class="kw">end</span>,
-})</code></pre>
-
-        <h2>Full example | player movement</h2>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- shared.luau (required on both server and client)</span>
-<span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
-<span class="kw">local</span> Stream    <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Stream"</span>)
-
-<span class="kw">local</span> moveSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>.<span class="fn">New</span>({
-    { <span class="str">"pos"</span>,    <span class="str">"Vector3"</span>                       },
-    { <span class="str">"vel"</span>,    <span class="str">"Vector3"</span>                       },
-    { <span class="str">"cf"</span>,     <span class="str">"CFrameLight"</span>                   },
-    { <span class="str">"state"</span>,  { <span class="str">"flags"</span>, <span class="str">"jumping"</span>, <span class="str">"sprinting"</span>, <span class="str">"crouching"</span> } },
-    { <span class="str">"health"</span>, <span class="str">"u16"</span>                           },
-})
-
-<span class="kw">local</span> move <span class="op">=</span> Stream.<span class="fn">Channel</span>(<span class="str">"playerMove"</span>, moveSchema, {
-    maxRate       <span class="op">=</span> <span class="num">30</span>,
-    deltaInterval <span class="op">=</span> <span class="num">15</span>,
-})
-
-Stream.<span class="fn">Init</span>()
-
-<span class="kw">return</span> { move <span class="op">=</span> move }
-
-<span class="cm">-- server.luau</span>
-<span class="kw">local</span> channels <span class="op">=</span> <span class="fn">require</span>(script.Parent.shared)
-
-channels.move:<span class="fn">On</span>(<span class="kw">function</span>(data, player)
-    <span class="cm">-- rebroadcast to all other clients (delta-compressed)</span>
-    channels.move:<span class="fn">SendToDelta</span>(player, data)
-<span class="kw">end</span>)
-
-<span class="cm">-- client.luau</span>
-<span class="kw">local</span> channels <span class="op">=</span> <span class="fn">require</span>(script.Parent.shared)
-<span class="kw">local</span> hrp      <span class="op">=</span> LocalPlayer.Character.HumanoidRootPart
-
-RunService.Heartbeat:<span class="fn">Connect</span>(<span class="kw">function</span>()
-    channels.move:<span class="fn">Send</span>({
-        pos    <span class="op">=</span> hrp.Position,
-        vel    <span class="op">=</span> hrp.AssemblyLinearVelocity,
-        cf     <span class="op">=</span> hrp.CFrame,
-        state  <span class="op">=</span> { jumping <span class="op">=</span> isJumping, sprinting <span class="op">=</span> isSprinting, crouching <span class="op">=</span> <span class="kw">false</span> },
-        health <span class="op">=</span> humanoid.Health,
-    })
-<span class="kw">end</span>)
-
-<span class="cm">-- receive world-state updates from server</span>
-channels.move:<span class="fn">On</span>(<span class="kw">function</span>(data, _)
-    <span class="cm">-- apply to other players' characters</span>
-<span class="kw">end</span>)</code></pre>
-
-        <h2>Other API</h2>
-        <table class="tbl">
-          <thead><tr><th>Call</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td><code>Stream.GetChannel(name)</code></td><td>Returns the Channel for <code>name</code>, or nil if not defined</td></tr>
-            <tr><td><code>Stream.GetChannels()</code></td><td>Returns the full channel registry table (read-only)</td></tr>
-            <tr><td><code>Stream.Destroy()</code></td><td>Disconnects all remotes and clears state | useful for tests</td></tr>
-            <tr><td><code>channel:Destroy()</code></td><td>Cleans up a single channel's subscriptions and rate-limit state</td></tr>
-          </tbody>
-        </table>
-
-        <h2>See also</h2>
-        <p>
-          <a href="./broadcast.html">Broadcast</a> | simpler unreliable events when binary encoding isn't needed &nbsp;·&nbsp;
-          <a href="./listener.html">Listener</a> | receive Broadcast fan-out on the client &nbsp;·&nbsp;
-          <a href="./codec.html">Codec</a> | LZH compression for large non-binary payloads &nbsp;·&nbsp;
-          <a href="./tokenbucket.html">TokenBucket</a> | rate limiting (Stream has per-channel limits built in) &nbsp;·&nbsp;
-          <a href="./guides-migration.html">Migration Guide</a> | v2 → v3 schema changes &nbsp;·&nbsp;
-          <a href="./examples-streaming.html">Streaming Example</a> | player movement replication &nbsp;·&nbsp;
-          <a href="./guides-combat.html">Combat Guide</a> | Stream for movement in a gun system
-        </p>
-
-      </section>
-    </main>
-  </div>
+  </section></main></div>
 </body>
 </html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Middleware | App | RoExpress Docs</title>
+  <meta name="description" content="RoExpress App middleware: chain auth guards, loggers, and validators that run before every handler.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow"><a href="./app.html" style="color:inherit;text-decoration:none">App</a> → Middleware</div>
+        <h1>Middleware</h1>
+        <p class="lead">Functions that run before every route handler, in registration order. Use them for auth, logging, rate guard overrides, or payload validation — anything that applies globally.</p>
+
+        <h2>Signatures</h2>
+        <div class="sig">app:<span class="fn">Use</span>(id, fn)</div>
+        <div class="sig">app:<span class="fn">Unuse</span>(id)</div>
+
+        <h2>Parameters</h2>
+        <table class="tbl">
+          <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>id</code></td><td>string</td><td>Unique name for this middleware function. Used to remove it later with <code>Unuse</code>.</td></tr>
+            <tr><td><code>fn</code></td><td>function</td><td><code>(Player, Payload) → boolean?</code>. Return <code>false</code> to block with 403. Throw to send 500. Return nothing to continue.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Return values</h2>
+        <table class="tbl">
+          <thead><tr><th>Return</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td><code>false</code> (explicit)</td><td>Block the request. Client receives <span class="pill p-err">403</span>. Subsequent middleware and the handler do not run.</td></tr>
+            <tr><td>throw / error</td>              <td>Block the request. Client receives <span class="pill p-err">500</span>.</td></tr>
+            <tr><td><code>nil</code> / nothing</td> <td>Continue to the next middleware, then the handler.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Examples</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- auth guard: block banned players</span>
+app:<span class="fn">Use</span>(<span class="str">"auth"</span>, <span class="kw">function</span>(Player, Payload)
+    <span class="kw">if</span> BanList[Player.UserId] <span class="kw">then return false end</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- logger: runs on every request</span>
+app:<span class="fn">Use</span>(<span class="str">"logger"</span>, <span class="kw">function</span>(Player, Payload)
+    <span class="fn">print</span>(Player.Name, Payload.method, Payload.route)
+<span class="kw">end</span>)
+
+<span class="cm">-- remove middleware by id (e.g. during a maintenance window)</span>
+app:<span class="fn">Unuse</span>(<span class="str">"auth"</span>)</code></pre>
+
+        <div class="cl info"><strong>Middleware order matters.</strong> Functions run in the order they were registered with <code>Use</code>. Register your auth guard before your logger if you don't want banned players appearing in logs.</div>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./app.html">← App</a> &nbsp;·&nbsp;
+          <a href="./app-routing.html">Route Handlers</a> | routes middleware applies to &nbsp;·&nbsp;
+          <a href="./pipeline.html">Request Pipeline</a> | where middleware sits in the full flow &nbsp;·&nbsp;
+          <a href="./guide-middleware.html">Middleware Guide</a> | patterns: auth, logging, ban lists
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

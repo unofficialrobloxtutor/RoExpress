@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stream Schema | RoExpress Docs</title>
+  <meta name="description" content="Stream.Schema.New — compile a typed binary schema from an ordered field list. Fixed-size schemas enable delta compression. All 20+ built-in wire types.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow"><a href="./stream.html">Stream</a> → Schema</div>
+    <h1>Schema</h1>
+    <p class="lead">Compiles an ordered field list into a binary schema. Fixed-size schemas — those with no <code>string</code> fields — pre-compute byte offsets at compile time and are eligible for delta compression.</p>
+
+    <h2>Stream.Schema.New()</h2>
+    <div class="sig"><span class="fn">Stream.Schema.New</span>(<span class="tp">definition</span>: {{ string | {any} }}) → Schema</div>
+    <p>Pass an ordered array of <code>{ fieldName, typeName }</code> pairs. The order determines wire layout — both server and client must use the same definition.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Stream <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Stream"</span>)
+
+<span class="cm">-- Fixed-size: all fields have known byte widths → delta eligible</span>
+<span class="kw">local</span> moveSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>.<span class="fn">New</span>({
+    { <span class="str">"pos"</span>,    <span class="str">"Vector3"</span>                                    },  <span class="cm">-- 12 B</span>
+    { <span class="str">"vel"</span>,    <span class="str">"Vector3"</span>                                    },  <span class="cm">-- 12 B</span>
+    { <span class="str">"cf"</span>,     <span class="str">"CFrameLight"</span>                                },  <span class="cm">-- 16 B</span>
+    { <span class="str">"state"</span>,  { <span class="str">"flags"</span>, <span class="str">"jumping"</span>, <span class="str">"sprinting"</span>, <span class="str">"crouching"</span> } },  <span class="cm">--  1 B</span>
+    { <span class="str">"health"</span>, <span class="str">"u16"</span>                                       },  <span class="cm">--  2 B</span>
+})  <span class="cm">-- total: 43 bytes per packet</span>
+
+<span class="cm">-- Variable-size: string field → not delta eligible</span>
+<span class="kw">local</span> chatSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>.<span class="fn">New</span>({
+    { <span class="str">"name"</span>,    <span class="str">"string"</span> },
+    { <span class="str">"message"</span>, <span class="str">"string"</span> },
+})</code></pre>
+
+    <div class="cl info"><strong>Fixed-size vs variable-size.</strong> A schema is fixed-size when every field has a known byte width at compile time. Adding even one <code>string</code> field makes the whole schema variable-size, which disables delta compression for that channel.</div>
+
+    <h2>Built-in types</h2>
+    <table class="tbl">
+      <thead><tr><th>Type name</th><th>Wire size</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><code>f32</code></td><td>4 B</td><td>Single-precision float</td></tr>
+        <tr><td><code>f64</code></td><td>8 B</td><td>Double-precision float</td></tr>
+        <tr><td><code>u8</code></td><td>1 B</td><td>Unsigned integer 0–255</td></tr>
+        <tr><td><code>u16</code></td><td>2 B</td><td>Unsigned integer 0–65535</td></tr>
+        <tr><td><code>u32</code></td><td>4 B</td><td>Unsigned integer 0–4294967295</td></tr>
+        <tr><td><code>i8</code></td><td>1 B</td><td>Signed integer −128–127</td></tr>
+        <tr><td><code>i16</code></td><td>2 B</td><td>Signed integer −32768–32767</td></tr>
+        <tr><td><code>i32</code></td><td>4 B</td><td>Signed integer −2147483648–2147483647</td></tr>
+        <tr><td><code>bool</code></td><td>1 B</td><td>Boolean stored as u8</td></tr>
+        <tr><td><code>string</code></td><td>2 + len B</td><td>u16 length-prefix. Makes schema variable-size — no delta.</td></tr>
+        <tr><td><code>Vector3</code></td><td>12 B</td><td>3× f32 (X, Y, Z)</td></tr>
+        <tr><td><code>Vector2</code></td><td>8 B</td><td>2× f32 (X, Y)</td></tr>
+        <tr><td><code>Vector3int16</code></td><td>6 B</td><td>3× i16</td></tr>
+        <tr><td><code>Vector2int16</code></td><td>4 B</td><td>2× i16</td></tr>
+        <tr><td><code>CFrame</code></td><td>28 B</td><td>Position (3× f32) + quaternion (Shepperd method, all 4 degenerate cases)</td></tr>
+        <tr><td><code>CFrameLight</code></td><td>16 B</td><td>Position (3× f32) + Y-yaw only. Cheaper for humanoids.</td></tr>
+        <tr><td><code>Color3</code></td><td>3 B</td><td>RGB as u8 (0–255 each)</td></tr>
+        <tr><td><code>Color3float</code></td><td>12 B</td><td>RGB as f32 (full precision)</td></tr>
+        <tr><td><code>BrickColor</code></td><td>2 B</td><td>u16 palette value</td></tr>
+        <tr><td><code>UDim</code></td><td>8 B</td><td>Scale f32 + Offset i32</td></tr>
+        <tr><td><code>UDim2</code></td><td>16 B</td><td>2× UDim</td></tr>
+        <tr><td><code>Rect</code></td><td>16 B</td><td>Min + Max as Vector2</td></tr>
+        <tr><td><code>NumberRange</code></td><td>8 B</td><td>Min f32 + Max f32</td></tr>
+        <tr><td><code>Ray</code></td><td>24 B</td><td>Origin + Direction as Vector3</td></tr>
+        <tr><td><code>PhysicalProperties</code></td><td>20 B</td><td>Density, Friction, Elasticity, FrictionWeight, ElasticityWeight as f32</td></tr>
+        <tr><td><code>{ "flags", ... }</code></td><td>1 B</td><td>Up to 8 named booleans packed into one byte</td></tr>
+        <tr><td><code>{ "enum", EnumType }</code></td><td>2 B</td><td>EnumItem → u16 value</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Custom types</h2>
+    <p>Register additional types with <code>Stream.Types.Register()</code> before calling <code>Stream.Init()</code>.</p>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code>Stream.Types.<span class="fn">Register</span>(<span class="str">"hp"</span>, {
+    size  <span class="op">=</span> <span class="num">2</span>,
+    write <span class="op">=</span> <span class="kw">function</span>(buf, offset, value)
+        buffer.<span class="fn">writeu16</span>(buf, offset, value)
+    <span class="kw">end</span>,
+    read  <span class="op">=</span> <span class="kw">function</span>(buf, offset)
+        <span class="kw">return</span> buffer.<span class="fn">readu16</span>(buf, offset)
+    <span class="kw">end</span>,
+})</code></pre>
+
+    <h2>Example — movement schema</h2>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- shared.luau — required on both server and client</span>
+<span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> Stream    <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Stream"</span>)
+
+<span class="kw">local</span> moveSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>.<span class="fn">New</span>({
+    { <span class="str">"pos"</span>,    <span class="str">"Vector3"</span>                                         },  <span class="cm">-- 12 B</span>
+    { <span class="str">"vel"</span>,    <span class="str">"Vector3"</span>                                         },  <span class="cm">-- 12 B</span>
+    { <span class="str">"cf"</span>,     <span class="str">"CFrameLight"</span>                                     },  <span class="cm">-- 16 B</span>
+    { <span class="str">"state"</span>,  { <span class="str">"flags"</span>, <span class="str">"jumping"</span>, <span class="str">"sprinting"</span>, <span class="str">"crouching"</span> }  },  <span class="cm">--  1 B</span>
+    { <span class="str">"health"</span>, <span class="str">"u16"</span>                                            },  <span class="cm">--  2 B</span>
+})  <span class="cm">-- 43 bytes per packet | fixed-size | delta eligible</span>
+
+<span class="kw">return</span> moveSchema</code></pre>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./stream.html">← Stream</a> &nbsp;·&nbsp;
+      <a href="./stream-channels.html">Channels</a> | using a schema to define a channel &nbsp;·&nbsp;
+      <a href="./guide-stream-server.html">Server Side</a> | delta send methods &nbsp;·&nbsp;
+      <a href="./guide-stream.html">FPS Guide</a> | full movement schema walkthrough
+    </p>
+
+  </section></main></div>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Strikes | Tamper | RoExpress Docs</title>
+  <meta name="description" content="Issue, query, and reset Tamper strikes. When a player reaches the configured threshold, autokick or your onKick callback fires.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+    <div class="eyebrow"><a href="./tamper.html">Tamper</a> → Strikes</div>
+    <h1>Strikes</h1>
+    <p class="lead">A strike is the unit of suspicion Tamper tracks per player. Passive detection issues strikes automatically; you can also issue them manually from middleware or route handlers when you detect bad data.</p>
+
+    <h2>Signatures</h2>
+    <div class="sig">Tamper.<span class="fn">Strike</span>(player: Player, reason: string?)</div>
+    <div class="sig">Tamper.<span class="fn">GetStrikes</span>(player: Player) → number</div>
+    <div class="sig">Tamper.<span class="fn">Reset</span>(player: Player)</div>
+
+    <h2>Behaviour</h2>
+    <table class="tbl">
+      <thead><tr><th>Method</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>Strike</code></td><td>Increments the player's strike count by 1. If the count reaches the configured <code>threshold</code>, the autokick or <code>onKick</code> callback fires immediately. The optional <code>reason</code> string is passed to the callback.</td></tr>
+        <tr><td><code>GetStrikes</code></td><td>Returns the current strike count for the player. Returns <code>0</code> if the player has no recorded strikes.</td></tr>
+        <tr><td><code>Reset</code></td><td>Sets the player's strike count back to <code>0</code>. Useful after a false-positive, or when a trusted action clears suspicion.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Example: manual strike on bad data</h2>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Tamper <span class="op">=</span> RoExpress.<span class="fn">Tamper</span>
+
+app:<span class="fn">Post</span>(<span class="str">"trade"</span>, <span class="kw">function</span>(req, res)
+    <span class="kw">local</span> data <span class="op">=</span> req.data
+
+    <span class="kw">if</span> <span class="kw">not</span> data <span class="kw">or</span> <span class="kw">not</span> data.itemId <span class="kw">or</span> <span class="kw">type</span>(data.itemId) <span class="op">~=</span> <span class="str">"number"</span> <span class="kw">then</span>
+        Tamper.<span class="fn">Strike</span>(req.player, <span class="str">"missing or invalid itemId in trade payload"</span>)
+        <span class="kw">return</span> res:<span class="fn">Error</span>(<span class="num">400</span>, <span class="str">"Bad request"</span>)
+    <span class="kw">end</span>
+
+    <span class="cm">-- process trade...</span>
+    res:<span class="fn">Send</span>({ ok <span class="op">=</span> <span class="kw">true</span> })
+<span class="kw">end</span>)</code></pre>
+
+    <div class="cl info">Strikes persist for the lifetime of the server session. They are not saved to DataStore automatically. If you need persistent bans, act inside your <code>onKick</code> callback.</div>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./tamper.html">← Tamper</a> &nbsp;·&nbsp;
+      <a href="./tamper-config.html">Configuration</a> | set the threshold and autokick behaviour &nbsp;·&nbsp;
+      <a href="./tamper-version.html">Version Checking</a> | silent drop on version mismatch
+    </p>
+  </section></main></div>
+</body>
+</html>

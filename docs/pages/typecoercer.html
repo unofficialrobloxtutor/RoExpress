@@ -1,22 +1,14 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TypeCoercer | RoExpress Docs</title>
-  <meta name="description" content="RoExpress TypeCoercer API: ToString, FromString, RegisterInstanceRoot | serialize Roblox types for RemoteEvent payloads and DataStore.">
+  <meta name="description" content="RoExpress TypeCoercer: coerce strings to Roblox types and validate payload tables against a schema. Used automatically by the Router.">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://roexpress.dev/docs/pages/typecoercer.html">
   <meta name="theme-color" content="#8b78ff">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://roexpress.dev/docs/pages/typecoercer.html">
-  <meta property="og:title" content="TypeCoercer | RoExpress Docs">
-  <meta property="og:description" content="ToString, FromString, RegisterInstanceRoot | Roblox type serialization.">
-  <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../public/css/styles.css">
   <script src="../nav.js"></script>
@@ -25,84 +17,51 @@
   <div id="overlay" onclick="toggleSidebar()"></div>
   <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
   <header id="hdr"></header>
-  <div id="lay">
-    <nav id="sb"></nav>
-    <main id="ct">
-      <section class="doc">
-        <div class="eyebrow">New in v2</div>
-        <h1>TypeCoercer <span class="pill p-shared">shared</span></h1>
-        <p class="lead">Serialize Roblox-specific types to plain strings so they can travel through RemoteEvent payloads and DataStore. Reconstruct them from strings on the other side.</p>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+    <div class="eyebrow">Shared</div>
+    <h1>TypeCoercer</h1>
+    <p class="lead">Coerce raw strings and payload tables into typed Roblox values. Used automatically by the Router for typed route params. Available standalone for validating request payloads before processing.</p>
+    <div class="import-block">
+      <span>Import</span>
+      <code><span class="kw">local</span> TypeCoercer <span class="op">=</span> RoExpress.<span class="fn">TypeCoercer</span></code>
+      <button class="cb" onclick="cp(this)" style="position:relative;top:0;right:0">copy</button>
+    </div>
 
-        <div class="cl info"><strong>Used automatically by the Router.</strong> When you declare a typed route param (<code>:id=number</code>, <code>:mode=Enum.CameraType</code>), the Router calls TypeCoercer internally to coerce and serialize values. You only need to call it directly when building URLs manually or working with DataStore.</div>
+    <div class="dir-grid">
 
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> TC <span class="op">=</span> RoExpress.TypeCoercer
-<span class="cm">-- or: require(game.ReplicatedStorage.RoExpress.TypeCoercer)</span></code></pre>
+      <a class="dir-card" href="./typecoercer-coerce.html">
+        <div class="dir-pills">
+          <span class="rtag">convert</span>
+        </div>
+        <div class="dir-title">Coerce</div>
+        <div class="dir-desc">Convert a single value to a named type, or validate an entire payload table against a field-by-field schema returning success, a result, and any per-field errors.</div>
+        <div class="dir-foot">
+          <span class="dir-methods">TypeCoercer.Coerce · TypeCoercer.CoerceTable</span>
+          <span class="dir-arrow">→</span>
+        </div>
+      </a>
 
-        <h2>ToString</h2>
-        <div class="sig">TC.<span class="fn">ToString</span>(value: any) → string</div>
-        <p>Serializes a value to its wire string. The Router calls this when building redirect URLs via <code>RouteBuilder.build()</code>.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code>TC.<span class="fn">ToString</span>(Vector3.<span class="fn">new</span>(<span class="num">10</span>, <span class="num">5</span>, <span class="num">-20</span>))         <span class="cm">-- "10,5,-20"</span>
-TC.<span class="fn">ToString</span>(Color3.<span class="fn">fromRGB</span>(<span class="num">255</span>, <span class="num">0</span>, <span class="num">128</span>))     <span class="cm">-- "255,0,128"</span>
-TC.<span class="fn">ToString</span>(CFrame.<span class="fn">new</span>(<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>))              <span class="cm">-- "1,2,3,0,0,0"</span>
-TC.<span class="fn">ToString</span>(Enum.CameraType.Scriptable)      <span class="cm">-- "Enum.CameraType.Scriptable"</span>
-TC.<span class="fn">ToString</span>(workspace.Baseplate)            <span class="cm">-- "Part:Baseplate"</span>
-TC.<span class="fn">ToString</span>(<span class="num">42</span>)                              <span class="cm">-- "42"</span></code></pre>
+      <a class="dir-card" href="./typecoercer-types.html">
+        <div class="dir-pills">
+          <span class="rtag">reference</span>
+        </div>
+        <div class="dir-title">Supported Types</div>
+        <div class="dir-desc">Full reference of every type name recognised by TypeCoercer — what it coerces from and the Luau result type on success.</div>
+        <div class="dir-foot">
+          <span class="dir-methods">number · boolean · Vector2 · Vector3 · CFrame · Color3 · Enum · Instance · UDim · UDim2 · Rect</span>
+          <span class="dir-arrow">→</span>
+        </div>
+      </a>
 
-        <h2>FromString</h2>
-        <div class="sig">TC.<span class="fn">FromString</span>(raw: string, typeName: string) → (boolean, any)</div>
-        <p>Reconstructs a value from its wire string. Returns <code>(true, value)</code> on success, <code>(false, nil)</code> on failure. The Router calls this automatically for typed params — you only need it when coercing manually.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code>TC.<span class="fn">FromString</span>(<span class="str">"10,5,-20"</span>, <span class="str">"vector3"</span>)                    <span class="cm">-- true, Vector3.new(10, 5, -20)</span>
-TC.<span class="fn">FromString</span>(<span class="str">"255,0,128"</span>, <span class="str">"color3"</span>)                    <span class="cm">-- true, Color3.fromRGB(255, 0, 128)</span>
-TC.<span class="fn">FromString</span>(<span class="str">"Scriptable"</span>, <span class="str">"Enum.CameraType"</span>)           <span class="cm">-- true, Enum.CameraType.Scriptable</span>
-TC.<span class="fn">FromString</span>(<span class="str">"Enum.CameraType.Scriptable"</span>, <span class="str">"Enum.CameraType"</span>) <span class="cm">-- true, same</span>
-TC.<span class="fn">FromString</span>(<span class="str">"Enum.CameraType.Scriptable"</span>, <span class="str">"Enum"</span>)        <span class="cm">-- true, any EnumItem</span>
-TC.<span class="fn">FromString</span>(<span class="str">"Part:Baseplate"</span>, <span class="str">"Instance"</span>)             <span class="cm">-- true, workspace.Baseplate</span>
-TC.<span class="fn">FromString</span>(<span class="str">"abc"</span>, <span class="str">"number"</span>)                          <span class="cm">-- false, nil</span></code></pre>
+    </div>
 
-        <h2>RegisterInstanceRoot</h2>
-        <div class="sig">TC.<span class="fn">RegisterInstanceRoot</span>(name: string, root: Instance)</div>
-        <p>Registers a search root for Instance coercion. Multiple roots can be registered and are searched in registration order. Required before using <code>"Instance"</code> as a route param type.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code>TC.<span class="fn">RegisterInstanceRoot</span>(<span class="str">"Workspace"</span>, workspace)
-TC.<span class="fn">RegisterInstanceRoot</span>(<span class="str">"Players"</span>, game:<span class="fn">GetService</span>(<span class="str">"Players"</span>))
-
-TC.<span class="fn">ToString</span>(workspace.Baseplate)           <span class="cm">-- "Part:Baseplate"</span>
-TC.<span class="fn">FromString</span>(<span class="str">"Part:Baseplate"</span>, <span class="str">"Instance"</span>) <span class="cm">-- workspace.Baseplate</span></code></pre>
-
-        <h2>Supports</h2>
-        <div class="sig">TC.<span class="fn">Supports</span>(typeName: string) → boolean</div>
-        <p>Returns <code>true</code> if the type name is recognised. Used by the Router to validate param type annotations at registration time.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code>TC.<span class="fn">Supports</span>(<span class="str">"vector3"</span>)          <span class="cm">-- true</span>
-TC.<span class="fn">Supports</span>(<span class="str">"Enum.CameraType"</span>)   <span class="cm">-- true</span>
-TC.<span class="fn">Supports</span>(<span class="str">"Enum"</span>)             <span class="cm">-- true</span>
-TC.<span class="fn">Supports</span>(<span class="str">"banana"</span>)           <span class="cm">-- false</span></code></pre>
-
-        <h2>Supported types</h2>
-        <table class="tbl">
-          <thead><tr><th>Type name</th><th>Wire format</th><th>Notes</th></tr></thead>
-          <tbody>
-            <tr><td><code>string</code></td><td>as-is</td><td></td></tr>
-            <tr><td><code>boolean</code></td><td><code>"true"</code> / <code>"false"</code></td><td>also accepts <code>"1"</code> / <code>"0"</code></td></tr>
-            <tr><td><code>number</code></td><td><code>"42"</code> / <code>"3.14"</code></td><td></td></tr>
-            <tr><td><code>int</code></td><td><code>"42"</code></td><td>rejects decimals</td></tr>
-            <tr><td><code>vector2</code></td><td><code>"x,y"</code></td><td></td></tr>
-            <tr><td><code>vector3</code></td><td><code>"x,y,z"</code></td><td></td></tr>
-            <tr><td><code>color3</code></td><td><code>"r,g,b"</code></td><td>auto-detects 0–255 vs 0–1 on input; always outputs 0–255</td></tr>
-            <tr><td><code>cframe</code></td><td><code>"x,y,z,rx,ry,rz"</code></td><td>rotation as Euler degrees; position-only <code>"x,y,z"</code> also accepted</td></tr>
-            <tr><td><code>Enum.TypeName</code></td><td><code>"ValueName"</code> or <code>"Enum.TypeName.ValueName"</code> or numeric value</td><td>exact enum type required</td></tr>
-            <tr><td><code>Enum</code></td><td><code>"Enum.TypeName.ValueName"</code></td><td>accepts any EnumItem; wire must carry the type</td></tr>
-            <tr><td><code>Instance</code></td><td><code>"ClassName:Name"</code></td><td>requires <code>RegisterInstanceRoot</code></td></tr>
-          </tbody>
-        </table>
-
-        <h2>See also</h2>
-        <p>
-          <a href="./guide-typecoercer.html">TypeCoercer Guide</a> | usage patterns with routes and DataStore &nbsp;·&nbsp;
-          <a href="./router.html">Router</a> | typed route params and RouteBuilder &nbsp;·&nbsp;
-          <a href="./types.html">Types</a> | Luau type definitions &nbsp;·&nbsp;
-          <a href="./codec.html">Codec</a> | binary serialization for Stream channels
-        </p>
-      </section>
-    </main>
-  </div>
+    <h2>See also</h2>
+    <p>
+      <a href="./guide-typecoercer.html">TypeCoercer Guide</a> | usage patterns with routes and DataStore &nbsp;·&nbsp;
+      <a href="./router.html">Router</a> | typed route params and RouteBuilder &nbsp;·&nbsp;
+      <a href="./types.html">Types</a> | Luau type definitions &nbsp;·&nbsp;
+      <a href="./codec.html">Codec</a> | binary serialization for Stream channels
+    </p>
+  </section></main></div>
 </body>
 </html>

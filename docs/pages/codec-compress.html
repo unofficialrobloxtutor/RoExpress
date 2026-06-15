@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codec Compress | RoExpress Docs</title>
+  <meta name="description" content="Codec.Compress and Codec.IsCompressed — LZ77 and LZH (Deflate) compression in RoExpress. Manual compression for large payloads.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow"><a href="./codec.html">Codec</a> → Compress</div>
+    <h1>Compress</h1>
+    <p class="lead">Compress a string with LZ77 or LZH (Deflate), and check whether a buffer is already compressed before compressing again.</p>
+
+    <h2>Algorithms</h2>
+
+    <table class="tbl">
+      <thead><tr><th>Algorithm</th><th>Access</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>LZ77</td><td><code>Codec.LZ77</code></td><td>Sliding window. Fast, good ratio on repetitive data.</td></tr>
+        <tr><td>LZH / Deflate</td><td><code>Codec.LZH</code></td><td>LZ77 + Huffman coding. Better ratio, slightly more CPU. Added in v2.3.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>API</h2>
+
+    <div class="sig">Codec.LZ77:<span class="fn">Compress</span>(data: string) → string</div>
+    <div class="sig">Codec.LZH:<span class="fn">Compress</span>(data: string) → string</div>
+    <div class="sig">Codec:<span class="fn">IsCompressed</span>(data: string) → boolean</div>
+
+    <h2>Manual compression</h2>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Codec  <span class="op">=</span> RoExpress.Codec
+<span class="kw">local</span> json   <span class="op">=</span> game:GetService(<span class="str">"HttpService"</span>):<span class="fn">JSONEncode</span>(bigTable)
+<span class="kw">local</span> packed <span class="op">=</span> Codec.LZH:<span class="fn">Compress</span>(json)
+
+<span class="fn">print</span>(<span class="op">#</span>json, <span class="str">"→"</span>, <span class="op">#</span>packed)  <span class="cm">-- original vs compressed size</span></code></pre>
+
+    <h2>Checking before compress</h2>
+
+    <p>Use <code>Codec:IsCompressed</code> to avoid double-compressing a buffer that was already compressed elsewhere:</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">if</span> <span class="op">not</span> Codec:<span class="fn">IsCompressed</span>(data) <span class="kw">then</span>
+    data <span class="op">=</span> Codec.LZH:<span class="fn">Compress</span>(data)
+<span class="kw">end</span></code></pre>
+
+    <h2>Manual vs route opt-in</h2>
+
+    <p>Manual compression is useful when you need fine-grained control — for example, compressing data before storing it, or compressing only part of a payload. For route-level compression handled automatically by App, see <a href="./codec-routes.html">Route Integration</a>.</p>
+
+    <h2>Size advice</h2>
+
+    <table class="tbl">
+      <thead><tr><th>Scenario</th><th>Recommendation</th></tr></thead>
+      <tbody>
+        <tr><td>Large repeated-structure data (map tiles, inventories)</td><td>LZH — better ratio</td></tr>
+        <tr><td>High-frequency small updates</td><td>Don't compress — overhead not worth it</td></tr>
+        <tr><td>Binary buffer data</td><td>Use <a href="./stream.html">Stream</a> instead</td></tr>
+      </tbody>
+    </table>
+
+    <div class="cl info">Compression only helps when the data has enough repetition to exploit. Always log <code>#original</code> vs <code>#compressed</code> during development to verify you're actually saving bytes.</div>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./codec.html">← Codec</a> &nbsp;&middot;&nbsp;
+      <a href="./codec-decompress.html">Decompress</a> | restore a compressed buffer &nbsp;&middot;&nbsp;
+      <a href="./codec-routes.html">Route Integration</a> | compress = true on routes
+    </p>
+
+  </section></main></div>
+</body>
+</html>

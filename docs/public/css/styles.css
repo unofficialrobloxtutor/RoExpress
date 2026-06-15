@@ -193,6 +193,21 @@ pre code{background:none;border:none;padding:0;font-size:12.5px;color:var(--text
 #sb-donate{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--border);padding:10px 12px;flex-shrink:0}
 .sb-donate-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 12px;border-radius:var(--radius);background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.18);color:var(--red);font-family:var(--font);font-size:11.5px;font-weight:500;text-decoration:none;transition:background var(--ease),border-color var(--ease)}
 .sb-donate-btn:hover{background:rgba(248,113,113,.14);border-color:rgba(248,113,113,.32);text-decoration:none;color:var(--red)}
+#disc{grid-template-columns:repeat(3,1fr)}
+
+/* ── directory card layout ── */
+.dir-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:28px 0}
+.dir-card{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:var(--code-bg);border:1px solid var(--border);border-radius:10px;padding:18px 18px 14px;transition:border-color var(--ease),background var(--ease)}
+.dir-card:hover{border-color:var(--border2);background:var(--bg2);text-decoration:none}
+.dir-pills{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;min-height:20px;align-items:center}
+.dir-title{font-size:13.5px;font-weight:500;color:var(--text);margin-bottom:6px}
+.dir-desc{font-size:12px;color:var(--text3);line-height:1.6;flex:1}
+.dir-foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:11px;border-top:1px solid var(--border);font-size:11px}
+.dir-methods{color:var(--text3);font-family:var(--font)}
+.dir-arrow{color:var(--accent2)}
+.rtag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:3px;background:var(--accent-bg);color:var(--accent2);letter-spacing:.04em;flex-shrink:0}
+.import-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:12px;color:var(--text3);margin:16px 0 0;display:flex;align-items:center;gap:10px}
+.import-block code{color:var(--text2);flex:1}
 
 @media(max-width:768px){
   #burger{display:flex}
@@ -207,6 +222,8 @@ pre code{background:none;border:none;padding:0;font-size:12.5px;color:var(--text
   .tbl{font-size:11.5px;display:block;overflow-x:auto}
   .tbl th,.tbl td{padding:7px 8px;white-space:nowrap}
   .cards{grid-template-columns:1fr!important}
+  #disc{grid-template-columns:1fr!important}
+  .dir-grid{grid-template-columns:1fr!important}
   .sig{padding:9px 12px;font-size:12px}
   h2{margin:32px 0 12px;font-size:15px}
   .pipe .ps{flex-wrap:wrap;gap:6px}

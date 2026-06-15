@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bridge Wait &amp; Query | RoExpress Docs</title>
+  <meta name="description" content="Bridge.Wait, WaitUntil, WaitFirst, Has — yield until a named event fires, a predicate is satisfied, or any one of a set of events arrives.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow"><a href="./bridge.html">Bridge</a> → Wait &amp; Query</div>
+    <h1>Wait &amp; Query</h1>
+    <p class="lead">Yield the current coroutine until a named event fires, a predicate is satisfied, or any one of a set of events fires first — and check event existence without yielding.</p>
+
+    <h2>API</h2>
+
+    <div class="sig">Bridge:<span class="fn">Wait</span>(event: string) → ...</div>
+    <div class="sig">Bridge:<span class="fn">WaitUntil</span>(event: string, predicate: (...any) → boolean) → ...</div>
+    <div class="sig">Bridge:<span class="fn">WaitFirst</span>(events: { string }) → event: string, ...</div>
+    <div class="sig">Bridge:<span class="fn">Has</span>(event: string) → boolean</div>
+
+    <h2>Wait</h2>
+
+    <p><code>Wait</code> yields the calling coroutine until the named event fires once, then returns all arguments the event was fired with:</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> player, killer <span class="op">=</span> Bridge:<span class="fn">Wait</span>(<span class="str">"playerDied"</span>)
+<span class="fn">print</span>(player.Name, <span class="str">"was killed by"</span>, killer.Name)</code></pre>
+
+    <h2>WaitUntil</h2>
+
+    <p><code>WaitUntil</code> keeps yielding each time the event fires until the predicate returns a truthy value, then returns the arguments from that final fire:</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Wait until a specific player dies</span>
+<span class="kw">local</span> player, killer <span class="op">=</span> Bridge:<span class="fn">WaitUntil</span>(<span class="str">"playerDied"</span>, <span class="kw">function</span>(p)
+    <span class="kw">return</span> p.Name <span class="op">==</span> <span class="str">"TargetPlayer"</span>
+<span class="kw">end</span>)
+<span class="fn">print</span>(<span class="str">"TargetPlayer died, killer:"</span>, killer.Name)</code></pre>
+
+    <h2>WaitFirst</h2>
+
+    <p><code>WaitFirst</code> yields until any one of the listed events fires, then returns the name of the event that fired along with its arguments:</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Yield until any round-ending event</span>
+<span class="kw">local</span> event, data <span class="op">=</span> Bridge:<span class="fn">WaitFirst</span>({ <span class="str">"roundWon"</span>, <span class="str">"roundDraw"</span>, <span class="str">"roundTimeout"</span> })
+<span class="fn">print</span>(<span class="str">"Round ended via:"</span>, event)</code></pre>
+
+    <h2>Return values</h2>
+
+    <table class="tbl">
+      <thead><tr><th>Function</th><th>Returns</th></tr></thead>
+      <tbody>
+        <tr><td><code>Wait(event)</code></td><td>All arguments the event was fired with.</td></tr>
+        <tr><td><code>WaitUntil(event, pred)</code></td><td>All arguments from the fire that satisfied the predicate.</td></tr>
+        <tr><td><code>WaitFirst(events)</code></td><td>The event name that fired first, followed by its arguments.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Has (non-yielding query)</h2>
+
+    <p><code>Has</code> returns immediately with a boolean — it does not yield. Use it to check whether any listeners are currently bound to an event name:</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">if</span> Bridge:<span class="fn">Has</span>(<span class="str">"playerDied"</span>) <span class="kw">then</span>
+    Bridge:<span class="fn">Fire</span>(<span class="str">"playerDied"</span>, player, killer)
+<span class="kw">end</span></code></pre>
+
+    <div class="cl info">Wait, WaitUntil, and WaitFirst all yield the calling coroutine. Call them inside a task.spawn or coroutine if you do not want to block the current thread.</div>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./bridge.html">← Bridge</a> &nbsp;&middot;&nbsp;
+      <a href="./bridge-bind.html">Bind &amp; Fire</a> | register and fire listeners &nbsp;&middot;&nbsp;
+      <a href="./broadcast.html">Broadcast</a> | server-to-client events &nbsp;&middot;&nbsp;
+      <a href="./listener.html">Listener</a> | client-side event subscription
+    </p>
+
+  </section></main></div>
+</body>
+</html>

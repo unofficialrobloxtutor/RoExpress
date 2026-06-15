@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codec Route Integration | RoExpress Docs</title>
+  <meta name="description" content="Use compress = true on any App route to enable automatic LZH compression. The Network client decompresses transparently — no client API changes needed.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow"><a href="./codec.html">Codec</a> → Route Integration</div>
+    <h1>Route Integration</h1>
+    <p class="lead">Add <code>compress = true</code> to any route's options table and App compresses the response automatically — the client decompresses it with no API changes needed.</p>
+
+    <h2>How to enable</h2>
+
+    <p>Pass <code>{ compress = true }</code> as the third argument to any route method:</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Server</span>
+app:<span class="fn">Get</span>(<span class="str">"map/data"</span>, <span class="kw">function</span>(req, res)
+    res:<span class="fn">Send</span>(largeMapTable)
+<span class="kw">end</span>, { compress <span class="op">=</span> <span class="kw">true</span> })</code></pre>
+
+    <h2>Client side</h2>
+
+    <p>The Network module detects a compressed response and decompresses it before handing data to your callback. Your client code does not change — <code>res.data</code> is already the original table. The response sets <code>compressed = true</code> so you can confirm compression was applied:</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Client | data is already decompressed</span>
+network:<span class="fn">Get</span>(<span class="str">"map/data"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res)
+    <span class="fn">print</span>(res.compressed)  <span class="cm">-- true</span>
+    <span class="fn">loadMap</span>(res.data)
+<span class="kw">end</span>)</code></pre>
+
+    <h2>Leaderboard example</h2>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Server: large leaderboard payload, compress on the way out</span>
+app:<span class="fn">Get</span>(<span class="str">"leaderboard/top100"</span>, <span class="kw">function</span>(req, res)
+    <span class="kw">local</span> entries <span class="op">=</span> <span class="fn">BuildTop100</span>()   <span class="cm">-- big table</span>
+    res:<span class="fn">Send</span>(entries)
+<span class="kw">end</span>, { compress <span class="op">=</span> <span class="kw">true</span> })
+
+<span class="cm">-- Client: identical call, transparent decompression</span>
+network:<span class="fn">Get</span>(<span class="str">"leaderboard/top100"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res)
+    <span class="fn">RenderLeaderboard</span>(res.data)
+<span class="kw">end</span>)</code></pre>
+
+    <h2>No client API change</h2>
+
+    <p>Compression is a server-side decision. You can add or remove <code>compress = true</code> from a route at any time without touching client code.</p>
+
+    <div class="cl info">Compression is opt-in per route. Only add it to routes that send large payloads — compressing small or frequently fired routes adds CPU overhead without meaningful size savings.</div>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./codec.html">← Codec</a> &nbsp;&middot;&nbsp;
+      <a href="./codec-compress.html">Compress</a> | manual LZ77 and LZH compression &nbsp;&middot;&nbsp;
+      <a href="./codec-decompress.html">Decompress</a> | restore a compressed buffer &nbsp;&middot;&nbsp;
+      <a href="./app.html">App</a> | route registration and options &nbsp;&middot;&nbsp;
+      <a href="./examples-inventory.html">Inventory Example</a> | large payload compression
+    </p>
+
+  </section></main></div>
+</body>
+</html>

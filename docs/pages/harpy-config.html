@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Harpy Configuration | RoExpress Docs</title>
+  <meta name="description" content="Create a Harpy HTTP client with base URL, shared headers, and retry count. Update settings at runtime with SetBase, SetHeader, RemoveHeader, and SetRetries.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow"><a href="./harpy.html">Harpy</a> → Configuration</div>
+    <h1>Configuration</h1>
+    <p class="lead">Create a Harpy client once per external API, configure its base URL and shared headers, then reuse it across every request.</p>
+
+    <h2>Constructor</h2>
+
+    <div class="sig">Harpy.<span class="fn">New</span>(config?) → Harpy</div>
+
+    <p>All config fields are optional. Create as many independent clients as you need — they share no state.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>base</code></td><td><code>string</code></td><td><code>""</code></td><td>Base URL prepended to every request path.</td></tr>
+        <tr><td><code>headers</code></td><td><code>{ [string]: string }</code></td><td><code>{}</code></td><td>Headers sent on every request from this client.</td></tr>
+        <tr><td><code>retries</code></td><td><code>number</code></td><td><code>3</code></td><td>Maximum retry attempts on 5xx or connection error.</td></tr>
+      </tbody>
+    </table>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> Harpy     <span class="op">=</span> RoExpress.Harpy
+
+<span class="kw">local</span> client <span class="op">=</span> Harpy.<span class="fn">New</span>({
+    base    <span class="op">=</span> <span class="str">"https://api.example.com"</span>,
+    retries <span class="op">=</span> <span class="num">3</span>,   <span class="cm">-- optional, default 3</span>
+})</code></pre>
+
+    <h2>Header merging</h2>
+
+    <p>Headers passed in the config table are merged with any headers set via <code>:SetHeader</code>. Per-request options can add further headers — they are merged in the same way, with per-request headers taking priority over client-level headers.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> client <span class="op">=</span> Harpy.<span class="fn">New</span>({
+    base    <span class="op">=</span> <span class="str">"https://hooks.slack.com/services/..."</span>,
+    headers <span class="op">=</span> { [<span class="str">"Content-Type"</span>] <span class="op">=</span> <span class="str">"application/json"</span> },
+    retries <span class="op">=</span> <span class="num">1</span>,
+})
+
+<span class="cm">-- Add or update headers after construction</span>
+client:<span class="fn">SetHeader</span>(<span class="str">"Authorization"</span>, <span class="str">"Bearer "</span> <span class="op">..</span> SECRET)
+client:<span class="fn">SetHeader</span>(<span class="str">"X-Game-Id"</span>, <span class="str">"my-game-123"</span>)</code></pre>
+
+    <h2>Runtime configuration methods</h2>
+
+    <table class="tbl">
+      <thead><tr><th>Method</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>:SetBase(url)</code></td><td>Set or replace the base URL. Applied to all future requests.</td></tr>
+        <tr><td><code>:SetHeader(key, value)</code></td><td>Add or update a persistent header sent on every request.</td></tr>
+        <tr><td><code>:RemoveHeader(key)</code></td><td>Remove a persistent header.</td></tr>
+        <tr><td><code>:SetRetries(n)</code></td><td>Change the maximum retry count. Use <code>0</code> to disable retries.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Multiple clients in one game</h2>
+
+    <p>Each Harpy client is completely independent. Base URL, headers, and retry count are per-instance.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Each client has its own base URL and headers</span>
+<span class="kw">local</span> analyticsClient <span class="op">=</span> Harpy.<span class="fn">New</span>({ base <span class="op">=</span> <span class="str">"https://analytics.example.com"</span> })
+<span class="kw">local</span> webhookClient   <span class="op">=</span> Harpy.<span class="fn">New</span>({ base <span class="op">=</span> DISCORD_WEBHOOK_URL, retries <span class="op">=</span> <span class="num">1</span> })
+<span class="kw">local</span> scoresClient    <span class="op">=</span> Harpy.<span class="fn">New</span>({ base <span class="op">=</span> <span class="str">"https://scores.example.com"</span> })
+
+analyticsClient:<span class="fn">SetHeader</span>(<span class="str">"Authorization"</span>, <span class="str">"Bearer "</span> <span class="op">..</span> ANALYTICS_SECRET)
+scoresClient:<span class="fn">SetHeader</span>(<span class="str">"X-Api-Key"</span>, SCORES_KEY)</code></pre>
+
+    <div class="cl info">Create one client per external service. Keeping clients separate makes it easy to swap base URLs, rotate keys, and tune retry counts independently.</div>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./harpy.html">← Harpy</a> &nbsp;&middot;&nbsp;
+      <a href="./harpy-methods.html">HTTP Methods</a> | Get, Post, Put, Delete &nbsp;&middot;&nbsp;
+      <a href="./harpy-retry.html">Retry &amp; Backoff</a> | automatic resilience
+    </p>
+
+  </section></main></div>
+</body>
+</html>

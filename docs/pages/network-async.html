@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Async / Promise API | RoExpress Docs</title>
+  <meta name="description" content="RoExpress Network async methods: GetAsync, PostAsync, PutAsync, DeleteAsync returning Promises. Chain with Then, Catch, Finally.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow"><a href="./network.html">Network</a> → Async API</div>
+        <h1>Async / Promise API</h1>
+        <p class="lead">The Async variants of every request method return a Promise instead of accepting a callback, letting you chain Then, Catch, and Finally for readable multi-step flows.</p>
+
+        <h2>Signatures</h2>
+        <div class="sig"><span class="pill p-get">GET</span> network:<span class="fn">GetAsync</span>(route, data?) → Promise</div>
+        <div class="sig"><span class="pill p-post">POST</span> network:<span class="fn">PostAsync</span>(route, data?) → Promise</div>
+        <div class="sig"><span class="pill p-put">PUT</span> network:<span class="fn">PutAsync</span>(route, data?) → Promise</div>
+        <div class="sig"><span class="pill p-delete">DELETE</span> network:<span class="fn">DeleteAsync</span>(route, data?) → Promise</div>
+
+        <p>Parameters are identical to the callback methods — only the return value changes. See <a href="./network-get.html">Request Methods</a> for parameter details.</p>
+
+        <h2>Basic chaining</h2>
+        <p>Use <code>:Then()</code> to transform the resolved value, <code>:Catch()</code> to handle any error in the chain, and <code>:Finally()</code> to run code whether it resolved or rejected.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>network:<span class="fn">GetAsync</span>(<span class="str">"inventory/items"</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res) <span class="kw">return</span> res.data.items <span class="kw">end</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(items) <span class="fn">populateUI</span>(items) <span class="kw">end</span>)
+    :<span class="fn">Catch</span>(<span class="kw">function</span>(err) <span class="fn">warn</span>(err.message) <span class="kw">end</span>)</code></pre>
+
+        <h2>Post with body</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>network:<span class="fn">PostAsync</span>(<span class="str">"player/123/update"</span>, { name <span class="op">=</span> <span class="str">"NewName"</span> })
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res)
+        <span class="fn">print</span>(<span class="str">"Saved with status"</span>, res.status)
+    <span class="kw">end</span>)
+    :<span class="fn">Catch</span>(<span class="kw">function</span>(err)
+        <span class="fn">warn</span>(<span class="str">"Update failed:"</span>, err.message)
+    <span class="kw">end</span>)</code></pre>
+
+        <h2>Sequential requests</h2>
+        <p>Return a Promise from inside <code>:Then()</code> to chain requests in order — the next <code>:Then()</code> waits for it.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>network:<span class="fn">GetAsync</span>(<span class="str">"shop/catalogue"</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res)
+        ShopUI:<span class="fn">Load</span>(res.data)
+        <span class="kw">return</span> network:<span class="fn">GetAsync</span>(<span class="str">"player/data"</span>)   <span class="cm">-- second request after first resolves</span>
+    <span class="kw">end</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res)
+        CoinsUI:<span class="fn">Set</span>(res.data.coins)
+    <span class="kw">end</span>)
+    :<span class="fn">Catch</span>(<span class="kw">function</span>(err)
+        UI:<span class="fn">ShowError</span>(<span class="str">"Load failed:"</span>, err.message)
+    <span class="kw">end</span>)</code></pre>
+
+        <h2>Finally</h2>
+        <p><code>:Finally(fn)</code> runs whether the Promise resolved or rejected — useful for hiding a loading spinner regardless of outcome.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>LoadingSpinner.Visible <span class="op">=</span> <span class="kw">true</span>
+
+network:<span class="fn">GetAsync</span>(<span class="str">"leaderboard"</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res) LeaderboardUI:<span class="fn">Populate</span>(res.data) <span class="kw">end</span>)
+    :<span class="fn">Catch</span>(<span class="kw">function</span>(err) <span class="fn">warn</span>(err.message) <span class="kw">end</span>)
+    :<span class="fn">Finally</span>(<span class="kw">function</span>()
+        LoadingSpinner.Visible <span class="op">=</span> <span class="kw">false</span>  <span class="cm">-- always hides</span>
+    <span class="kw">end</span>)</code></pre>
+
+        <div class="cl info"><strong>Promise shape.</strong> The resolved value passed to <code>:Then()</code> is the full <code>NetworkResponse</code> table — access <code>res.data</code>, <code>res.status</code> etc. The rejection value passed to <code>:Catch()</code> is also a <code>NetworkResponse</code> with <code>type == "error"</code> or <code>"timeout"</code>. See <a href="./promise-create.html">Promise Creation</a> for details.</div>
+
+        <h2>Relationship to the Promise module</h2>
+        <p>The objects returned by the Async methods implement <code>:Then()</code>, <code>:Catch()</code>, and <code>:Finally()</code>. See <a href="./promise.html">Promise</a> for the full API reference and chaining patterns.</p>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./network.html">← Network</a> &nbsp;·&nbsp;
+          <a href="./network-get.html">Request Methods</a> | callback-based variants &nbsp;·&nbsp;
+          <a href="./promise.html">Promise</a> | Then, Catch, Finally reference &nbsp;·&nbsp;
+          <a href="./promise-chaining.html">Promise Chaining</a> | error propagation patterns &nbsp;·&nbsp;
+          <a href="./network-cancel.html">Cancel &amp; Timeout</a> | abort in-flight requests
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

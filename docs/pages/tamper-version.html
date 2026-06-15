@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Version Checking | Tamper | RoExpress Docs</title>
+  <meta name="description" content="Tamper version token: every packet carries a version string. A mismatch is a silent drop — no handler is called, no strike issued.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+    <div class="eyebrow"><a href="./tamper.html">Tamper</a> → Version Checking</div>
+    <h1>Version Checking</h1>
+    <p class="lead">Every packet sent by the RoExpress client includes a version token. The server validates the token before any handler or middleware runs. A mismatch results in a silent drop — the packet is discarded immediately.</p>
+
+    <h2>How it works</h2>
+    <p>The version token is derived from the RoExpress build embedded in your game. When your client and server are on the same version the token matches and the request proceeds normally. When they differ — for example because a player is running a stale or spoofed client — the token check fails.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Outcome</th><th>Behaviour</th></tr></thead>
+      <tbody>
+        <tr><td>Token matches</td><td>Request proceeds through the pipeline normally.</td></tr>
+        <tr><td>Token mismatch</td><td>Silent drop. No handler is called. No strike is issued. No response is sent to the client.</td></tr>
+        <tr><td>Token absent</td><td>Treated as a mismatch — silent drop.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Why silent drop?</h2>
+    <p>A version mismatch most commonly means the player is running an outdated client mid-update, not that they are acting maliciously. Issuing a strike or kicking in this case would penalise legitimate players caught in a deployment. The silent drop lets the client retry or reconnect without punishment.</p>
+    <p>An attacker spoofing the version token to bypass detection would still fail the match and have their packets silently ignored, with no information returned that could help them calibrate a spoof.</p>
+
+    <div class="cl info">Version checking is fully automatic. There is no configuration option and no API to call. It is always active when Tamper is loaded.</div>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./tamper.html">← Tamper</a> &nbsp;·&nbsp;
+      <a href="./tamper-config.html">Configuration</a> | strike threshold and autokick &nbsp;·&nbsp;
+      <a href="./tamper-strikes.html">Strikes</a> | manual and passive strike issuance &nbsp;·&nbsp;
+      <a href="./pipeline.html">Request Pipeline</a> | where version check fits in the pipeline
+    </p>
+  </section></main></div>
+</body>
+</html>

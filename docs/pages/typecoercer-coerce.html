@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coerce | TypeCoercer | RoExpress Docs</title>
+  <meta name="description" content="TypeCoercer.Coerce and CoerceTable: convert a single value or validate an entire payload table against a schema, with per-field error reporting.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+    <div class="eyebrow"><a href="./typecoercer.html">TypeCoercer</a> → Coerce</div>
+    <h1>Coerce</h1>
+    <p class="lead">Convert a single raw value to a typed Roblox value, or validate an entire payload table against a field schema and get back a typed result alongside any per-field errors.</p>
+
+    <h2>Coerce</h2>
+    <div class="sig">TypeCoercer.<span class="fn">Coerce</span>(value: any, typeName: string) → (boolean, any)</div>
+    <p>Attempts to convert <code>value</code> to the type named by <code>typeName</code>. Returns <code>(true, result)</code> on success and <code>(false, nil)</code> on failure. The Router calls this automatically for typed route params — you only need it when coercing manually.</p>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> TC <span class="op">=</span> RoExpress.<span class="fn">TypeCoercer</span>
+
+<span class="kw">local</span> ok, vec <span class="op">=</span> TC.<span class="fn">Coerce</span>(<span class="str">"10,5,-20"</span>, <span class="str">"vector3"</span>)
+<span class="kw">if</span> ok <span class="kw">then</span>
+    <span class="fn">print</span>(vec)   <span class="cm">-- Vector3.new(10, 5, -20)</span>
+<span class="kw">end</span>
+
+<span class="kw">local</span> ok2, num <span class="op">=</span> TC.<span class="fn">Coerce</span>(<span class="str">"abc"</span>, <span class="str">"number"</span>)
+<span class="fn">print</span>(ok2)      <span class="cm">-- false</span></code></pre>
+
+    <h2>CoerceTable</h2>
+    <div class="sig">TypeCoercer.<span class="fn">CoerceTable</span>(t: \{\}, schema: \{\}) → (boolean, \{\}, \{\})</div>
+    <p>Validates and coerces every field in <code>t</code> against the corresponding type name in <code>schema</code>. Returns three values: overall success, a table of coerced values (may be partial on failure), and a table of per-field error messages for any field that failed.</p>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> TC <span class="op">=</span> RoExpress.<span class="fn">TypeCoercer</span>
+
+<span class="cm">-- Validate an incoming payload</span>
+app:<span class="fn">Post</span>(<span class="str">"spawn"</span>, <span class="kw">function</span>(req, res)
+    <span class="kw">local</span> ok, data, errs <span class="op">=</span> TC.<span class="fn">CoerceTable</span>(req.data, {
+        position <span class="op">=</span> <span class="str">"vector3"</span>,
+        rotation <span class="op">=</span> <span class="str">"number"</span>,
+        tool     <span class="op">=</span> <span class="str">"string"</span>,
+    })
+    <span class="kw">if</span> <span class="kw">not</span> ok <span class="kw">then</span>
+        <span class="kw">return</span> res:<span class="fn">Error</span>(<span class="num">400</span>, errs)
+    <span class="kw">end</span>
+    <span class="cm">-- data.position is now a Vector3, data.rotation a number, etc.</span>
+    res:<span class="fn">Send</span>({ ok <span class="op">=</span> <span class="kw">true</span> })
+<span class="kw">end</span>)</code></pre>
+
+    <div class="cl info">The Router calls <code>Coerce</code> automatically for typed route params such as <code>:id=number</code>. You only need to call <code>Coerce</code> or <code>CoerceTable</code> directly when validating raw <code>req.data</code> payload fields.</div>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./typecoercer.html">← TypeCoercer</a> &nbsp;·&nbsp;
+      <a href="./typecoercer-types.html">Supported Types</a> | every recognised type name and wire format &nbsp;·&nbsp;
+      <a href="./router.html">Router</a> | typed route params that call Coerce automatically
+    </p>
+  </section></main></div>
+</body>
+</html>

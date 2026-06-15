@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wildcards &amp; Globs | RoExpress Docs</title>
+  <meta name="description" content="RoExpress Router wildcards and globs: * matches one unnamed segment, ** consumes all remaining segments. Captures available in req.captures[].">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow"><a href="./router.html">Router</a> → Wildcards &amp; Globs</div>
+        <h1>Wildcards &amp; Globs</h1>
+        <p class="lead">Use <code>*</code> to match exactly one unnamed segment, or <code>**</code> to consume all remaining segments. Both are captured into <code>req.captures[]</code> in order.</p>
+
+        <h2>Single wildcard — <code>*</code></h2>
+        <p><code>*</code> matches any one path segment. The matched value is stored as a string in <code>req.captures[n]</code>, where <code>n</code> is the left-to-right index of that wildcard in the pattern.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- matches: asset/sword/preview, asset/shield/preview, …</span>
+app:<span class="fn">Get</span>(<span class="str">"asset/*/preview"</span>, <span class="kw">function</span>(req, res)
+    <span class="fn">print</span>(req.captures[<span class="num">1</span>])  <span class="cm">-- "sword", "shield" …</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Multiple wildcards</h2>
+        <p>Each <code>*</code> gets its own sequential index in <code>req.captures</code>.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- matches: zone/forest/item/axe, zone/cave/item/torch, …</span>
+app:<span class="fn">Get</span>(<span class="str">"zone/*/item/*"</span>, <span class="kw">function</span>(req, res)
+    <span class="fn">print</span>(req.captures[<span class="num">1</span>])  <span class="cm">-- zone name, e.g. "forest"</span>
+    <span class="fn">print</span>(req.captures[<span class="num">2</span>])  <span class="cm">-- item name, e.g. "axe"</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Glob — <code>**</code></h2>
+        <p><code>**</code> must appear at the end of the pattern. It matches zero or more remaining segments and stores them as a <strong>table of strings</strong> in <code>req.captures[1]</code>.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- matches: assets/a  assets/a/b  assets/a/b/c …</span>
+app:<span class="fn">Get</span>(<span class="str">"assets/**"</span>, <span class="kw">function</span>(req, res)
+    <span class="cm">-- req.captures[1] = { "a", "b", "c" }</span>
+    <span class="fn">print</span>(table.<span class="fn">concat</span>(req.captures[<span class="num">1</span>], <span class="str">"/"</span>))
+<span class="kw">end</span>)</code></pre>
+
+        <div class="cl info"><strong>Zero segments.</strong> <code>**</code> matches even when there are no trailing segments. In that case <code>req.captures[1]</code> is an empty table <code>{}</code>.</div>
+
+        <h2>Captures reference</h2>
+        <table class="tbl">
+          <thead><tr><th>Pattern</th><th>Matches</th><th>Captured in</th><th>Value type</th></tr></thead>
+          <tbody>
+            <tr><td><code>item/*</code></td><td>Any single segment after <code>item/</code></td><td><code>req.captures[1]</code></td><td>string</td></tr>
+            <tr><td><code>zone/*/item/*</code></td><td>Two unnamed segments</td><td><code>req.captures[1]</code>, <code>req.captures[2]</code></td><td>string, string</td></tr>
+            <tr><td><code>files/**</code></td><td>Zero or more trailing segments</td><td><code>req.captures[1]</code></td><td>table of strings</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Route priority</h2>
+        <p>Wildcards are lower priority than named params, and globs are lowest of all. Literal segments beat everything. Registration order breaks ties within the same specificity level.</p>
+        <table class="tbl">
+          <thead><tr><th>Priority (high → low)</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td>Literal</td><td><code>item/sword</code></td></tr>
+            <tr><td>Constrained param</td><td><code>item/:id(%d+)</code></td></tr>
+            <tr><td>Typed param</td><td><code>item/:id=number</code></td></tr>
+            <tr><td>Plain param</td><td><code>item/:id</code></td></tr>
+            <tr><td>Wildcard</td><td><code>item/*</code></td></tr>
+            <tr><td>Glob</td><td><code>item/**</code></td></tr>
+          </tbody>
+        </table>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./router.html">← Router</a> &nbsp;·&nbsp;
+          <a href="./router-params.html">Named Params</a> | named captures with type coercion &nbsp;·&nbsp;
+          <a href="./router-constraints.html">Constraints</a> | Lua pattern restrictions &nbsp;·&nbsp;
+          <a href="./app.html">App</a> | route registration methods
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

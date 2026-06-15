@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Object | App | RoExpress Docs</title>
+  <meta name="description" content="The req object passed to every RoExpress route handler: params, captures, query, data, player, and raw payload.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow"><a href="./app.html" style="color:inherit;text-decoration:none">App</a> → Request Object</div>
+        <h1>Request Object</h1>
+        <p class="lead">The <code>req</code> argument passed to every modern <code>(req, res)</code> handler. Contains everything about the incoming request — params, payload, query, and the player who sent it.</p>
+
+        <h2>Fields</h2>
+        <table class="tbl">
+          <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>req.params</code></td>   <td><code>{[string]: any}</code></td>    <td>Named route params, already coerced to their declared type. <code>:id=number</code> arrives as a Lua number, not a string.</td></tr>
+            <tr><td><code>req.captures</code></td> <td><code>{any}</code></td>              <td>Positional captures from wildcards (<code>*</code>) and globs (<code>**</code>) in the route pattern.</td></tr>
+            <tr><td><code>req.query</code></td>    <td><code>{[string]: string}</code></td> <td>Query string params passed after <code>?</code>, e.g. <code>items?limit=10&page=2</code>.</td></tr>
+            <tr><td><code>req.data</code></td>     <td><code>any</code></td>               <td>The raw body sent by the client. May be <code>nil</code> for GET / DELETE with no body.</td></tr>
+            <tr><td><code>req.player</code></td>   <td><code>Player?</code></td>           <td>The Player who fired this request. Only populated in modern <code>(req, res)</code> handlers.</td></tr>
+            <tr><td><code>req.raw</code></td>      <td><code>Payload?</code></td>          <td>The full raw payload table before routing. Only populated in modern handlers. Useful for Tamper or logging middleware.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Examples</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- typed param → arrives as number</span>
+app:<span class="fn">Get</span>(<span class="str">"player/:id=number"</span>, <span class="kw">function</span>(req, res)
+    <span class="fn">print</span>(req.params.id)        <span class="cm">-- number, not string</span>
+    <span class="fn">print</span>(req.player.Name)      <span class="cm">-- Player who sent the request</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- wildcard capture</span>
+app:<span class="fn">Get</span>(<span class="str">"zone/*/item/*"</span>, <span class="kw">function</span>(req, res)
+    <span class="kw">local</span> zone, item <span class="op">=</span> req.captures[<span class="num">1</span>], req.captures[<span class="num">2</span>]
+<span class="kw">end</span>)
+
+<span class="cm">-- query string: GET("items?limit=10&page=2")</span>
+app:<span class="fn">Get</span>(<span class="str">"items"</span>, <span class="kw">function</span>(req, res)
+    <span class="kw">local</span> limit <span class="op">=</span> <span class="fn">tonumber</span>(req.query.limit) <span class="op">or</span> <span class="num">20</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- POST body</span>
+app:<span class="fn">Post</span>(<span class="str">"buy"</span>, <span class="kw">function</span>(req, res)
+    <span class="kw">local</span> itemId <span class="op">=</span> req.data.itemId   <span class="cm">-- from client body table</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./app.html">← App</a> &nbsp;·&nbsp;
+          <a href="./app-routing.html">Route Handlers</a> | registering GET/POST/PUT/DELETE &nbsp;·&nbsp;
+          <a href="./app-res.html">Response Object</a> | sending replies &nbsp;·&nbsp;
+          <a href="./router.html">Router</a> | param syntax, wildcards, constraints &nbsp;·&nbsp;
+          <a href="./types.html">Types</a> | full Payload and Request type definitions
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

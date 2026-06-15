@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How Promises Are Created | RoExpress Docs</title>
+  <meta name="description" content="How RoExpress Promises are created: returned from GetAsync, PostAsync, PutAsync, DeleteAsync. What the resolved NetworkResponse looks like and what rejects.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow"><a href="./promise.html">Promise</a> → How Promises Are Created</div>
+        <h1>How Promises Are Created</h1>
+        <p class="lead">You never construct Promises manually — they are returned directly by the async network methods. Understanding what they resolve and reject with lets you handle both cases correctly.</p>
+
+        <h2>Source methods</h2>
+        <p>Each of the four Async request methods returns a Promise:</p>
+        <div class="sig"><span class="pill p-get">GET</span> network:<span class="fn">GetAsync</span>(route, data?) → Promise</div>
+        <div class="sig"><span class="pill p-post">POST</span> network:<span class="fn">PostAsync</span>(route, data?) → Promise</div>
+        <div class="sig"><span class="pill p-put">PUT</span> network:<span class="fn">PutAsync</span>(route, data?) → Promise</div>
+        <div class="sig"><span class="pill p-delete">DELETE</span> network:<span class="fn">DeleteAsync</span>(route, data?) → Promise</div>
+
+        <h2>What the Promise resolves with</h2>
+        <p>When the server responds successfully (the handler calls <code>res:Send(data)</code>), the Promise resolves with the full <strong>NetworkResponse</strong> table. The resolved value passed to your <code>:Then()</code> callback is that table.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>network:<span class="fn">GetAsync</span>(<span class="str">"player/123"</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res)
+        <span class="cm">-- res is the full NetworkResponse</span>
+        <span class="fn">print</span>(res.type)       <span class="cm">-- "success"</span>
+        <span class="fn">print</span>(res.status)     <span class="cm">-- e.g. 200</span>
+        <span class="fn">print</span>(res.data)       <span class="cm">-- whatever the server sent</span>
+        <span class="fn">print</span>(res.message)    <span class="cm">-- nil on success</span>
+    <span class="kw">end</span>)</code></pre>
+
+        <h2>NetworkResponse fields (resolved)</h2>
+        <table class="tbl">
+          <thead><tr><th>Field</th><th>Type</th><th>Value on success</th></tr></thead>
+          <tbody>
+            <tr><td><code>type</code></td><td>string</td><td><code>"success"</code></td></tr>
+            <tr><td><code>status</code></td><td>number?</td><td>Code from <code>res:Status()</code> on server, or nil if not set.</td></tr>
+            <tr><td><code>data</code></td><td>any?</td><td>Payload from <code>res:Send(data)</code> on server.</td></tr>
+            <tr><td><code>message</code></td><td>string?</td><td>nil on success.</td></tr>
+            <tr><td><code>compressed</code></td><td>boolean?</td><td><code>true</code> if auto-decompressed from Deflate.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>What the Promise rejects with</h2>
+        <p>When the server returns an error (the handler calls <code>res:Error(message)</code>), or the request times out after all retry attempts, the Promise rejects. The value passed to <code>:Catch()</code> is also a <strong>NetworkResponse</strong> table — but with <code>type == "error"</code> or <code>type == "timeout"</code>.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>network:<span class="fn">GetAsync</span>(<span class="str">"player/999"</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res) UI:<span class="fn">Load</span>(res.data) <span class="kw">end</span>)
+    :<span class="fn">Catch</span>(<span class="kw">function</span>(err)
+        <span class="cm">-- err is a NetworkResponse with type == "error" or "timeout"</span>
+        <span class="kw">if</span> err.type <span class="op">==</span> <span class="str">"timeout"</span> <span class="kw">then</span>
+            <span class="fn">warn</span>(<span class="str">"Request timed out"</span>)
+        <span class="kw">else</span>
+            <span class="fn">warn</span>(<span class="str">"Server error:"</span>, err.message)
+        <span class="kw">end</span>
+    <span class="kw">end</span>)</code></pre>
+
+        <h2>NetworkResponse fields (rejected)</h2>
+        <table class="tbl">
+          <thead><tr><th>Field</th><th>Type</th><th>Value on error/timeout</th></tr></thead>
+          <tbody>
+            <tr><td><code>type</code></td><td>string</td><td><code>"error"</code> or <code>"timeout"</code></td></tr>
+            <tr><td><code>status</code></td><td>number?</td><td>Code from <code>res:Status()</code> on server if it called Error. nil on timeout.</td></tr>
+            <tr><td><code>data</code></td><td>any?</td><td>nil</td></tr>
+            <tr><td><code>message</code></td><td>string?</td><td>Message from <code>res:Error(message)</code>, or a built-in rejection message from middleware.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Full resolve/reject example</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>network:<span class="fn">PostAsync</span>(<span class="str">"shop/buy"</span>, { itemId <span class="op">=</span> <span class="num">42</span> })
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res)
+        <span class="cm">-- server called res:Status(200):Send({ newBalance = 850 })</span>
+        CoinDisplay:<span class="fn">Set</span>(res.data.newBalance)
+    <span class="kw">end</span>)
+    :<span class="fn">Catch</span>(<span class="kw">function</span>(err)
+        <span class="kw">if</span> err.type <span class="op">==</span> <span class="str">"error"</span> <span class="kw">then</span>
+            <span class="cm">-- server called res:Error("Not enough coins")</span>
+            UI:<span class="fn">ShowError</span>(err.message)
+        <span class="kw">elseif</span> err.type <span class="op">==</span> <span class="str">"timeout"</span> <span class="kw">then</span>
+            UI:<span class="fn">ShowError</span>(<span class="str">"Server not responding — try again"</span>)
+        <span class="kw">end</span>
+    <span class="kw">end</span>)</code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./promise.html">← Promise</a> &nbsp;·&nbsp;
+          <a href="./promise-chaining.html">Chaining</a> | Then, Catch, Finally reference &nbsp;·&nbsp;
+          <a href="./network-async.html">Async / Promise API</a> | all four async methods &nbsp;·&nbsp;
+          <a href="./types.html">NetworkResponse type</a> | full field reference
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

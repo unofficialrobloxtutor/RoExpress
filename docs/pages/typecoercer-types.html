@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supported Types | TypeCoercer | RoExpress Docs</title>
+  <meta name="description" content="Full reference of every type name recognised by TypeCoercer: number, boolean, Vector2, Vector3, CFrame, Color3, UDim, UDim2, Rect, Enum, Instance.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+    <div class="eyebrow"><a href="./typecoercer.html">TypeCoercer</a> → Supported Types</div>
+    <h1>Supported Types</h1>
+    <p class="lead">Every type name that TypeCoercer recognises, what input it accepts, and the Luau result type returned on success. Pass the type name as the second argument to <code>Coerce</code>, or as a schema value in <code>CoerceTable</code>.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Type name</th><th>Coerces from</th><th>Result type</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><code>string</code></td><td>any value</td><td>string</td><td>Passes through as-is via <code>tostring</code>.</td></tr>
+        <tr><td><code>number</code></td><td><code>"42"</code>, <code>"3.14"</code></td><td>number</td><td>Fails if the string cannot be parsed as a number.</td></tr>
+        <tr><td><code>int</code></td><td><code>"42"</code></td><td>number</td><td>Rejects decimals — must be a whole number string.</td></tr>
+        <tr><td><code>boolean</code></td><td><code>"true"</code>, <code>"false"</code>, <code>"1"</code>, <code>"0"</code></td><td>boolean</td><td>Case-insensitive.</td></tr>
+        <tr><td><code>vector2</code></td><td><code>"x,y"</code></td><td>Vector2</td><td></td></tr>
+        <tr><td><code>vector3</code></td><td><code>"x,y,z"</code></td><td>Vector3</td><td></td></tr>
+        <tr><td><code>cframe</code></td><td><code>"x,y,z"</code> or <code>"x,y,z,rx,ry,rz"</code></td><td>CFrame</td><td>Rotation as Euler degrees. Position-only form produces identity rotation.</td></tr>
+        <tr><td><code>color3</code></td><td><code>"r,g,b"</code></td><td>Color3</td><td>Auto-detects 0–255 vs 0–1 on input; always outputs 0–255 internally.</td></tr>
+        <tr><td><code>udim</code></td><td><code>"scale,offset"</code></td><td>UDim</td><td></td></tr>
+        <tr><td><code>udim2</code></td><td><code>"xs,xo,ys,yo"</code></td><td>UDim2</td><td>Four comma-separated values: X scale, X offset, Y scale, Y offset.</td></tr>
+        <tr><td><code>rect</code></td><td><code>"minX,minY,maxX,maxY"</code></td><td>Rect</td><td></td></tr>
+        <tr><td><code>Enum.TypeName</code></td><td><code>"ValueName"</code>, <code>"Enum.TypeName.ValueName"</code>, or numeric value</td><td>EnumItem</td><td>Exact enum type required, e.g. <code>"Enum.CameraType"</code>.</td></tr>
+        <tr><td><code>Enum</code></td><td><code>"Enum.TypeName.ValueName"</code></td><td>EnumItem</td><td>Accepts any EnumItem; wire string must carry the full type path.</td></tr>
+        <tr><td><code>Instance</code></td><td><code>"ClassName:Name"</code></td><td>Instance</td><td>Requires at least one registered instance root. See <a href="./guide-typecoercer.html">TypeCoercer Guide</a>.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Wire format examples</h2>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> TC <span class="op">=</span> RoExpress.<span class="fn">TypeCoercer</span>
+
+TC.<span class="fn">Coerce</span>(<span class="str">"10,5,-20"</span>,              <span class="str">"vector3"</span>)          <span class="cm">-- Vector3.new(10, 5, -20)</span>
+TC.<span class="fn">Coerce</span>(<span class="str">"255,0,128"</span>,             <span class="str">"color3"</span>)           <span class="cm">-- Color3.fromRGB(255, 0, 128)</span>
+TC.<span class="fn">Coerce</span>(<span class="str">"1,2,3,0,0,0"</span>,          <span class="str">"cframe"</span>)           <span class="cm">-- CFrame at (1,2,3)</span>
+TC.<span class="fn">Coerce</span>(<span class="str">"Scriptable"</span>,            <span class="str">"Enum.CameraType"</span>) <span class="cm">-- Enum.CameraType.Scriptable</span>
+TC.<span class="fn">Coerce</span>(<span class="str">"Part:Baseplate"</span>,        <span class="str">"Instance"</span>)        <span class="cm">-- workspace.Baseplate</span>
+TC.<span class="fn">Coerce</span>(<span class="str">"0.5,10"</span>,               <span class="str">"udim"</span>)             <span class="cm">-- UDim.new(0.5, 10)</span>
+TC.<span class="fn">Coerce</span>(<span class="str">"0,0,100,50"</span>,           <span class="str">"rect"</span>)             <span class="cm">-- Rect.new(0, 0, 100, 50)</span></code></pre>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./typecoercer.html">← TypeCoercer</a> &nbsp;·&nbsp;
+      <a href="./typecoercer-coerce.html">Coerce</a> | Coerce and CoerceTable method signatures &nbsp;·&nbsp;
+      <a href="./guide-typecoercer.html">TypeCoercer Guide</a> | usage patterns with routes and DataStore
+    </p>
+  </section></main></div>
+</body>
+</html>

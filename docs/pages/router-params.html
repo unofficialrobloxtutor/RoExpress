@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Named Params | RoExpress Docs</title>
+  <meta name="description" content="RoExpress Router named params: capture route segments by name with :name, coerce to typed values with :name=type. Supports number, boolean, Vector3, Color3, CFrame, Enum, and more.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow"><a href="./router.html">Router</a> → Named Params</div>
+        <h1>Named Params</h1>
+        <p class="lead">Capture route segments by name with <code>:name</code>, or capture and coerce to a typed value with <code>:name=type</code>. Captured values are available on <code>req.params</code>.</p>
+
+        <h2>Basic syntax</h2>
+        <p>Prefix a segment with <code>:</code> to name it. The value is always a string unless a type annotation is added.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- :id captures any single segment as a string</span>
+app:<span class="fn">Get</span>(<span class="str">"player/:id"</span>, <span class="kw">function</span>(req, res)
+    <span class="fn">print</span>(req.params.id)  <span class="cm">-- "123" (string)</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- :id=number coerces to a number</span>
+app:<span class="fn">Get</span>(<span class="str">"player/:id=number"</span>, <span class="kw">function</span>(req, res)
+    <span class="fn">print</span>(req.params.id)  <span class="cm">-- 123 (number)</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Supported types</h2>
+        <table class="tbl">
+          <thead><tr><th>Annotation</th><th>Input</th><th>Result type</th></tr></thead>
+          <tbody>
+            <tr><td><code>:name</code></td><td>Any segment</td><td>string</td></tr>
+            <tr><td><code>:name=number</code></td><td>Numeric string</td><td>number</td></tr>
+            <tr><td><code>:name=int</code></td><td>Integer string (no decimal)</td><td>number</td></tr>
+            <tr><td><code>:name=boolean</code></td><td><code>"true"</code> or <code>"false"</code></td><td>boolean</td></tr>
+            <tr><td><code>:name=vector2</code></td><td>Vector2-shaped segment</td><td>Vector2</td></tr>
+            <tr><td><code>:name=vector3</code></td><td>Vector3-shaped segment</td><td>Vector3</td></tr>
+            <tr><td><code>:name=cframe</code></td><td>CFrame-shaped segment</td><td>CFrame</td></tr>
+            <tr><td><code>:name=color3</code></td><td>Color3-shaped segment</td><td>Color3</td></tr>
+            <tr><td><code>:name=Enum</code></td><td>Any EnumItem (wire format carries the type)</td><td>EnumItem</td></tr>
+            <tr><td><code>:name=Enum.CameraType</code></td><td>Specific Enum type</td><td>EnumItem</td></tr>
+            <tr><td><code>:name=instance</code></td><td>Instance reference</td><td>Instance</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Examples</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Integer item ID</span>
+app:<span class="fn">Get</span>(<span class="str">"shop/:itemId=int"</span>, <span class="kw">function</span>(req, res)
+    <span class="fn">print</span>(req.params.itemId)  <span class="cm">-- always a whole number</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- Boolean flag</span>
+app:<span class="fn">Get</span>(<span class="str">"flag/:on=boolean"</span>, <span class="kw">function</span>(req, res)
+    <span class="fn">print</span>(req.params.on)  <span class="cm">-- true or false</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- Vector3 position</span>
+app:<span class="fn">Get</span>(<span class="str">"pos/:v=vector3"</span>, <span class="kw">function</span>(req, res)
+    <span class="fn">print</span>(req.params.v)  <span class="cm">-- Vector3 value</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- Specific Enum type</span>
+app:<span class="fn">Get</span>(<span class="str">"cam/:mode=Enum.CameraType"</span>, <span class="kw">function</span>(req, res)
+    <span class="fn">print</span>(req.params.mode)  <span class="cm">-- EnumItem</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Coercion failure and OnParamError</h2>
+        <p>When a typed param fails coercion (wrong format or out of range), the default behaviour is to respond 400 automatically and skip the handler. Override this with <code>app:OnParamError(fn)</code>.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>app:<span class="fn">OnParamError</span>(<span class="kw">function</span>(req, res, paramName, value)
+    res:<span class="fn">Status</span>(<span class="num">422</span>):<span class="fn">Send</span>({ error <span class="op">=</span> <span class="str">"Bad param: "</span> <span class="op">..</span> paramName })
+<span class="kw">end</span>)</code></pre>
+
+        <div class="cl info"><strong>Pattern constraints.</strong> You can restrict which values a named param matches using a Lua pattern in parentheses: <code>:id(%d+)=number</code>. See <a href="./router-constraints.html">Constraints</a> for the full syntax.</div>
+
+        <h2>RouteBuilder — typed URL construction</h2>
+        <p><code>Router.Route(pattern)</code> pairs a pattern with a type-checked URL builder so your handler registration and URL construction can never drift apart.</p>
+        <div class="sig">RoExpress.Router.<span class="fn">Route</span>(pattern: string) → RouteBuilder&lt;T&gt;</div>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> GetCoins <span class="op">=</span> RoExpress.Router.<span class="fn">Route</span>(<span class="str">"player/:UserId=number/coins"</span>) :: RoExpress.RouteBuilder&lt;{
+    UserId: number,
+}&gt;
+
+App:<span class="fn">Get</span>(GetCoins.pattern, <span class="kw">function</span>(req, res)
+    res:<span class="fn">Send</span>({ coins <span class="op">=</span> <span class="num">100</span> })
+<span class="kw">end</span>)
+
+<span class="cm">-- .build() is type-checked and always serialises correctly</span>
+GetCoins.<span class="fn">build</span>({ UserId <span class="op">=</span> <span class="num">12345</span> })  <span class="cm">-- "/player/12345/coins"</span></code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./router.html">← Router</a> &nbsp;·&nbsp;
+          <a href="./router-constraints.html">Constraints</a> | Lua pattern restrictions on param values &nbsp;·&nbsp;
+          <a href="./router-wildcards.html">Wildcards &amp; Globs</a> | unnamed captures &nbsp;·&nbsp;
+          <a href="./app.html">App</a> | OnParamError handler &nbsp;·&nbsp;
+          <a href="./types.html">Exported Types</a> | RouteBuilder&lt;T&gt;
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

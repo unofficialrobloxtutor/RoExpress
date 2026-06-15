@@ -17,4 +17,7 @@ Thumbs.db
 *.log
 
 # Temporary files
+*.tmp
+*.temp
 
+.claude/worktrees/agent-a80ff87b0454172e6

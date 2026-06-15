@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Creating Ports | RoExpress Docs</title>
+  <meta name="description" content="RoExpress port creation: app:Listen(name, callback, settings?) registers a named isolated pipeline with its own RemoteEvent, Router, and TokenBucket.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow"><a href="./port.html">Port</a> → Creating Ports</div>
+        <h1>Creating Ports</h1>
+        <p class="lead">Call <code>app:Listen(name, callback, settings?)</code> to register a named port. The callback receives the port's own App-like instance — a fully isolated pipeline with its own RemoteEvent, Router, and TokenBucket.</p>
+
+        <h2>Signature</h2>
+        <div class="sig">app:<span class="fn">Listen</span>(name: string, callback: (port) → (), settings?: PortSettings) → Port</div>
+
+        <table class="tbl">
+          <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>name</code></td><td>string</td><td>Unique port identifier — must match the name used on the client</td></tr>
+            <tr><td><code>callback</code></td><td><code>(port) → ()</code></td><td>Called immediately with the port instance. Register routes inside.</td></tr>
+            <tr><td><code>settings</code></td><td>PortSettings?</td><td>Optional TokenBucket configuration (see <a href="./port-settings.html">Port Settings</a>)</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Port API</h2>
+        <p>The port instance exposes the same routing interface as App:</p>
+        <div class="sig">port:<span class="fn">Get</span>(route, handler)</div>
+        <div class="sig">port:<span class="fn">Post</span>(route, handler)</div>
+        <div class="sig">port:<span class="fn">Put</span>(route, handler)</div>
+        <div class="sig">port:<span class="fn">Delete</span>(route, handler)</div>
+        <div class="sig">port:<span class="fn">Use</span>(id, fn) &nbsp;·&nbsp; port:<span class="fn">Unuse</span>(id)</div>
+        <div class="sig">port:<span class="fn">Push</span>(player, event, data) &nbsp;·&nbsp; port:<span class="fn">PushAll</span>(event, data) &nbsp;·&nbsp; port:<span class="fn">PushTo</span>(players, event, data)</div>
+
+        <h2>Combat port example</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> app <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
+
+app:<span class="fn">Listen</span>(<span class="str">"combat"</span>, <span class="kw">function</span>(port)
+    port:<span class="fn">Post</span>(<span class="str">"shoot/:targetId=number"</span>, <span class="kw">function</span>(req, res)
+        res:<span class="fn">Send</span>(<span class="fn">handleShoot</span>(req.player, req.params.targetId))
+    <span class="kw">end</span>)
+
+    port:<span class="fn">Post</span>(<span class="str">"reload"</span>, <span class="kw">function</span>(req, res)
+        res:<span class="fn">Send</span>(<span class="fn">handleReload</span>(req.player))
+    <span class="kw">end</span>)
+<span class="kw">end</span>, {
+    maxTokens  <span class="op">=</span> <span class="num">20</span>,
+    refillRate <span class="op">=</span> <span class="num">10</span>,
+})</code></pre>
+
+        <h2>Getting a port reference later</h2>
+        <p>If you need to add routes or call push methods from outside the Listen callback, use <code>app:GetPort(name)</code>.</p>
+        <div class="sig">app:<span class="fn">GetPort</span>(name: string) → Port</div>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> combatPort <span class="op">=</span> app:<span class="fn">GetPort</span>(<span class="str">"combat"</span>)
+combatPort:<span class="fn">Get</span>(<span class="str">"status"</span>, <span class="kw">function</span>(req, res)
+    res:<span class="fn">Send</span>(<span class="str">"ok"</span>)
+<span class="kw">end</span>)</code></pre>
+
+        <div class="cl info"><strong>Isolation.</strong> Each port creates its own RemoteEvent in ReplicatedStorage under a name derived from the port name. Requests to the "combat" port never share bandwidth or rate-limit tokens with the main App channel or other ports.</div>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./port.html">← Port</a> &nbsp;·&nbsp;
+          <a href="./port-use.html">Using Ports</a> | client-side access &nbsp;·&nbsp;
+          <a href="./port-settings.html">Port Settings</a> | TokenBucket configuration &nbsp;·&nbsp;
+          <a href="./router.html">Router</a> | route syntax available inside ports &nbsp;·&nbsp;
+          <a href="./examples-gun.html">Gun Example</a> | combat port in full context
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

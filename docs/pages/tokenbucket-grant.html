@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grant &amp; Reset | TokenBucket | RoExpress Docs</title>
+  <meta name="description" content="TokenBucket Grant, GrantAll, and Reset: add tokens as a reward, replenish all players, or reset a bucket to its starting value.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+    <div class="eyebrow"><a href="./tokenbucket.html">TokenBucket</a> → Grant &amp; Reset</div>
+    <h1>Grant &amp; Reset</h1>
+    <p class="lead">Add tokens back to a player's bucket as a reward or privilege, replenish all active players at once, or reset an individual bucket to its configured starting value.</p>
+
+    <h2>Signatures</h2>
+    <div class="sig">bucket:<span class="fn">Grant</span>(player: Player, amount: number?)</div>
+    <div class="sig">bucket:<span class="fn">GrantAll</span>(amount: number?)</div>
+    <div class="sig">bucket:<span class="fn">Reset</span>(player: Player?)</div>
+
+    <h2>Behaviour</h2>
+    <table class="tbl">
+      <thead><tr><th>Method</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>Grant</code></td><td>Adds <code>amount</code> tokens to the specified player's bucket. The resulting count is capped at <code>max</code>. If <code>amount</code> is omitted, adds 1.</td></tr>
+        <tr><td><code>GrantAll</code></td><td>Adds <code>amount</code> tokens to every currently active player's bucket. Useful for a server-wide bonus event. Each player is capped at <code>max</code> individually.</td></tr>
+        <tr><td><code>Reset</code></td><td>Sets the player's token count back to the configured <code>start</code> value (defaults to <code>max</code>). If <code>player</code> is omitted, resets all active players.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Example: VIP reward</h2>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> bucket <span class="op">=</span> app.TokenBucket
+
+<span class="cm">-- Grant 20 bonus tokens when a player buys VIP</span>
+MarketplaceService.PromptPurchaseFinished:<span class="fn">Connect</span>(<span class="kw">function</span>(player, assetId, purchased)
+    <span class="kw">if</span> purchased <span class="kw">and</span> assetId <span class="op">==</span> VIP_PASS_ID <span class="kw">then</span>
+        bucket:<span class="fn">Grant</span>(player, <span class="num">20</span>)
+    <span class="kw">end</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- Server-wide refill at round start</span>
+<span class="kw">local</span> <span class="kw">function</span> <span class="fn">onRoundStart</span>()
+    bucket:<span class="fn">GrantAll</span>()   <span class="cm">-- top everyone up by 1, or pass an amount</span>
+<span class="kw">end</span></code></pre>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./tokenbucket.html">← TokenBucket</a> &nbsp;·&nbsp;
+      <a href="./tokenbucket-consume.html">Consume &amp; Check</a> | deduct tokens per request &nbsp;·&nbsp;
+      <a href="./tokenbucket-config.html">Configuration</a> | max, refillRate, refillInterval
+    </p>
+  </section></main></div>
+</body>
+</html>

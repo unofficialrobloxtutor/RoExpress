@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Promise Chaining | RoExpress Docs</title>
+  <meta name="description" content="RoExpress Promise chaining: Then, Catch, Finally signatures, chaining examples, and how errors propagate through the chain.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow"><a href="./promise.html">Promise</a> → Chaining</div>
+        <h1>Chaining</h1>
+        <p class="lead">Then, Catch, and Finally let you compose async steps without nested callbacks. Each method returns the same Promise, so you can chain them in sequence.</p>
+
+        <h2>Then</h2>
+        <div class="sig">promise:<span class="fn">Then</span>(fn: (value: any) → any?) → Promise</div>
+        <p>Called when the Promise resolves. The return value of <code>fn</code> becomes the resolved value of the next step in the chain. If <code>fn</code> returns a Promise, the chain waits for that Promise to settle before continuing.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>network:<span class="fn">GetAsync</span>(<span class="str">"shop/catalogue"</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res)
+        <span class="kw">return</span> res.data.items        <span class="cm">-- pass items to the next Then</span>
+    <span class="kw">end</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(items)
+        <span class="fn">populateShop</span>(items)         <span class="cm">-- receives the return value from above</span>
+    <span class="kw">end</span>)</code></pre>
+
+        <h2>Catch</h2>
+        <div class="sig">promise:<span class="fn">Catch</span>(fn: (err: any) → any?) → Promise</div>
+        <p>Called when any step in the chain rejects (errors or times out). A single <code>:Catch()</code> at the end of the chain handles errors from all preceding steps — you don't need one after every <code>:Then()</code>.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>network:<span class="fn">GetAsync</span>(<span class="str">"player/data"</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res) UI:<span class="fn">Load</span>(res.data) <span class="kw">end</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>() UI:<span class="fn">Show</span>() <span class="kw">end</span>)
+    :<span class="fn">Catch</span>(<span class="kw">function</span>(err)
+        <span class="cm">-- catches errors from any Then above</span>
+        <span class="fn">warn</span>(err.message)
+        UI:<span class="fn">ShowError</span>(<span class="str">"Failed to load player data"</span>)
+    <span class="kw">end</span>)</code></pre>
+
+        <h2>Finally</h2>
+        <div class="sig">promise:<span class="fn">Finally</span>(fn: () → ()) → Promise</div>
+        <p>Called regardless of whether the Promise resolved or rejected. Use it for cleanup that must always run — hiding a loading spinner, unlocking a button, etc. The return value of <code>fn</code> is ignored.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>LoadingSpinner.Visible <span class="op">=</span> <span class="kw">true</span>
+
+network:<span class="fn">GetAsync</span>(<span class="str">"leaderboard"</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res) LeaderboardUI:<span class="fn">Populate</span>(res.data) <span class="kw">end</span>)
+    :<span class="fn">Catch</span>(<span class="kw">function</span>(err) <span class="fn">warn</span>(err.message) <span class="kw">end</span>)
+    :<span class="fn">Finally</span>(<span class="kw">function</span>()
+        LoadingSpinner.Visible <span class="op">=</span> <span class="kw">false</span>   <span class="cm">-- always runs</span>
+    <span class="kw">end</span>)</code></pre>
+
+        <h2>How errors propagate</h2>
+        <p>When a step rejects — either because the network returned an error/timeout, or because a <code>:Then()</code> callback threw — the rejection skips all subsequent <code>:Then()</code> steps and jumps to the first <code>:Catch()</code> in the chain. After <code>:Catch()</code> handles the error, the chain continues normally (resolved) unless <code>:Catch()</code> itself throws.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>network:<span class="fn">GetAsync</span>(<span class="str">"missing/route"</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res)
+        <span class="cm">-- SKIPPED if the request failed</span>
+        UI:<span class="fn">Load</span>(res.data)
+    <span class="kw">end</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>()
+        <span class="cm">-- also SKIPPED</span>
+        UI:<span class="fn">Show</span>()
+    <span class="kw">end</span>)
+    :<span class="fn">Catch</span>(<span class="kw">function</span>(err)
+        <span class="cm">-- runs here with the NetworkResponse that has type == "error"</span>
+        <span class="fn">warn</span>(<span class="str">"Error:"</span>, err.type, err.message)
+    <span class="kw">end</span>)
+    :<span class="fn">Finally</span>(<span class="kw">function</span>()
+        <span class="cm">-- ALWAYS runs</span>
+        LoadingSpinner.Visible <span class="op">=</span> <span class="kw">false</span>
+    <span class="kw">end</span>)</code></pre>
+
+        <h2>Sequential requests</h2>
+        <p>Return a Promise from inside <code>:Then()</code> to chain network calls in order. The outer chain does not advance until the returned Promise settles.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>network:<span class="fn">GetAsync</span>(<span class="str">"shop/catalogue"</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res)
+        ShopUI:<span class="fn">Load</span>(res.data)
+        <span class="kw">return</span> network:<span class="fn">GetAsync</span>(<span class="str">"player/data"</span>)   <span class="cm">-- wait for this too</span>
+    <span class="kw">end</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res)
+        CoinsUI:<span class="fn">Set</span>(res.data.coins)               <span class="cm">-- player/data result</span>
+    <span class="kw">end</span>)
+    :<span class="fn">Catch</span>(<span class="kw">function</span>(err)
+        UI:<span class="fn">ShowError</span>(err.message)
+    <span class="kw">end</span>)</code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./promise.html">← Promise</a> &nbsp;·&nbsp;
+          <a href="./promise-create.html">Creation</a> | what resolves and rejects &nbsp;·&nbsp;
+          <a href="./network-async.html">Async / Promise API</a> | methods that return Promises &nbsp;·&nbsp;
+          <a href="./guide-promise.html">Promise Guide</a> | parallel merge and advanced patterns
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

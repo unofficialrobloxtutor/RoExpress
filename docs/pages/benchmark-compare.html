@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Benchmark Compare | RoExpress Docs</title>
+  <meta name="description" content="Benchmark.Compare — print multiple Results side-by-side. Interpret p95 vs p99 tail latencies and use comparisons in pre-deploy checks.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow"><a href="./benchmark.html">Benchmark</a> → Compare</div>
+    <h1>Compare</h1>
+    <p class="lead">Print multiple Results side-by-side in a columnar table. The <code>target</code> row shows what each column is measuring so mixed comparisons — RoExpress, named ports, and vanilla remotes together — are easy to read at a glance.</p>
+
+    <h2>bench:Compare()</h2>
+    <div class="sig"><span class="fn">bench:Compare</span>(<span class="tp">results</span>: { Results }) → ()</div>
+    <p>Accepts an array of Results returned by any run method. Prints a formatted columnar table to the Studio output window. Each column is one benchmark run identified by its <code>label</code> and <code>target</code>.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> bench     <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Benchmark"</span>)
+<span class="kw">local</span> rs        <span class="op">=</span> game:<span class="fn">GetService</span>(<span class="str">"ReplicatedStorage"</span>)
+<span class="kw">local</span> combatNet <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Network"</span>, <span class="str">"combat"</span>)
+<span class="kw">local</span> echoFunc  <span class="op">=</span> rs:<span class="fn">WaitForChild</span>(<span class="str">"EchoFunc"</span>)
+
+bench:<span class="fn">Compare</span>({
+    bench:<span class="fn">Run</span>(<span class="str">"player/123"</span>,                { label <span class="op">=</span> <span class="str">"Main GET"</span>   }),
+    bench:<span class="fn">RunOnPort</span>(combatNet, <span class="str">"shoot/1"</span>, { method <span class="op">=</span> <span class="str">"POST"</span>, label <span class="op">=</span> <span class="str">"Port POST"</span>  }),
+    bench:<span class="fn">RunRemoteFunction</span>(echoFunc,      { label <span class="op">=</span> <span class="str">"Vanilla RF"</span>  }),
+})</code></pre>
+
+    <h2>Comparison table output</h2>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">── ─────────────────────────────────────────────────────────────────</span>
+<span class="cm">   metric      Main GET          Port POST         Vanilla RF</span>
+<span class="cm">   ───────────────────────────────────────────────────────────────</span>
+<span class="cm">   min         4.21 ms           5.10 ms           8.44 ms</span>
+<span class="cm">   avg         6.83 ms           7.22 ms           12.31 ms</span>
+<span class="cm">   median      6.10 ms           6.90 ms           11.80 ms</span>
+<span class="cm">   p95         12.44 ms          13.01 ms           22.10 ms</span>
+<span class="cm">   p99         18.07 ms          19.44 ms           28.77 ms</span>
+<span class="cm">   max         18.71 ms          20.01 ms           30.22 ms</span>
+<span class="cm">   ───────────────────────────────────────────────────────────────</span>
+<span class="cm">   errors      0/20              0/20              0/20</span>
+<span class="cm">   req/s       8.3               7.9               4.1</span>
+<span class="cm">   target      RoExpress         RoExpress Port    RemoteFunction</span>
+<span class="cm">── ─────────────────────────────────────────────────────────────────</span></code></pre>
+
+    <h2>Interpreting p95 vs p99</h2>
+    <p><strong>p95</strong> (95th percentile) means 95% of your measured requests finished within that time. It captures the "typical worst case" — one request in twenty lands at or above this value. For most gameplay systems, p95 is the right threshold to enforce.</p>
+    <p><strong>p99</strong> (99th percentile) captures the tail — one request in a hundred lands at or above this value. High p99 with a low avg indicates occasional spikes: JIT cold starts, GC pauses, or Roblox rate-limit jitter. Use p99 to detect these outliers, but don't set SLA targets against it with low iteration counts (you need at least 100 samples for a meaningful p99).</p>
+
+    <table class="tbl">
+      <thead><tr><th>Metric</th><th>What it tells you</th><th>When to use it</th></tr></thead>
+      <tbody>
+        <tr><td><code>avg</code></td><td>Mean RTT</td><td>Overall throughput character; hides outliers</td></tr>
+        <tr><td><code>median</code></td><td>p50 — half of requests are faster</td><td>Typical player experience</td></tr>
+        <tr><td><code>p95</code></td><td>Typical worst case (1-in-20)</td><td>Pre-deploy gate, SLA thresholds</td></tr>
+        <tr><td><code>p99</code></td><td>Tail latency (1-in-100)</td><td>Spike detection; needs ≥100 iterations</td></tr>
+        <tr><td><code>max</code></td><td>Single worst request</td><td>Identifying timeouts; sensitive to outliers</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Using Compare in pre-deploy checks</h2>
+    <p>Run <code>Compare</code> from a <code>LocalScript</code> in Studio Play mode before shipping a build. Keep a baseline result (or hard-coded thresholds) and assert against p95:</p>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> bench   <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Benchmark"</span>)
+<span class="kw">local</span> result  <span class="op">=</span> bench:<span class="fn">Run</span>(<span class="str">"player/123"</span>, { iterations <span class="op">=</span> <span class="num">50</span> })
+
+bench:<span class="fn">Print</span>(result)
+
+<span class="kw">if</span> result.p95 <span class="op">></span> <span class="num">20</span> <span class="kw">then</span>
+    <span class="fn">warn</span>(<span class="str">"p95 regression detected:"</span>, result.p95, <span class="str">"ms (threshold: 20 ms)"</span>)
+<span class="kw">end</span></code></pre>
+
+    <div class="cl info"><strong>Do not run Benchmark in production.</strong> Each measured request is a real remote call from a real player connection. Use Benchmark in Studio Play mode or a dedicated test place only.</div>
+
+    <h2>bench:Destroy()</h2>
+    <div class="sig"><span class="fn">bench:Destroy</span>() → ()</div>
+    <p>Drops the internal Network reference. Does not destroy the <code>Network</code> instance — the caller owns it.</p>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./benchmark.html">← Benchmark</a> &nbsp;·&nbsp;
+      <a href="./benchmark-run.html">Run</a> | collecting Results to pass to Compare &nbsp;·&nbsp;
+      <a href="./network.html">Network</a> | the instance passed to Benchmark &nbsp;·&nbsp;
+      <a href="./tokenbucket.html">TokenBucket</a> | rate limits that affect results
+    </p>
+
+  </section></main></div>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Types | RoExpress Docs</title>
+  <meta name="description" content="RoExpress request-side types: Request object fields, Payload envelope, and RouteHandler function signature including compact and legacy forms.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow"><a href="./types.html">Types</a> → Request Types</div>
+    <h1>Request Types</h1>
+    <p class="lead">The incoming side of every route handler. <code>Request</code> is the parsed, player-attributed object your handler receives. <code>Payload</code> is the raw network envelope. <code>RouteHandler</code> is the function signature accepted by <code>app:Get()</code>, <code>app:Post()</code>, and so on.</p>
+
+    <h2>Request</h2>
+    <p>The <code>req</code> argument passed to every route handler. All fields are populated by the time your handler fires.</p>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">export type</span> Request <span class="op">=</span> {
+    params   : { [string]: any },   <span class="cm">-- named captures from the route pattern</span>
+    captures : { any },             <span class="cm">-- positional captures (wildcard segments)</span>
+    query    : { [string]: string },<span class="cm">-- query string key/value pairs</span>
+    data     : any,                 <span class="cm">-- request body (from Payload.data)</span>
+    player   : Player?,             <span class="cm">-- the Player who sent the request</span>
+    raw      : Payload?,            <span class="cm">-- the unmodified network envelope</span>
+}</code></pre>
+
+    <table class="tbl">
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>params</code></td><td>{ [string]: any }</td><td>Named route captures, e.g. <code>:id</code> from <code>"player/:id"</code> arrives as <code>req.params.id</code></td></tr>
+        <tr><td><code>captures</code></td><td>{ any }</td><td>Positional wildcard captures in order of appearance</td></tr>
+        <tr><td><code>query</code></td><td>{ [string]: string }</td><td>Parsed query string — <code>"player/1?sort=asc"</code> gives <code>req.query.sort == "asc"</code></td></tr>
+        <tr><td><code>data</code></td><td>any</td><td>The deserialized request body sent by the client</td></tr>
+        <tr><td><code>player</code></td><td>Player?</td><td>The Roblox <code>Player</code> instance who fired the remote; <code>nil</code> for server-originated calls</td></tr>
+        <tr><td><code>raw</code></td><td>Payload?</td><td>The raw <code>Payload</code> envelope before parsing — useful for debugging or reading <code>version</code></td></tr>
+      </tbody>
+    </table>
+
+    <h2>Payload</h2>
+    <p>The wire envelope that travels over the remote. RoExpress parses this into <code>Request</code> automatically. You access it via <code>req.raw</code> when you need the original.</p>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">export type</span> Payload <span class="op">=</span> {
+    method  : <span class="str">"GET"</span> | <span class="str">"POST"</span> | <span class="str">"PUT"</span> | <span class="str">"DELETE"</span>,
+    route   : string,
+    data    : any?,
+    version : string?,
+}</code></pre>
+
+    <table class="tbl">
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>method</code></td><td>"GET" | "POST" | "PUT" | "DELETE"</td><td>HTTP-style method sent by the client</td></tr>
+        <tr><td><code>route</code></td><td>string</td><td>The route string as sent — e.g. <code>"player/123"</code></td></tr>
+        <tr><td><code>data</code></td><td>any?</td><td>Request body, or nil if none was sent</td></tr>
+        <tr><td><code>version</code></td><td>string?</td><td>Optional client-set version tag for compatibility checks</td></tr>
+      </tbody>
+    </table>
+
+    <h2>RouteHandler</h2>
+    <p>The function type accepted by <code>app:Get()</code>, <code>app:Post()</code>, <code>app:Put()</code>, and <code>app:Delete()</code>. Two forms are accepted — use the compact form for new code.</p>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Modern (compact) handler: (req, res) → ()</span>
+<span class="kw">export type</span> RouteHandlerCompact <span class="op">=</span> (req: Request, res: Response) -> ()
+
+<span class="cm">-- Legacy handler: (Player, Payload, req, res) → ()</span>
+<span class="kw">export type</span> RouteHandlerLegacy  <span class="op">=</span>
+    (Player: Player, Payload: Payload, req: Request, res: Response) -> ()
+
+<span class="cm">-- Union | accepted by app:Get() / app:Post() etc.</span>
+<span class="kw">export type</span> RouteHandler <span class="op">=</span> RouteHandlerCompact | RouteHandlerLegacy</code></pre>
+
+    <div class="cl info"><strong>Prefer the compact form.</strong> <code>(req, res)</code> is cleaner and the recommended style for all new code. The legacy four-argument form is supported for backward compatibility with pre-v2.4 handlers.</div>
+
+    <h2>How to import types</h2>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+
+<span class="cm">-- Explicit type import</span>
+<span class="kw">type</span> Request      <span class="op">=</span> RoExpress.Request
+<span class="kw">type</span> Payload      <span class="op">=</span> RoExpress.Payload
+<span class="kw">type</span> RouteHandler <span class="op">=</span> RoExpress.RouteHandler
+
+<span class="cm">-- Or use GetApp() which returns a fully-typed App — no annotation needed</span>
+<span class="kw">local</span> app <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
+
+app:<span class="fn">Get</span>(<span class="str">"player/:id"</span>, <span class="kw">function</span>(req, res)
+    res:<span class="fn">Send</span>({ id <span class="op">=</span> req.params.id, player <span class="op">=</span> req.player.Name })
+<span class="kw">end</span>)</code></pre>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./types.html">← Types</a> &nbsp;·&nbsp;
+      <a href="./types-response.html">Response Types</a> | Response, NetworkResponse, MiddlewareHandler &nbsp;·&nbsp;
+      <a href="./app-req.html">Request Object</a> | detailed field reference with examples &nbsp;·&nbsp;
+      <a href="./app-routing.html">Route Handlers</a> | registering handlers with app:Get() etc.
+    </p>
+
+  </section></main></div>
+</body>
+</html>

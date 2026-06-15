@@ -1,20 +1,13 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Router | RoExpress Docs</title>
-  <meta name="description" content="RoExpress Router: typed params, wildcards, globs, inline constraints. Supports number, boolean, Vector2, Vector3, Color3, CFrame param types. Pattern syntax reference.">
-  <meta name="keywords" content="roblox, luau, roexpress, router, typed params, wildcard, glob, constraint, number, boolean, vector2, vector3, cframe, captures">
+  <meta name="description" content="RoExpress Router: typed named params, wildcards, globs, and inline constraints. Route pattern syntax reference.">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://roexpress.dev/docs/router/">
   <meta name="theme-color" content="#8b78ff">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://roexpress.dev/docs/router/">
-  <meta property="og:title" content="Router | RoExpress Docs">
-  <meta property="og:description" content="Typed params, wildcards, globs, inline constraints. Full route pattern syntax reference.">
-  <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,170 +25,41 @@
       <section class="doc">
         <div class="eyebrow">Shared</div>
         <h1>Router</h1>
-        <p class="lead">RoExpress routes are URL-like strings supporting typed named params, wildcards, globs, and inline constraints. The Router is embedded in App and Port | you don't use it directly, but understanding its syntax is essential.</p>
+        <p class="lead">RoExpress routes are URL-like strings supporting typed named params, wildcards, globs, and inline constraints — embedded in App and Port, you never instantiate it directly.</p>
 
-        <h2>Syntax reference</h2>
-        <table class="tbl">
-          <thead><tr><th>Pattern</th><th>Matches</th><th>Captured in</th></tr></thead>
-          <tbody>
-            <tr><td><code>player/123</code></td><td>Literal segment</td><td>|</td></tr>
-            <tr><td><code>player/:id</code></td><td>Any single segment</td><td><code>req.params.id</code> (string)</td></tr>
-            <tr><td><code>player/:id=number</code></td><td>Segment coerced to number</td><td><code>req.params.id</code> (number)</td></tr>
-            <tr><td><code>item/:id=int</code></td><td>Integer only</td><td><code>req.params.id</code> (number, no decimal)</td></tr>
-            <tr><td><code>flag/:on=boolean</code></td><td><code>"true"</code> or <code>"false"</code></td><td><code>req.params.on</code> (boolean)</td></tr>
-            <tr><td><code>pos/:v=vector3</code></td><td>Vector3-shaped segment</td><td><code>req.params.v</code> (Vector3)</td></tr>
-            <tr><td><code>skin/:c=color3</code></td><td>Color3-shaped segment</td><td><code>req.params.c</code> (Color3)</td></tr>
-            <tr><td><code>pose/:cf=cframe</code></td><td>CFrame-shaped segment</td><td><code>req.params.cf</code> (CFrame)</td></tr>
-            <tr><td><code>:id(%d+)</code></td><td>Segment matching Lua pattern <code>%d+</code></td><td><code>req.params.id</code> (string)</td></tr>
-            <tr><td><code>:id(%d+)=number</code></td><td>Pattern match, then coerce to number</td><td><code>req.params.id</code> (number)</td></tr>
-            <tr><td><code>cam/:mode=Enum.CameraType</code></td><td>Segment coerced to a specific Enum type</td><td><code>req.params.mode</code> (EnumItem)</td></tr>
-            <tr><td><code>event/:state=Enum</code></td><td>Any EnumItem — wire format carries the type</td><td><code>req.params.state</code> (EnumItem)</td></tr>
-            <tr><td><code>item/*</code></td><td>Any single segment (unnamed)</td><td><code>req.captures[1]</code> (string)</td></tr>
-            <tr><td><code>files/**</code></td><td>Zero or more trailing segments</td><td><code>req.captures[1]</code> (table of strings)</td></tr>
-          </tbody>
-        </table>
+        <div class="import-block"><code><span class="cm">-- Router is used internally by App via route strings passed to app:Get / app:Post / app:Put / app:Delete</span></code></div>
 
-        <h2>Pattern constraints</h2>
-        <p>Wrap a Lua pattern in <code>()</code> after the param name to restrict which values the segment matches. The pattern is anchored | the entire segment must match.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- digits only, raw string</span>
-app:<span class="fn">Get</span>(<span class="str">"user/:id(%d+)"</span>, <span class="kw">function</span>(req, res)
-    <span class="fn">print</span>(req.params.id)  <span class="cm">-- "123" — string</span>
-<span class="kw">end</span>)
+        <div class="dir-grid">
+          <a class="dir-card" href="./router-params.html">
+            <div class="dir-pills"><span class="rtag">params</span></div>
+            <div class="dir-title">Named Params</div>
+            <div class="dir-desc">Capture route segments by name. Coerce to a typed value with <code>:name=type</code>.</div>
+            <div class="dir-foot">
+              <span class="dir-methods">:name &nbsp;·&nbsp; :name=type</span>
+              <span class="dir-arrow">→</span>
+            </div>
+          </a>
 
-<span class="cm">-- digits only, coerced to number</span>
-app:<span class="fn">Get</span>(<span class="str">"user/:id(%d+)=number"</span>, <span class="kw">function</span>(req, res)
-    <span class="fn">print</span>(req.params.id)  <span class="cm">-- 123 — number</span>
-<span class="kw">end</span>)
+          <a class="dir-card" href="./router-wildcards.html">
+            <div class="dir-pills"><span class="rtag">capture</span></div>
+            <div class="dir-title">Wildcards &amp; Globs</div>
+            <div class="dir-desc">Match one unnamed segment with <code>*</code> or any number of trailing segments with <code>**</code>.</div>
+            <div class="dir-foot">
+              <span class="dir-methods">* &nbsp;·&nbsp; **</span>
+              <span class="dir-arrow">→</span>
+            </div>
+          </a>
 
-<span class="cm">-- lowercase letters only</span>
-app:<span class="fn">Get</span>(<span class="str">"cmd/:action(%a+)"</span>, <span class="kw">function</span>(req, res)
-    <span class="fn">print</span>(req.params.action)  <span class="cm">-- "fire", "reload" | rejects "fire2"</span>
-<span class="kw">end</span>)</code></pre>
-        <p>Uses standard <a href="https://www.lua.org/manual/5.1/manual.html#5.4.1" target="_blank">Lua patterns</a>. Common classes: <code>%d</code> digit, <code>%a</code> letter, <code>%w</code> alphanumeric, <code>%l</code> lowercase, <code>%u</code> uppercase. A non-matching segment causes the route to be skipped entirely (404), not a 400.</p>
-
-        <h2>Wildcards and globs</h2>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- * matches exactly one segment, value in req.captures[1]</span>
-app:<span class="fn">Get</span>(<span class="str">"asset/*/preview"</span>, <span class="kw">function</span>(req, res)
-    <span class="fn">print</span>(req.captures[<span class="num">1</span>])  <span class="cm">-- "sword", "shield" …</span>
-<span class="kw">end</span>)
-
-<span class="cm">-- multiple * each get their own captures index</span>
-app:<span class="fn">Get</span>(<span class="str">"zone/*/item/*"</span>, <span class="kw">function</span>(req, res)
-    <span class="fn">print</span>(req.captures[<span class="num">1</span>], req.captures[<span class="num">2</span>])
-<span class="kw">end</span>)
-
-<span class="cm">-- ** consumes all remaining segments as a table</span>
-<span class="cm">-- matches: files/a  files/a/b  files/a/b/c …</span>
-app:<span class="fn">Get</span>(<span class="str">"files/**"</span>, <span class="kw">function</span>(req, res)
-    <span class="cm">-- req.captures[1] = { "a", "b", "c" }</span>
-    <span class="fn">print</span>(table.<span class="fn">concat</span>(req.captures[<span class="num">1</span>], <span class="str">"/"</span>))
-<span class="kw">end</span>)</code></pre>
-
-        <h2>Examples</h2>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Typed named param</span>
-app:<span class="fn">Get</span>(<span class="str">"shop/:itemId=int"</span>, <span class="kw">function</span>(req, res)
-    <span class="fn">print</span>(req.params.itemId)  <span class="cm">-- always a whole number</span>
-<span class="kw">end</span>)
-
-<span class="cm">-- Pattern + type: digits only, returned as number</span>
-app:<span class="fn">Get</span>(<span class="str">"page/:n(%d+)=int"</span>, <span class="kw">function</span>(req, res)
-    res:<span class="fn">Send</span>({ page <span class="op">=</span> req.params.n })
-<span class="kw">end</span>)</code></pre>
-
-        <h2>RouteBuilder — typed URL construction</h2>
-        <p><code>Router.Route(pattern)</code> returns a <code>RouteBuilder&lt;T&gt;</code> — a small object that pairs a pattern with a type-checked URL builder. It solves two problems at once: your route string and your handler registration can never drift apart, and building redirect or navigation URLs is always serialised correctly through TypeCoercer.</p>
-        <div class="sig">RoExpress.Router.<span class="fn">Route</span>(pattern: string) → RouteBuilder&lt;T&gt;</div>
-        <table class="tbl">
-          <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td><code>.pattern</code></td><td><code>string</code></td><td>The raw route string — pass to <code>app:Get</code> / <code>app:Post</code></td></tr>
-            <tr><td><code>.build(params)</code></td><td><code>(T) → string</code></td><td>Builds a stable URL from typed params using TypeCoercer</td></tr>
-          </tbody>
-        </table>
-        <div class="cl info"><strong>Luau limitation.</strong> Luau cannot extract param names from a string literal at the type level (no template literal types). You annotate <code>T</code> once with <code>:: RoExpress.RouteBuilder&lt;{...}&gt;</code> and the compiler enforces it everywhere <code>.build()</code> is called.</div>
-
-        <h3>Basic usage</h3>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
-<span class="kw">local</span> App <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
-
-<span class="kw">local</span> GetCoins <span class="op">=</span> RoExpress.Router.<span class="fn">Route</span>(<span class="str">"player/:UserId=number/coins"</span>) :: RoExpress.RouteBuilder&lt;{
-    UserId: number,
-}&gt;
-
-<span class="cm">-- .pattern keeps registration in sync with the builder</span>
-App:<span class="fn">Get</span>(GetCoins.pattern, <span class="kw">function</span>(req, res)
-    res:<span class="fn">Send</span>({ coins <span class="op">=</span> <span class="num">100</span> })
-<span class="kw">end</span>)
-
-<span class="cm">-- .build() is type-checked and always round-trips correctly</span>
-GetCoins.<span class="fn">build</span>({ UserId <span class="op">=</span> <span class="num">12345</span> })  <span class="cm">-- "/player/12345/coins"</span></code></pre>
-
-        <h3>Redirecting with typed Enum params</h3>
-        <p>The most common use case — passing typed params through a redirect without the URL breaking. Before <code>RouteBuilder</code>, interpolating an <code>EnumItem</code> into a template string would produce <code>Enum.CameraType.Scriptable</code>, which the router couldn't parse back. <code>.build()</code> uses TypeCoercer internally so this always round-trips.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Url <span class="op">=</span> {
-    SendToServer <span class="op">=</span> RoExpress.Router.<span class="fn">Route</span>(<span class="str">"/server/:Value=number/:Value2=Enum.CameraType"</span>) :: RoExpress.RouteBuilder&lt;{
-        Value  : number,
-        Value2 : Enum.CameraType,
-    }&gt;,
-    SendToClient <span class="op">=</span> RoExpress.Router.<span class="fn">Route</span>(<span class="str">"/client/:Value=number/:Value2=Enum.CameraType"</span>) :: RoExpress.RouteBuilder&lt;{
-        Value  : number,
-        Value2 : Enum.CameraType,
-    }&gt;,
-}
-
-App:<span class="fn">Get</span>(Url.SendToServer.pattern, <span class="kw">function</span>(req, res)
-    res:<span class="fn">Redirect</span>(Url.SendToClient.<span class="fn">build</span>({
-        Value  <span class="op">=</span> req.params.Value,
-        Value2 <span class="op">=</span> req.params.Value2,
-    }))
-<span class="kw">end</span>)
-
-App:<span class="fn">Get</span>(Url.SendToClient.pattern, <span class="kw">function</span>(req, res)
-    <span class="fn">print</span>(<span class="str">"Fired"</span>)
-<span class="kw">end</span>)</code></pre>
-
-        <h3>Centralised route table</h3>
-        <p>The recommended pattern — define all your routes in one shared file and import them wherever you register handlers or build URLs. The compiler enforces the param shape at every call site.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- routes.luau (shared module)</span>
-<span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
-<span class="kw">local</span> R <span class="op">=</span> RoExpress.Router
-
-<span class="kw">return</span> {
-    Shop  <span class="op">=</span> R.<span class="fn">Route</span>(<span class="str">"/shop/:PlayerId=number/:ItemId=number"</span>) :: RoExpress.RouteBuilder&lt;{
-        PlayerId : number,
-        ItemId   : number,
-    }&gt;,
-    Equip <span class="op">=</span> R.<span class="fn">Route</span>(<span class="str">"/equip/:PlayerId=number/:Slot=string"</span>) :: RoExpress.RouteBuilder&lt;{
-        PlayerId : number,
-        Slot     : string,
-    }&gt;,
-}
-
-<span class="cm">-- server.luau</span>
-<span class="kw">local</span> Url <span class="op">=</span> <span class="fn">require</span>(script.routes)
-
-App:<span class="fn">Get</span>(Url.Shop.pattern, <span class="kw">function</span>(req, res)
-    res:<span class="fn">Redirect</span>(Url.Equip.<span class="fn">build</span>({ PlayerId <span class="op">=</span> req.params.PlayerId, Slot <span class="op">=</span> <span class="str">"primary"</span> }))
-<span class="kw">end</span>)</code></pre>
-
-        <h2>Query strings</h2>
-        <p>Any <code>?key=value</code> suffix on the route is stripped before matching and made available as <code>req.query</code>. The route pattern itself never includes the query string.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- client</span>
-network:<span class="fn">Get</span>(<span class="str">"shop/items?limit=10&sort=price"</span>)
-
-<span class="cm">-- server</span>
-app:<span class="fn">Get</span>(<span class="str">"shop/items"</span>, <span class="kw">function</span>(req, res)
-    <span class="fn">print</span>(req.query.limit)  <span class="cm">-- "10"  (always string)</span>
-    <span class="fn">print</span>(req.query.sort)   <span class="cm">-- "price"</span>
-    res:<span class="fn">Send</span>(Shop.<span class="fn">GetItems</span>(req.query))
-<span class="kw">end</span>)</code></pre>
-        <p>Query values are always strings. Coerce manually if you need a number: <code>tonumber(req.query.limit)</code>.</p>
-
-        <h2>Param error handling</h2>
-        <p>When a typed param fails coercion (wrong type or out of range), the default behaviour is to respond 400 and not call the handler. Override this with <code>app:OnParamError(fn)</code> | see <a href="./app.html">App</a>.</p>
-
-        <h2>Route priority</h2>
-        <p>Routes are sorted automatically by specificity, not registration order. Literal &gt; constrained &gt; typed &gt; plain param &gt; wildcard &gt; glob. Two routes of equal specificity are matched in registration order.</p>
+          <a class="dir-card" href="./router-constraints.html">
+            <div class="dir-pills"><span class="rtag">validation</span></div>
+            <div class="dir-title">Constraints</div>
+            <div class="dir-desc">Restrict param values with Lua pattern constraints. Combine with type coercion for precise matching.</div>
+            <div class="dir-foot">
+              <span class="dir-methods">=number &nbsp;·&nbsp; =boolean &nbsp;·&nbsp; =vector3 &nbsp;·&nbsp; custom</span>
+              <span class="dir-arrow">→</span>
+            </div>
+          </a>
+        </div>
 
         <h2>See also</h2>
         <p>
@@ -205,7 +69,6 @@ app:<span class="fn">Get</span>(<span class="str">"shop/items"</span>, <span cla
           <a href="./types.html">Exported Types</a> | Payload, Request, RouteBuilder&lt;T&gt; &nbsp;·&nbsp;
           <a href="./examples-inventory.html">Inventory Example</a> | typed params in practice
         </p>
-
       </section>
     </main>
   </div>

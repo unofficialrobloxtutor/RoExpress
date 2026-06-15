@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Using Ports | RoExpress Docs</title>
+  <meta name="description" content="RoExpress client-side port access: RoExpress('Network', 'portName') and RoExpress('Listener', 'portName') wire to a port's isolated RemoteEvent.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow"><a href="./port.html">Port</a> → Using Ports</div>
+        <h1>Using Ports</h1>
+        <p class="lead">Pass the port name as the second argument to <code>RoExpress()</code> to get a Network or Listener wired to that port's isolated RemoteEvent. The call signature is identical to the main-channel versions.</p>
+
+        <h2>Client Network on a port</h2>
+        <div class="sig">RoExpress(<span class="str">"Network"</span>, portName: string) → Network</div>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> combatNet <span class="op">=</span> RoExpress(<span class="str">"Network"</span>, <span class="str">"combat"</span>)
+
+<span class="cm">-- callback style</span>
+combatNet:<span class="fn">Post</span>(<span class="str">"shoot/123"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res)
+    <span class="kw">if</span> res.ok <span class="kw">then</span> <span class="fn">showHit</span>(res.data) <span class="kw">end</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- promise style</span>
+combatNet:<span class="fn">PostAsync</span>(<span class="str">"shoot/123"</span>)
+    :<span class="fn">Then</span>(<span class="kw">function</span>(res) <span class="fn">showHit</span>(res.data) <span class="kw">end</span>)
+    :<span class="fn">Catch</span>(<span class="kw">function</span>(err) <span class="fn">warn</span>(err.message) <span class="kw">end</span>)</code></pre>
+
+        <h2>Client Listener on a port</h2>
+        <div class="sig">RoExpress(<span class="str">"Listener"</span>, portName: string) → Listener</div>
+        <p>For push events fired from a port (<code>port:Push()</code> / <code>port:PushAll()</code>), subscribe with a Listener on the same port name:</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> combatListener <span class="op">=</span> RoExpress(<span class="str">"Listener"</span>, <span class="str">"combat"</span>)
+
+combatListener:<span class="fn">On</span>(<span class="str">"hit.confirmed"</span>, <span class="kw">function</span>(data)
+    <span class="fn">print</span>(<span class="str">"damage:"</span>, data.damage)
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Caching</h2>
+        <p>Each port name is cached — calling <code>RoExpress("Network", "combat")</code> from multiple scripts returns the same instance. There is no penalty for requiring it in several places.</p>
+
+        <div class="cl info"><strong>Port name must match.</strong> The name passed on the client must exactly match the name used in <code>app:Listen(name, ...)</code> on the server. Mismatched names will fail to find the RemoteEvent.</div>
+
+        <h2>Full combat example</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Server (Script)</span>
+<span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> app <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
+
+app:<span class="fn">Listen</span>(<span class="str">"combat"</span>, <span class="kw">function</span>(port)
+    port:<span class="fn">Post</span>(<span class="str">"shoot/:targetId=number"</span>, <span class="kw">function</span>(req, res)
+        res:<span class="fn">Send</span>(<span class="fn">handleShoot</span>(req.player, req.params.targetId))
+    <span class="kw">end</span>)
+<span class="kw">end</span>)
+
+<span class="cm">-- Client (LocalScript)</span>
+<span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> combatNet <span class="op">=</span> RoExpress(<span class="str">"Network"</span>, <span class="str">"combat"</span>)
+
+combatNet:<span class="fn">Post</span>(<span class="str">"shoot/456"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res)
+    <span class="fn">print</span>(res.data)
+<span class="kw">end</span>)</code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./port.html">← Port</a> &nbsp;·&nbsp;
+          <a href="./port-create.html">Creating Ports</a> | server-side setup &nbsp;·&nbsp;
+          <a href="./port-settings.html">Port Settings</a> | rate limiting per port &nbsp;·&nbsp;
+          <a href="./network.html">Network</a> | full client Network API &nbsp;·&nbsp;
+          <a href="./listener.html">Listener</a> | full client Listener API
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

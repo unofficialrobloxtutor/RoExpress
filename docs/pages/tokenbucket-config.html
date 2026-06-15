@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuration | TokenBucket | RoExpress Docs</title>
+  <meta name="description" content="Configure TokenBucket: max tokens, refill rate, and refill interval. Controls the effective per-player request rate.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+    <div class="eyebrow"><a href="./tokenbucket.html">TokenBucket</a> → Configuration</div>
+    <h1>Configuration</h1>
+    <p class="lead">Pass an options table to <code>TokenBucket.new</code> to control capacity and refill behaviour. The same options apply whether you are configuring the App's built-in bucket, a Port's bucket, or a standalone instance.</p>
+
+    <h2>Construction signature</h2>
+    <div class="sig">TokenBucket.<span class="fn">new</span>(options: \{max: number?, refillRate: number?, refillInterval: number?, start: number?, cost: number?}) → TokenBucket</div>
+
+    <h2>Options</h2>
+    <table class="tbl">
+      <thead><tr><th>Option</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>max</code></td><td>60</td><td>Maximum tokens per player. Acts as the burst ceiling — a player can never hold more than this many tokens.</td></tr>
+        <tr><td><code>refillRate</code></td><td>20</td><td>Number of tokens added to each player's bucket on each refill tick.</td></tr>
+        <tr><td><code>refillInterval</code></td><td>1</td><td>How often (in seconds) the refill fires. Together with <code>refillRate</code> this determines the sustained request rate: <code>refillRate / refillInterval</code> tokens per second.</td></tr>
+        <tr><td><code>start</code></td><td><code>max</code></td><td>How many tokens a player starts with when they first appear. Defaults to a full bucket.</td></tr>
+        <tr><td><code>cost</code></td><td>1</td><td>Tokens deducted per <code>Consume</code> call. Increase this for expensive actions.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>How the math works</h2>
+    <p>The token bucket algorithm (RFC 2697 single-rate) separates burst capacity from sustained rate. <code>max</code> controls how many requests a player can fire in rapid succession. <code>refillRate / refillInterval</code> controls how quickly they recover.</p>
+
+    <h2>Example: 30 requests per second</h2>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Burst of 60, recovers 30 tokens/s (30 per 1s tick)</span>
+<span class="kw">local</span> TokenBucket <span class="op">=</span> RoExpress(<span class="str">"TokenBucket"</span>)
+<span class="kw">local</span> bucket <span class="op">=</span> TokenBucket.<span class="fn">new</span>({
+    max            <span class="op">=</span> <span class="num">60</span>,
+    refillRate     <span class="op">=</span> <span class="num">30</span>,
+    refillInterval <span class="op">=</span> <span class="num">1</span>,
+})</code></pre>
+
+    <h2>Example: 5 requests per second</h2>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Strict economy port: burst of 10, recovers 5 tokens/s</span>
+app:<span class="fn">Listen</span>(<span class="str">"economy"</span>, <span class="kw">function</span>(port)
+    port:<span class="fn">Post</span>(<span class="str">"trade"</span>, handler)
+<span class="kw">end</span>, {
+    max            <span class="op">=</span> <span class="num">10</span>,
+    refillRate     <span class="op">=</span> <span class="num">5</span>,
+    refillInterval <span class="op">=</span> <span class="num">1</span>,
+    cost           <span class="op">=</span> <span class="num">1</span>,
+})</code></pre>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./tokenbucket.html">← TokenBucket</a> &nbsp;·&nbsp;
+      <a href="./tokenbucket-consume.html">Consume &amp; Check</a> | deduct tokens per request &nbsp;·&nbsp;
+      <a href="./tokenbucket-grant.html">Grant &amp; Reset</a> | add tokens back &nbsp;·&nbsp;
+      <a href="./port.html">Port</a> | per-port rate limiting settings
+    </p>
+  </section></main></div>
+</body>
+</html>

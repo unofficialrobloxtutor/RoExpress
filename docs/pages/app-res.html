@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Response Object | App | RoExpress Docs</title>
+  <meta name="description" content="The res object in RoExpress route handlers: Send, Error, Status, and Redirect.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow"><a href="./app.html" style="color:inherit;text-decoration:none">App</a> → Response Object</div>
+        <h1>Response Object</h1>
+        <p class="lead">The <code>res</code> argument for sending replies. Each terminal method (<code>Send</code>, <code>Error</code>, <code>Redirect</code>) is callable exactly once. <code>Status</code> is chainable and must precede a terminal call.</p>
+
+        <h2>Methods</h2>
+
+        <div class="sig"><span class="pill p-ok">200</span> res:<span class="fn">Send</span>(data?)</div>
+        <p>Send a success response. <code>data</code> can be any table, string, number, or <code>nil</code>. For PUT/DELETE, only <code>boolean?</code> or <code>nil</code> is valid — passing a table is warned and stripped.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>res:<span class="fn">Send</span>({ score <span class="op">=</span> <span class="num">100</span> })   <span class="cm">-- sends data with 200</span>
+res:<span class="fn">Send</span>()              <span class="cm">-- sends nil with 200 (e.g. after a PUT)</span></code></pre>
+
+        <div class="sig"><span class="pill p-err">500</span> res:<span class="fn">Error</span>(message)</div>
+        <p>Send a 500 error response with a message string. The client receives the message in <code>res.error</code>.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">if not</span> valid <span class="kw">then</span>
+    res:<span class="fn">Error</span>(<span class="str">"item not found"</span>)
+    <span class="kw">return</span>
+<span class="kw">end</span></code></pre>
+
+        <div class="sig">res:<span class="fn">Status</span>(code) → res</div>
+        <p>Set an HTTP-style status code. Chainable — must be followed by a terminal call.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>res:<span class="fn">Status</span>(<span class="num">204</span>):<span class="fn">Send</span>()           <span class="cm">-- no content</span>
+res:<span class="fn">Status</span>(<span class="num">403</span>):<span class="fn">Error</span>(<span class="str">"forbidden"</span>) <span class="cm">-- custom 403</span></code></pre>
+
+        <div class="sig">res:<span class="fn">Redirect</span>(path)</div>
+        <p>Re-dispatch the request to a different server route. Transparent to the client — the redirected handler sends the actual response. Version check, rate limit, and middleware run only once. Redirect chains are capped at 5 hops; a 508 is sent on overflow.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>app:<span class="fn">Get</span>(<span class="str">"me"</span>, <span class="kw">function</span>(req, res)
+    <span class="cm">-- transparently forward to the canonical route</span>
+    res:<span class="fn">Redirect</span>(<span class="str">"player/"</span> <span class="op">..</span> req.player.UserId)
+<span class="kw">end</span>)</code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./app.html">← App</a> &nbsp;·&nbsp;
+          <a href="./app-routing.html">Route Handlers</a> | registering routes &nbsp;·&nbsp;
+          <a href="./app-req.html">Request Object</a> | params, query, data &nbsp;·&nbsp;
+          <a href="./network.html">Network</a> | how the client receives responses &nbsp;·&nbsp;
+          <a href="./types.html">Types</a> | NetworkResponse type definition
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

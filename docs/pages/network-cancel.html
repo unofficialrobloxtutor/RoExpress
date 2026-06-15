@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cancel &amp; Timeout | RoExpress Docs</title>
+  <meta name="description" content="RoExpress Network cancel and timeout: abort in-flight requests with Cancel, override default timeout with SetTimeout.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow"><a href="./network.html">Network</a> → Cancel &amp; Timeout</div>
+        <h1>Cancel &amp; Timeout</h1>
+        <p class="lead">Abort an in-flight request before its callback fires, or override the default timeout to control how long the client waits for a response.</p>
+
+        <h2>Cancel</h2>
+        <div class="sig">network:<span class="fn">Cancel</span>(requestId)</div>
+        <table class="tbl">
+          <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>requestId</code></td><td>number</td><td>The id returned by <code>Get</code>, <code>Post</code>, <code>Put</code>, or <code>Delete</code> when the request was made.</td></tr>
+          </tbody>
+        </table>
+        <p>Cancels a pending request. The callback will not be called. Has no effect if the response has already arrived — <code>Cancel</code> is safe to call at any time.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> id <span class="op">=</span> network:<span class="fn">Get</span>(<span class="str">"slow/resource"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res)
+    <span class="fn">print</span>(res.data)
+<span class="kw">end</span>)
+
+<span class="cm">-- Cancel when the player closes the panel</span>
+closeButton.Activated:<span class="fn">Connect</span>(<span class="kw">function</span>()
+    network:<span class="fn">Cancel</span>(id)
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Cancel on player leave</h2>
+        <p>A common pattern: cancel all pending work when the player leaves so cleanup callbacks don't run after the character is gone.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> ids <span class="op">=</span> {}
+
+ids[<span class="num">1</span>] <span class="op">=</span> network:<span class="fn">Get</span>(<span class="str">"player/data"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res) UI:<span class="fn">Load</span>(res.data) <span class="kw">end</span>)
+ids[<span class="num">2</span>] <span class="op">=</span> network:<span class="fn">Get</span>(<span class="str">"shop/catalogue"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res) Shop:<span class="fn">Load</span>(res.data) <span class="kw">end</span>)
+
+game.Players.LocalPlayer.AncestryChanged:<span class="fn">Connect</span>(<span class="kw">function</span>()
+    <span class="kw">for</span> _, id <span class="kw">in</span> ids <span class="kw">do</span>
+        network:<span class="fn">Cancel</span>(id)
+    <span class="kw">end</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h2>SetTimeout</h2>
+        <div class="sig">network:<span class="fn">SetTimeout</span>(seconds)</div>
+        <table class="tbl">
+          <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>seconds</code></td><td>number</td><td>How long to wait for a response before treating the request as timed out. Default is 10 seconds.</td></tr>
+          </tbody>
+        </table>
+        <p>Sets the timeout for all subsequent requests on this network instance. The default is <strong>10 seconds</strong>. Call once after getting the network object — it applies globally to this instance, not per-request.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> network <span class="op">=</span> RoExpress.<span class="fn">GetNetwork</span>()
+network:<span class="fn">SetTimeout</span>(<span class="num">5</span>)   <span class="cm">-- wait up to 5 seconds before timing out</span>
+
+network:<span class="fn">Get</span>(<span class="str">"player/data"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res)
+    <span class="kw">if</span> res.type <span class="op">==</span> <span class="str">"timeout"</span> <span class="kw">then</span>
+        UI:<span class="fn">ShowError</span>(<span class="str">"Server took too long to respond"</span>)
+    <span class="kw">else</span>
+        UI:<span class="fn">Load</span>(res.data)
+    <span class="kw">end</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h2>What happens on timeout</h2>
+        <p>When a request times out the callback fires with a response where <code>res.type == "timeout"</code>. The <code>data</code> and <code>status</code> fields will be nil. Network automatically retries timed-out requests up to the configured maximum — by default 2 retries with exponential backoff — so the callback only fires after all retry attempts are exhausted.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>network:<span class="fn">Get</span>(<span class="str">"slow/endpoint"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res)
+    <span class="kw">if</span> res.type <span class="op">==</span> <span class="str">"timeout"</span> <span class="kw">then</span>
+        <span class="fn">warn</span>(<span class="str">"Request timed out after retries"</span>)
+        <span class="kw">return</span>
+    <span class="kw">end</span>
+    <span class="cm">-- handle success or error</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./network.html">← Network</a> &nbsp;·&nbsp;
+          <a href="./network-get.html">Request Methods</a> | methods that return a requestId &nbsp;·&nbsp;
+          <a href="./network-async.html">Async / Promise API</a> | chainable request variants
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

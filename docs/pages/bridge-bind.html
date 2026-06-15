@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bridge Bind &amp; Fire | RoExpress Docs</title>
+  <meta name="description" content="Bridge.Bind, BindOnce, Unbind, Fire — register persistent or one-shot listeners on named events and fire them across server modules.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow"><a href="./bridge.html">Bridge</a> → Bind &amp; Fire</div>
+    <h1>Bind &amp; Fire</h1>
+    <p class="lead">Register persistent or one-shot listeners on named events, remove them by id, and fire events to all current listeners with any number of arguments.</p>
+
+    <h2>API</h2>
+
+    <div class="sig">Bridge:<span class="fn">Bind</span>(event: string, callback: (...any) → ()) → id</div>
+    <div class="sig">Bridge:<span class="fn">BindOnce</span>(event: string, callback: (...any) → ()) → id</div>
+    <div class="sig">Bridge:<span class="fn">Unbind</span>(id)</div>
+    <div class="sig">Bridge:<span class="fn">Fire</span>(event: string, ...)</div>
+
+    <h2>Bind and fire</h2>
+
+    <p><code>Bind</code> registers a listener that stays active until explicitly removed. <code>Fire</code> calls all listeners currently bound to that event name.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Module A: fires event</span>
+Bridge:<span class="fn">Fire</span>(<span class="str">"playerDied"</span>, player, killer)
+
+<span class="cm">-- Module B: reacts</span>
+Bridge:<span class="fn">Bind</span>(<span class="str">"playerDied"</span>, <span class="kw">function</span>(player, killer)
+    <span class="fn">updateLeaderboard</span>(killer)
+<span class="kw">end</span>)</code></pre>
+
+    <h2>One-shot listener</h2>
+
+    <p><code>BindOnce</code> registers a listener that automatically removes itself after firing once:</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code>Bridge:<span class="fn">BindOnce</span>(<span class="str">"roundStarted"</span>, <span class="kw">function</span>(roundData)
+    <span class="fn">InitRoundUI</span>(roundData)
+<span class="kw">end</span>)</code></pre>
+
+    <h2>Removing a listener</h2>
+
+    <p><code>Bind</code> and <code>BindOnce</code> both return an id. Pass it to <code>Unbind</code> to remove the listener at any time:</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> id <span class="op">=</span> Bridge:<span class="fn">Bind</span>(<span class="str">"itemPurchased"</span>, <span class="kw">function</span>(item)
+    <span class="fn">LogPurchase</span>(item)
+<span class="kw">end</span>)
+
+<span class="cm">-- Later, when this module is shutting down:</span>
+Bridge:<span class="fn">Unbind</span>(id)</code></pre>
+
+    <h2>Shop → inventory example</h2>
+
+    <p>A shop module fires an event; the inventory module reacts without either module needing a direct reference to the other:</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- ShopModule.lua</span>
+<span class="kw">local function</span> <span class="fn">Purchase</span>(player, itemId)
+    <span class="cm">-- ... validate, charge currency ...</span>
+    Bridge:<span class="fn">Fire</span>(<span class="str">"itemPurchased"</span>, player, itemId)
+<span class="kw">end</span>
+
+<span class="cm">-- InventoryModule.lua</span>
+Bridge:<span class="fn">Bind</span>(<span class="str">"itemPurchased"</span>, <span class="kw">function</span>(player, itemId)
+    <span class="fn">AddToInventory</span>(player, itemId)
+<span class="kw">end</span>)</code></pre>
+
+    <div class="cl info">Bridge is a server-only internal bus. It does not cross the client/server boundary. For server-to-client events use <a href="./broadcast.html">Broadcast</a>; for client-side subscriptions use <a href="./listener.html">Listener</a>.</div>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./bridge.html">← Bridge</a> &nbsp;&middot;&nbsp;
+      <a href="./bridge-wait.html">Wait &amp; Query</a> | yield until an event fires &nbsp;&middot;&nbsp;
+      <a href="./broadcast.html">Broadcast</a> | server-to-client events &nbsp;&middot;&nbsp;
+      <a href="./listener.html">Listener</a> | client-side event subscription
+    </p>
+
+  </section></main></div>
+</body>
+</html>

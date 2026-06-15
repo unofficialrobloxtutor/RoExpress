@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscribe | RoExpress Docs</title>
+  <meta name="description" content="RoExpress Listener subscribe: On, Once, Off. Listen for named events, unsubscribe by id, and use the returned unsubscribe function.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow"><a href="./listener.html">Listener</a> → Subscribe</div>
+        <h1>Subscribe</h1>
+        <p class="lead">Register a callback for a named event. On fires every time the event arrives; Once fires only the first time. Both return an id you can pass to Off to remove the listener.</p>
+
+        <h2>On</h2>
+        <div class="sig">listener:<span class="fn">On</span>(event, callback) → id</div>
+        <table class="tbl">
+          <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>event</code></td><td>string</td><td>Event name — must match the name used in <code>app:Push(event, ...)</code> or <code>broadcast:Emit(event, ...)</code> on the server.</td></tr>
+            <tr><td><code>callback</code></td><td><code>(data: any) → ()</code></td><td>Called every time the named event arrives on either the push or broadcast channel.</td></tr>
+          </tbody>
+        </table>
+        <p>Returns a subscription <strong>id</strong> (number) that can be passed to <code>listener:Off(id)</code> to remove the subscription.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> id <span class="op">=</span> listener:<span class="fn">On</span>(<span class="str">"round.start"</span>, <span class="kw">function</span>(data)
+    <span class="fn">print</span>(<span class="str">"Round started, duration:"</span>, data.duration)
+    HUD:<span class="fn">ShowTimer</span>(data.duration)
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Once</h2>
+        <div class="sig">listener:<span class="fn">Once</span>(event, callback) → id</div>
+        <p>Identical to <code>On</code> but automatically unsubscribes after the callback fires once. Use it when you only need to react to the first occurrence of an event — for example, waiting for initial player data to arrive.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- fires once, then cleans itself up</span>
+listener:<span class="fn">Once</span>(<span class="str">"player.data"</span>, <span class="kw">function</span>(data)
+    UI:<span class="fn">SetCoins</span>(data.coins)
+    UI:<span class="fn">SetLevel</span>(data.level)
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Difference between On and Once</h2>
+        <table class="tbl">
+          <thead><tr><th></th><th>On</th><th>Once</th></tr></thead>
+          <tbody>
+            <tr><td>Fires</td><td>Every time the event arrives</td><td>Only the first time</td></tr>
+            <tr><td>Auto-unsubscribes</td><td>No — call Off manually</td><td>Yes — removed after first fire</td></tr>
+            <tr><td>Returns</td><td>id for Off</td><td>id for Off (before it fires)</td></tr>
+            <tr><td>Use case</td><td>Persistent listeners (round timer, health bar)</td><td>One-time setup (initial load, spawn event)</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Off</h2>
+        <div class="sig">listener:<span class="fn">Off</span>(id)</div>
+        <p>Removes a subscription by the id returned from <code>On</code> or <code>Once</code>. Safe to call after the subscription has already fired (Once) or never registered (no-op).</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> id <span class="op">=</span> listener:<span class="fn">On</span>(<span class="str">"round.end"</span>, <span class="kw">function</span>(data)
+    <span class="fn">print</span>(<span class="str">"Winner:"</span>, data.winner)
+<span class="kw">end</span>)
+
+<span class="cm">-- Remove when the UI is closed</span>
+closeButton.Activated:<span class="fn">Connect</span>(<span class="kw">function</span>()
+    listener:<span class="fn">Off</span>(id)
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Callback receives data</h2>
+        <p>The callback's first argument is whatever the server passed as the second argument to <code>app:Push(event, data)</code> or <code>broadcast:Emit(event, data)</code>. It can be any Roblox-serialisable value — a table, number, string, etc.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- server sends: app:Push("round.end", { winner = "Alice", time = 94.3 })</span>
+
+listener:<span class="fn">On</span>(<span class="str">"round.end"</span>, <span class="kw">function</span>(data)
+    <span class="fn">print</span>(data.winner, data.time)   <span class="cm">-- "Alice"  94.3</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./listener.html">← Listener</a> &nbsp;·&nbsp;
+          <a href="./listener-push.html">Server Push</a> | how push events arrive &nbsp;·&nbsp;
+          <a href="./listener-broadcast.html">Broadcast</a> | how broadcast events arrive &nbsp;·&nbsp;
+          <a href="./push.html">App Push</a> | server-side push API
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

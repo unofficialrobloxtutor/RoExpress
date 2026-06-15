@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Benchmark Run | RoExpress Docs</title>
+  <meta name="description" content="Benchmark.Run and Benchmark.Print — fire real requests, collect min/max/avg/p95/p99 latency statistics, and print formatted summaries to the Studio output window.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow"><a href="./benchmark.html">Benchmark</a> → Run</div>
+    <h1>Run</h1>
+    <p class="lead">Fire real requests against a RoExpress route, named port, vanilla <code>RemoteFunction</code>, or <code>RemoteEvent</code>. A warmup pass runs first (results discarded) to prime the JIT and connection, then <code>iterations</code> measured requests are collected.</p>
+
+    <h2>bench:Run()</h2>
+    <div class="sig"><span class="fn">bench:Run</span>(<span class="tp">route</span>: string, <span class="tp">config</span>?: Config) → Results</div>
+    <p>Benchmarks a route on the main RoExpress channel. Returns a Results table with min, avg, median, p95, p99, max, errors, throughput, and more.</p>
+
+    <h2>bench:RunOnPort()</h2>
+    <div class="sig"><span class="fn">bench:RunOnPort</span>(<span class="tp">portNetwork</span>: Network, <span class="tp">route</span>: string, <span class="tp">config</span>?: Config) → Results</div>
+    <p>Same as <code>Run</code> but fires against a named port channel. Obtain <code>portNetwork</code> with <code>RoExpress("Network", "portName")</code>.</p>
+
+    <h2>bench:RunRemoteFunction()</h2>
+    <div class="sig"><span class="fn">bench:RunRemoteFunction</span>(<span class="tp">remote</span>: RemoteFunction, <span class="tp">config</span>?: Config) → Results</div>
+    <p>Full round-trip benchmark against a vanilla <code>RemoteFunction</code>. Calls <code>remote:InvokeServer(...)</code> and measures until the response arrives — directly comparable to a RoExpress route benchmark.</p>
+
+    <h2>bench:RunRemoteEvent()</h2>
+    <div class="sig"><span class="fn">bench:RunRemoteEvent</span>(<span class="tp">remote</span>: RemoteEvent, <span class="tp">config</span>?: Config) → Results</div>
+    <p>Fire-only timing for a vanilla <code>RemoteEvent</code>. Measures the client-side cost of <code>FireServer</code> — this is <strong>not</strong> round-trip. The <code>target</code> field reads <code>"RemoteEvent (fire only)"</code> so Compare output makes the distinction clear.</p>
+
+    <div class="cl info"><strong>RemoteEvent results are not round-trip.</strong> They will be much faster than any round-trip benchmark and cannot be directly compared. Use <code>RunRemoteFunction</code> for a fair comparison against RoExpress routes.</div>
+
+    <h2>bench:RunAndPrint()</h2>
+    <div class="sig"><span class="fn">bench:RunAndPrint</span>(<span class="tp">route</span>: string, <span class="tp">config</span>?: Config) → Results</div>
+    <p>Convenience wrapper — runs and prints in one call. Returns Results so you can store it for <code>Compare</code>.</p>
+
+    <h2>Config</h2>
+    <p>All run methods accept the same optional config table. Fields that don't apply to a target type are ignored.</p>
+    <table class="tbl">
+      <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>method</code></td><td>"GET" | "POST" | "PUT" | "DELETE"</td><td>"GET"</td><td>HTTP method — RoExpress targets only</td></tr>
+        <tr><td><code>data</code></td><td>any?</td><td>nil</td><td>Request body — RoExpress targets only</td></tr>
+        <tr><td><code>args</code></td><td>{ any }?</td><td>{}</td><td>Arguments unpacked into FireServer / InvokeServer — vanilla remotes only</td></tr>
+        <tr><td><code>iterations</code></td><td>number?</td><td>20</td><td>Measured requests</td></tr>
+        <tr><td><code>warmup</code></td><td>number?</td><td>3</td><td>Discarded warm-up requests (JIT / connection)</td></tr>
+        <tr><td><code>interval</code></td><td>number?</td><td>0</td><td>Seconds between requests (0 = back-to-back)</td></tr>
+        <tr><td><code>timeout</code></td><td>number?</td><td>nil</td><td>Per-request timeout passed to Network — RoExpress only</td></tr>
+        <tr><td><code>label</code></td><td>string?</td><td>route / remote.Name</td><td>Display name in Print / Compare output</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Results</h2>
+    <table class="tbl">
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>label</code></td><td>string</td><td>Display name (from config or auto-assigned)</td></tr>
+        <tr><td><code>target</code></td><td>string</td><td>"RoExpress" · "RoExpress Port" · "RemoteFunction" · "RemoteEvent (fire only)"</td></tr>
+        <tr><td><code>method</code></td><td>string</td><td>GET / POST / PUT / DELETE / invoke / fire</td></tr>
+        <tr><td><code>min</code></td><td>number</td><td>Fastest request (ms)</td></tr>
+        <tr><td><code>avg</code></td><td>number</td><td>Mean RTT (ms)</td></tr>
+        <tr><td><code>median</code></td><td>number</td><td>p50 (ms)</td></tr>
+        <tr><td><code>p95</code></td><td>number</td><td>95th percentile (ms)</td></tr>
+        <tr><td><code>p99</code></td><td>number</td><td>99th percentile (ms)</td></tr>
+        <tr><td><code>max</code></td><td>number</td><td>Slowest request (ms)</td></tr>
+        <tr><td><code>errors</code></td><td>number</td><td>Failed request count</td></tr>
+        <tr><td><code>errorCodes</code></td><td>{ [number]: number }</td><td>Error count per HTTP status code</td></tr>
+        <tr><td><code>throughput</code></td><td>number</td><td>Requests per second (wall-clock)</td></tr>
+        <tr><td><code>total</code></td><td>number</td><td>Total wall time for all iterations (ms)</td></tr>
+        <tr><td><code>completed</code></td><td>number</td><td>Iterations actually measured</td></tr>
+        <tr><td><code>iterations</code></td><td>number</td><td>Configured iteration count</td></tr>
+        <tr><td><code>warmup</code></td><td>number</td><td>Configured warmup count</td></tr>
+      </tbody>
+    </table>
+
+    <h2>bench:Print()</h2>
+    <div class="sig"><span class="fn">bench:Print</span>(<span class="tp">results</span>: Results) → ()</div>
+    <p>Writes a formatted summary to the Studio output window. The header line shows the target type and method so you can identify each run at a glance.</p>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">── player/123   [RoExpress GET] × 20  (warmup: 3) ───────────────</span>
+<span class="cm">   min          4.21 ms</span>
+<span class="cm">   avg          6.83 ms</span>
+<span class="cm">   median       6.10 ms</span>
+<span class="cm">   p95         12.44 ms</span>
+<span class="cm">   p99         18.07 ms</span>
+<span class="cm">   max         18.71 ms</span>
+<span class="cm">   ─────────────────────────────────────────────────────────────</span>
+<span class="cm">   errors       0 / 20</span>
+<span class="cm">   throughput   8.3 req/s</span>
+<span class="cm">──────────────────────────────────────────────────────────────────</span></code></pre>
+
+    <h2>Example — GET request benchmark</h2>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> bench <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Benchmark"</span>)
+
+<span class="cm">-- RoExpress main channel</span>
+<span class="kw">local</span> result <span class="op">=</span> bench:<span class="fn">RunAndPrint</span>(<span class="str">"player/123"</span>, {
+    method     <span class="op">=</span> <span class="str">"GET"</span>,
+    iterations <span class="op">=</span> <span class="num">30</span>,
+    warmup     <span class="op">=</span> <span class="num">5</span>,
+    label      <span class="op">=</span> <span class="str">"player GET"</span>,
+})
+
+<span class="cm">-- Named port channel</span>
+<span class="kw">local</span> combatNet <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Network"</span>, <span class="str">"combat"</span>)
+<span class="kw">local</span> portResult <span class="op">=</span> bench:<span class="fn">RunOnPort</span>(combatNet, <span class="str">"shoot/123"</span>, {
+    method <span class="op">=</span> <span class="str">"POST"</span>,
+    data   <span class="op">=</span> { weapon <span class="op">=</span> <span class="str">"AK47"</span> },
+    label  <span class="op">=</span> <span class="str">"combat POST shoot"</span>,
+})
+bench:<span class="fn">Print</span>(portResult)
+
+<span class="cm">-- Vanilla RemoteFunction round-trip</span>
+<span class="kw">local</span> rs       <span class="op">=</span> game:<span class="fn">GetService</span>(<span class="str">"ReplicatedStorage"</span>)
+<span class="kw">local</span> echoFunc <span class="op">=</span> rs:<span class="fn">WaitForChild</span>(<span class="str">"EchoFunc"</span>)
+<span class="kw">local</span> rfResult <span class="op">=</span> bench:<span class="fn">RunRemoteFunction</span>(echoFunc, {
+    args       <span class="op">=</span> { <span class="str">"payload"</span> },
+    iterations <span class="op">=</span> <span class="num">30</span>,
+    label      <span class="op">=</span> <span class="str">"vanilla RF echo"</span>,
+})
+bench:<span class="fn">Print</span>(rfResult)</code></pre>
+
+    <div class="cl info"><strong>Rate limiting.</strong> With <code>interval = 0</code> and high iteration counts you may see 429 errors in <code>results.errorCodes</code>. Call <code>tokenBucket:Reset()</code> on the server before each run to clear per-player state.</div>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./benchmark.html">← Benchmark</a> &nbsp;·&nbsp;
+      <a href="./benchmark-compare.html">Compare</a> | side-by-side p95/p99 analysis &nbsp;·&nbsp;
+      <a href="./network.html">Network</a> | the instance Benchmark fires through &nbsp;·&nbsp;
+      <a href="./tokenbucket.html">TokenBucket</a> | rate limits that affect results
+    </p>
+
+  </section></main></div>
+</body>
+</html>

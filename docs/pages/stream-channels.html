@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stream Channels | RoExpress Docs</title>
+  <meta name="description" content="Stream.Channel and Stream.Init — define typed binary channels, subscribe with On/Once, and send data between server and client.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow"><a href="./stream.html">Stream</a> → Channels</div>
+    <h1>Channels</h1>
+    <p class="lead">Define typed binary channels with <code>Stream.Channel()</code>, then call <code>Stream.Init()</code> once after all channels are registered. Channel IDs are derived from a djb2 hash of the channel name — there is no ordering dependency between <code>Channel()</code> calls.</p>
+
+    <h2>Stream.Channel()</h2>
+    <div class="sig"><span class="fn">Stream.Channel</span>(<span class="tp">name</span>: string, <span class="tp">schema</span>: Schema, <span class="tp">options</span>?: Options) → Channel</div>
+    <p>Defines a typed binary channel. Returns a Channel object used to send and subscribe. Must be called before <code>Stream.Init()</code> on both server and client.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>reliable</code></td><td>boolean?</td><td>false</td><td>Use RemoteEvent instead of UnreliableRemoteEvent</td></tr>
+        <tr><td><code>maxRate</code></td><td>number?</td><td>—</td><td>Max incoming fires/sec per player (server-side only)</td></tr>
+        <tr><td><code>onDrop</code></td><td>fn?</td><td>—</td><td>Called when a packet is rate-limited and discarded</td></tr>
+        <tr><td><code>deltaInterval</code></td><td>number?</td><td>10</td><td>Force a full resync every N delta packets</td></tr>
+      </tbody>
+    </table>
+
+    <div class="cl info"><strong>Order matters.</strong> <code>Stream.Channel()</code> must be called before <code>Stream.Init()</code>. Define all channels first, then call Init once on both server and client.</div>
+
+    <h2>Stream.Init()</h2>
+    <div class="sig"><span class="fn">Stream.Init</span>() → ()</div>
+    <p>Finalises all registered channels and connects the underlying remotes (<code>StreamUnreliable</code> and <code>StreamReliable</code> in <code>ReplicatedStorage/RoExpressStream/</code>). Call exactly once — after all <code>Stream.Channel()</code> definitions — on both server and client.</p>
+
+    <h2>Channel IDs</h2>
+    <p>Each channel gets a numeric ID from a djb2 hash of its name, stored in bits 0–14 of the wire <code>channelId</code> field. Bit 15 is the delta flag. Because IDs are name-derived, registration order does not matter — the server and client will always agree on the mapping.</p>
+
+    <h2>channel:On()</h2>
+    <div class="sig"><span class="fn">channel:On</span>(<span class="tp">fn</span>: (data: table, sender: Player?) → ()) → unsubscribe: () → ()</div>
+    <p>Registers a persistent listener. <code>sender</code> is a <code>Player</code> on the server and <code>nil</code> on the client. Returns an unsubscribe function — call it at any time to stop receiving.</p>
+
+    <h2>channel:Once()</h2>
+    <div class="sig"><span class="fn">channel:Once</span>(<span class="tp">fn</span>: (data: table, sender: Player?) → ()) → unsubscribe: () → ()</div>
+    <p>Same as <code>On</code> but automatically unsubscribes after the first fire. The returned unsubscribe function can still be called early to cancel before the first packet arrives.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Persistent subscription | fires every time</span>
+<span class="kw">local</span> unsub <span class="op">=</span> channel:<span class="fn">On</span>(<span class="kw">function</span>(data, sender)
+    <span class="cm">-- sender is a Player on the server, nil on the client</span>
+    <span class="fn">print</span>(data.pos)
+<span class="kw">end</span>)
+
+<span class="cm">-- One-shot | auto-unsubscribes after first fire</span>
+<span class="kw">local</span> unsub2 <span class="op">=</span> channel:<span class="fn">Once</span>(<span class="kw">function</span>(data, sender)
+    <span class="fn">print</span>(<span class="str">"first packet from"</span>, sender)
+<span class="kw">end</span>)
+
+unsub()   <span class="cm">-- cancel the persistent listener</span>
+unsub2()  <span class="cm">-- cancel before the first packet arrives</span></code></pre>
+
+    <h2>Other channel methods</h2>
+    <table class="tbl">
+      <thead><tr><th>Call</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>channel:Destroy()</code></td><td>Cleans up a single channel's subscriptions and rate-limit state</td></tr>
+        <tr><td><code>Stream.GetChannel(name)</code></td><td>Returns the Channel for <code>name</code>, or nil if not defined</td></tr>
+        <tr><td><code>Stream.GetChannels()</code></td><td>Returns the full channel registry table (read-only)</td></tr>
+        <tr><td><code>Stream.Destroy()</code></td><td>Disconnects all remotes and clears state — useful for tests</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Example — defining and using a channel</h2>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- shared.luau — required on both server and client</span>
+<span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> Stream    <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Stream"</span>)
+
+<span class="kw">local</span> moveSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>.<span class="fn">New</span>({
+    { <span class="str">"pos"</span>,   <span class="str">"Vector3"</span> },
+    { <span class="str">"vel"</span>,   <span class="str">"Vector3"</span> },
+    { <span class="str">"state"</span>, { <span class="str">"flags"</span>, <span class="str">"jumping"</span>, <span class="str">"sprinting"</span> } },
+})
+
+<span class="kw">local</span> move <span class="op">=</span> Stream.<span class="fn">Channel</span>(<span class="str">"playerMove"</span>, moveSchema, {
+    maxRate       <span class="op">=</span> <span class="num">30</span>,   <span class="cm">-- server drops client fires above 30/s</span>
+    deltaInterval <span class="op">=</span> <span class="num">15</span>,   <span class="cm">-- force full resync every 15 delta packets</span>
+})
+
+Stream.<span class="fn">Init</span>()  <span class="cm">-- call once, after all Channel() definitions</span>
+
+<span class="kw">return</span> { move <span class="op">=</span> move }
+
+<span class="cm">-- server.luau</span>
+<span class="kw">local</span> channels <span class="op">=</span> <span class="fn">require</span>(script.Parent.shared)
+
+channels.move:<span class="fn">On</span>(<span class="kw">function</span>(data, player)
+    <span class="fn">print</span>(player.Name, data.pos, data.state.jumping)
+<span class="kw">end</span>)
+
+<span class="cm">-- client.luau</span>
+<span class="kw">local</span> channels <span class="op">=</span> <span class="fn">require</span>(script.Parent.shared)
+<span class="kw">local</span> hrp      <span class="op">=</span> LocalPlayer.Character.HumanoidRootPart
+
+RunService.Heartbeat:<span class="fn">Connect</span>(<span class="kw">function</span>()
+    channels.move:<span class="fn">Send</span>({
+        pos   <span class="op">=</span> hrp.Position,
+        vel   <span class="op">=</span> hrp.AssemblyLinearVelocity,
+        state <span class="op">=</span> { jumping <span class="op">=</span> isJumping, sprinting <span class="op">=</span> isSprinting },
+    })
+<span class="kw">end</span>)</code></pre>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./stream.html">← Stream</a> &nbsp;·&nbsp;
+      <a href="./stream-schema.html">Schema</a> | building the schema passed to Channel() &nbsp;·&nbsp;
+      <a href="./guide-stream-server.html">Server Side</a> | SendTo, Broadcast, delta methods &nbsp;·&nbsp;
+      <a href="./guide-stream-client.html">Client Side</a> | channel:Send and throttling
+    </p>
+
+  </section></main></div>
+</body>
+</html>

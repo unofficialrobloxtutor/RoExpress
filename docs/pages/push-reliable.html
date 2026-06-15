@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Push Reliability | RoExpress Docs</title>
+  <meta name="description" content="RoExpress Push reliability: RemoteEvent guarantees ordered delivery. Compare Push vs Broadcast and learn when to choose each.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow"><a href="./push.html">Push</a> → Reliability</div>
+        <h1>Reliability</h1>
+        <p class="lead">Push uses Roblox's standard <code>RemoteEvent</code>, which guarantees that every fired event arrives at the client in the order it was sent. No 900-byte cap. No silent drops.</p>
+
+        <h2>Transport comparison</h2>
+        <table class="tbl">
+          <thead><tr><th></th><th>Push (app:Push)</th><th>Broadcast (broadcast:Emit)</th></tr></thead>
+          <tbody>
+            <tr><td>Remote</td><td>RemoteEvent</td><td>UnreliableRemoteEvent</td></tr>
+            <tr><td>Delivery</td><td>Guaranteed</td><td>May drop under load</td></tr>
+            <tr><td>Order</td><td>Preserved</td><td>Not guaranteed</td></tr>
+            <tr><td>Payload cap</td><td>Roblox standard (no 900-byte limit)</td><td>900 bytes</td></tr>
+            <tr><td>Rate limited</td><td>No (server-initiated)</td><td>Yes — per-player TokenBucket</td></tr>
+            <tr><td>Best for</td><td>Inventory, state sync, round events</td><td>HUD pings, position hints, visual FX</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Why Push is not rate limited</h2>
+        <p>Rate limiting on the main App channel and Broadcast exists to protect the server from client-driven abuse. Push is <em>server-initiated</em> — the server controls when and how often it fires. There is no client-side attack surface to limit, so no TokenBucket is applied.</p>
+
+        <h2>No 900-byte cap on Push</h2>
+        <p>The 900-byte restriction is a Roblox engine limit on <code>UnreliableRemoteEvent</code>, which Broadcast uses. Push fires over a standard <code>RemoteEvent</code> and is subject only to Roblox's normal RemoteEvent payload size. For most game data (inventory tables, round state, player stats) this is not a concern.</p>
+
+        <div class="cl info"><strong>Still be reasonable.</strong> While Push has no hard 900-byte cap, sending multi-kilobyte payloads over RemoteEvent on every frame will degrade performance. Push large state once on join or on change, not every heartbeat.</div>
+
+        <h2>When to choose Push vs Broadcast</h2>
+        <table class="tbl">
+          <thead><tr><th>Scenario</th><th>Use</th></tr></thead>
+          <tbody>
+            <tr><td>Player's inventory changed</td><td>Push — must arrive, must be current</td></tr>
+            <tr><td>Round start / end</td><td>Push — all players must receive it</td></tr>
+            <tr><td>Player data on join</td><td>Push — critical state sync</td></tr>
+            <tr><td>Damage number at a position</td><td>Broadcast — lossy OK, high frequency</td></tr>
+            <tr><td>Player movement hint for other clients</td><td>Broadcast — stale data is fine, volume is high</td></tr>
+            <tr><td>Visual hit effect</td><td>Broadcast — dropped frames are imperceptible</td></tr>
+          </tbody>
+        </table>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./push.html">← Push</a> &nbsp;·&nbsp;
+          <a href="./push-methods.html">Push Methods</a> | Push / PushAll / PushTo signatures &nbsp;·&nbsp;
+          <a href="./broadcast.html">Broadcast</a> | unreliable alternative &nbsp;·&nbsp;
+          <a href="./broadcast-emit.html">Broadcast Fire Methods</a> | Emit / EmitAll / EmitTo
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

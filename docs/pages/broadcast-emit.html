@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fire Methods | RoExpress Docs</title>
+  <meta name="description" content="RoExpress Broadcast fire methods: broadcast:Emit, broadcast:EmitAll, broadcast:EmitTo. Unreliable server-to-client events over UnreliableRemoteEvent with a 900-byte limit.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow"><a href="./broadcast.html">Broadcast</a> → Fire Methods</div>
+        <h1>Fire Methods</h1>
+        <p class="lead">Three methods to fire events to one player, all players, or a subset. All are sent over <code>UnreliableRemoteEvent</code> and subject to the 900-byte payload limit.</p>
+
+        <h2>Signatures</h2>
+        <div class="sig">broadcast:<span class="fn">Emit</span>(player: Player, event: string, data: any)</div>
+        <div class="sig">broadcast:<span class="fn">EmitAll</span>(event: string, data: any)</div>
+        <div class="sig">broadcast:<span class="fn">EmitTo</span>(players: {Player}, event: string, data: any)</div>
+
+        <h2>Parameters</h2>
+        <table class="tbl">
+          <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>player</code></td><td>Player</td><td>Target player for <code>Emit</code></td></tr>
+            <tr><td><code>players</code></td><td><code>{Player}</code></td><td>Target subset for <code>EmitTo</code></td></tr>
+            <tr><td><code>event</code></td><td>string</td><td>Event name — matched by <code>listener:On(event)</code> on the client</td></tr>
+            <tr><td><code>data</code></td><td>any</td><td>Payload. Serialised over UnreliableRemoteEvent. Must be ≤ 900 bytes.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Usage</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> broadcast <span class="op">=</span> RoExpress(<span class="str">"Broadcast"</span>)
+
+<span class="cm">-- To one player</span>
+broadcast:<span class="fn">Emit</span>(player, <span class="str">"hit"</span>, { dmg <span class="op">=</span> <span class="num">35</span>, pos <span class="op">=</span> hitPos })
+
+<span class="cm">-- To all players in the server</span>
+broadcast:<span class="fn">EmitAll</span>(<span class="str">"explosion"</span>, { pos <span class="op">=</span> blast.Position, radius <span class="op">=</span> <span class="num">20</span> })
+
+<span class="cm">-- To a specific subset</span>
+broadcast:<span class="fn">EmitTo</span>({ p1, p2, p3 }, <span class="str">"zoneEnter"</span>, { zoneId <span class="op">=</span> <span class="num">4</span> })</code></pre>
+
+        <h2>Receiving on the client</h2>
+        <p>Broadcast events are received by <a href="./listener.html">Listener</a> using <code>listener:On(event, callback)</code>:</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Server</span>
+broadcast:<span class="fn">EmitAll</span>(<span class="str">"hit"</span>, { dmg <span class="op">=</span> <span class="num">35</span>, pos <span class="op">=</span> hit.Position })
+
+<span class="cm">-- Client</span>
+<span class="kw">local</span> listener <span class="op">=</span> RoExpress(<span class="str">"Listener"</span>)
+listener:<span class="fn">On</span>(<span class="str">"hit"</span>, <span class="kw">function</span>(data)
+    <span class="fn">spawnDamageNumber</span>(data.pos, data.dmg)
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Broadcast vs Push</h2>
+        <table class="tbl">
+          <thead><tr><th>Feature</th><th>Broadcast</th><th>Push</th></tr></thead>
+          <tbody>
+            <tr><td>Transport</td><td>UnreliableRemoteEvent</td><td>RemoteEvent</td></tr>
+            <tr><td>Guaranteed delivery</td><td>No</td><td>Yes</td></tr>
+            <tr><td>In-order delivery</td><td>No</td><td>Yes</td></tr>
+            <tr><td>Payload limit</td><td>900 bytes</td><td>Roblox standard</td></tr>
+            <tr><td>Rate limited</td><td>Yes — global TokenBucket</td><td>No (server-initiated)</td></tr>
+            <tr><td>Best for</td><td>Damage numbers, movement hints, visual FX</td><td>Inventory sync, round events, state changes</td></tr>
+          </tbody>
+        </table>
+
+        <div class="cl info"><strong>900-byte limit.</strong> The UnreliableRemoteEvent payload cap is a Roblox engine limit. Keep broadcast data small — event names, positions, and scalar values fit easily. For large payloads, use <a href="./push.html">Push</a> instead.</div>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./broadcast.html">← Broadcast</a> &nbsp;·&nbsp;
+          <a href="./broadcast-rate.html">Rate Limiting</a> | throttling broadcast volume &nbsp;·&nbsp;
+          <a href="./push.html">Push</a> | reliable alternative for critical events &nbsp;·&nbsp;
+          <a href="./listener.html">Listener</a> | client-side event subscription
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

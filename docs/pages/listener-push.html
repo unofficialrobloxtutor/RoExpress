@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Server Push | RoExpress Docs</title>
+  <meta name="description" content="How RoExpress server push events arrive via listener:On. Reliable RemoteEvent delivery, event naming conventions, and examples.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow"><a href="./listener.html">Listener</a> → Server Push</div>
+        <h1>Server Push</h1>
+        <p class="lead">Push events are reliable server-to-client messages sent by <code>app:Push()</code> over a RemoteEvent — every event is guaranteed to arrive exactly once.</p>
+
+        <h2>How push events arrive</h2>
+        <p>On the server you call <code>app:Push(player, event, data)</code>. On the client you subscribe with <code>listener:On(event, fn)</code>. Listener routes the incoming RemoteEvent payload to the matching handler automatically — no extra setup needed.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- SERVER (Script)</span>
+<span class="kw">local</span> app <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
+
+app:<span class="fn">Get</span>(<span class="str">"round/start"</span>, <span class="kw">function</span>(req, res)
+    <span class="cm">-- push to everyone when a round begins</span>
+    app:<span class="fn">PushAll</span>(<span class="str">"round.start"</span>, { duration <span class="op">=</span> <span class="num">120</span> })
+    res:<span class="fn">Send</span>({ ok <span class="op">=</span> <span class="kw">true</span> })
+<span class="kw">end</span>)
+
+<span class="cm">-- CLIENT (LocalScript)</span>
+<span class="kw">local</span> listener <span class="op">=</span> RoExpress(<span class="str">"Listener"</span>)
+
+listener:<span class="fn">On</span>(<span class="str">"round.start"</span>, <span class="kw">function</span>(data)
+    HUD:<span class="fn">ShowTimer</span>(data.duration)
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Reliability guarantee</h2>
+        <p>Push uses Roblox's <strong>RemoteEvent</strong>. This means every event fired at a specific player is guaranteed to arrive — Roblox's network layer will retransmit until acknowledged. Push is the right channel when missing an event would break game logic (round start/end, inventory updates, match results).</p>
+        <table class="tbl">
+          <thead><tr><th>Property</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td>Transport</td><td>RemoteEvent (reliable)</td></tr>
+            <tr><td>Delivery</td><td>Guaranteed — every event arrives</td></tr>
+            <tr><td>Order</td><td>Ordered per-player</td></tr>
+            <tr><td>Server API</td><td><code>app:Push(player, event, data)</code> · <code>app:PushAll(event, data)</code> · <code>app:PushTo(players, event, data)</code></td></tr>
+          </tbody>
+        </table>
+
+        <h2>Event naming convention</h2>
+        <p>Event names are plain strings — any string the server and client agree on. A common convention is <code>noun.verb</code> or <code>domain.action</code> to avoid collisions between systems:</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- recommended naming patterns</span>
+<span class="str">"round.start"</span>       <span class="cm">-- round started</span>
+<span class="str">"round.end"</span>         <span class="cm">-- round ended with results</span>
+<span class="str">"player.data"</span>       <span class="cm">-- initial player data push on join</span>
+<span class="str">"inventory.update"</span>  <span class="cm">-- coins or items changed</span>
+<span class="str">"match.result"</span>      <span class="cm">-- win/loss outcome</span></code></pre>
+
+        <h2>Round lifecycle example</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> listener <span class="op">=</span> RoExpress(<span class="str">"Listener"</span>)
+
+listener:<span class="fn">On</span>(<span class="str">"round.start"</span>, <span class="kw">function</span>(data)
+    <span class="fn">print</span>(<span class="str">"Round starting — duration:"</span>, data.duration)
+    HUD:<span class="fn">StartTimer</span>(data.duration)
+    HUD:<span class="fn">ShowMessage</span>(<span class="str">"Round started!"</span>)
+<span class="kw">end</span>)
+
+listener:<span class="fn">On</span>(<span class="str">"round.end"</span>, <span class="kw">function</span>(data)
+    <span class="fn">print</span>(<span class="str">"Round over — winner:"</span>, data.winner)
+    HUD:<span class="fn">StopTimer</span>()
+    HUD:<span class="fn">ShowWinner</span>(data.winner)
+<span class="kw">end</span>)</code></pre>
+
+        <div class="cl info"><strong>Same handler, both channels.</strong> <code>listener:On("round.start", fn)</code> receives events from <em>both</em> <code>app:Push()</code> (reliable) and <code>broadcast:Emit()</code> (unreliable). For round lifecycle events you almost always want Push. See <a href="./listener-broadcast.html">Broadcast</a> for the unreliable counterpart.</div>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./listener.html">← Listener</a> &nbsp;·&nbsp;
+          <a href="./listener-on.html">Subscribe</a> | On, Once, Off reference &nbsp;·&nbsp;
+          <a href="./listener-broadcast.html">Broadcast</a> | unreliable channel comparison &nbsp;·&nbsp;
+          <a href="./push.html">App Push</a> | server-side push API
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

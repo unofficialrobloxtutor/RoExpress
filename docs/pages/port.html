@@ -1,20 +1,13 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ports | RoExpress Docs</title>
-  <meta name="description" content="RoExpress Port module: named isolated pipelines with their own RemoteEvent, Router, and TokenBucket. Perfect for combat, inventory, chat systems.">
-  <meta name="keywords" content="roblox, luau, roexpress, port, isolated, pipeline, named, remoteevent, combat, inventory, tokenbucket">
+  <title>Port | RoExpress Docs</title>
+  <meta name="description" content="RoExpress Port: named isolated pipelines with dedicated RemoteEvent, Router, and TokenBucket. Zero interference between channels.">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://roexpress.dev/docs/port/">
   <meta name="theme-color" content="#8b78ff">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://roexpress.dev/docs/port/">
-  <meta property="og:title" content="Ports | RoExpress Docs">
-  <meta property="og:description" content="Named isolated pipelines with dedicated RemoteEvent, Router, and TokenBucket. Zero interference with the main App channel.">
-  <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,79 +24,52 @@
     <main id="ct">
       <section class="doc">
         <div class="eyebrow">Server API</div>
-        <h1>Ports</h1>
-        <p class="lead">Named isolated pipelines. Each port gets its own RemoteEvent, Router, and TokenBucket. High-frequency combat requests can't starve inventory requests | they live on separate channels with separate rate limits.</p>
+        <h1>Port</h1>
+        <p class="lead">Named isolated pipelines. Each port gets its own RemoteEvent, Router, and TokenBucket — high-frequency combat requests can't starve inventory requests.</p>
 
-        <h2>Creating a port</h2>
-        <div class="sig">app:<span class="fn">Listen</span>(name, callback, settings?) → Port</div>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> app <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
+        <div class="import-block"><code><span class="cm">-- Server: app:Listen("portName", callback, settings?)  -- Client: RoExpress("Network", "portName")</span></code></div>
 
-app:<span class="fn">Listen</span>(<span class="str">"combat"</span>, <span class="kw">function</span>(port)
-    port:<span class="fn">Post</span>(<span class="str">"shoot/:targetId=number"</span>, <span class="kw">function</span>(req, res)
-        res:<span class="fn">Send</span>(<span class="fn">handleShoot</span>(req.player, req.params.targetId))
-    <span class="kw">end</span>)
-<span class="kw">end</span>, {
-    maxTokens <span class="op">=</span> <span class="num">20</span>,
-    refillRate <span class="op">=</span> <span class="num">10</span>,
-})</code></pre>
+        <div class="dir-grid">
+          <a class="dir-card" href="./port-create.html">
+            <div class="dir-pills"><span class="rtag">isolation</span></div>
+            <div class="dir-title">Creating Ports</div>
+            <div class="dir-desc">Register a named port on the server. The callback receives a full App-like instance with its own Router and TokenBucket.</div>
+            <div class="dir-foot">
+              <span class="dir-methods">app:Listen(name, cb, settings?)</span>
+              <span class="dir-arrow">→</span>
+            </div>
+          </a>
 
-        <h2>Port settings</h2>
-        <table class="tbl">
-          <thead><tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td><code>maxTokens</code></td><td>number</td><td>60</td><td>Token bucket max capacity</td></tr>
-            <tr><td><code>refillRate</code></td><td>number</td><td>20</td><td>Tokens added per second</td></tr>
-            <tr><td><code>startTokens</code></td><td>number</td><td><code>maxTokens</code></td><td>Initial token count per player</td></tr>
-            <tr><td><code>cost</code></td><td>number</td><td>1</td><td>Tokens consumed per request</td></tr>
-          </tbody>
-        </table>
+          <a class="dir-card" href="./port-use.html">
+            <div class="dir-pills"><span class="rtag">client</span></div>
+            <div class="dir-title">Using Ports</div>
+            <div class="dir-desc">Access a port from the client with Network or Listener. The call signature is identical to the main channel.</div>
+            <div class="dir-foot">
+              <span class="dir-methods">RoExpress("Network", "portName") &nbsp;·&nbsp; RoExpress("Listener", "portName")</span>
+              <span class="dir-arrow">→</span>
+            </div>
+          </a>
 
-        <h2>Port API</h2>
-        <p>A Port instance exposes the same routing interface as App:</p>
-        <div class="sig">port:<span class="fn">Get</span>(route, handler)</div>
-        <div class="sig">port:<span class="fn">Post</span>(route, handler)</div>
-        <div class="sig">port:<span class="fn">Put</span>(route, handler)</div>
-        <div class="sig">port:<span class="fn">Delete</span>(route, handler)</div>
-        <div class="sig">port:<span class="fn">Use</span>(id, fn) &nbsp;·&nbsp; port:<span class="fn">Unuse</span>(id)</div>
-
-        <h2>Getting a port reference</h2>
-        <div class="sig">app:<span class="fn">GetPort</span>(name) → Port</div>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> combatPort <span class="op">=</span> app:<span class="fn">GetPort</span>(<span class="str">"combat"</span>)
-combatPort:<span class="fn">Get</span>(<span class="str">"status"</span>, <span class="kw">function</span>(req, res) res:<span class="fn">Send</span>(<span class="str">"ok"</span>) <span class="kw">end</span>)</code></pre>
-
-        <h2>Client side</h2>
-        <p>Pass the port name as the second argument to get a <a href="./network.html">Network</a> or <a href="./listener.html">Listener</a> wired to that port's RemoteEvent. The call signature matches the main-channel versions exactly | same methods, same response shape.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> combatNet <span class="op">=</span> RoExpress(<span class="str">"Network"</span>, <span class="str">"combat"</span>)
-
-<span class="cm">-- callback style</span>
-combatNet:<span class="fn">Post</span>(<span class="str">"shoot/123"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res)
-    <span class="kw">if</span> res.ok <span class="kw">then</span> <span class="fn">showHit</span>(res.data) <span class="kw">end</span>
-<span class="kw">end</span>)
-
-<span class="cm">-- promise style</span>
-combatNet:<span class="fn">PostAsync</span>(<span class="str">"shoot/123"</span>)
-    :<span class="fn">Then</span>(<span class="kw">function</span>(res) <span class="fn">showHit</span>(res.data) <span class="kw">end</span>)
-    :<span class="fn">Catch</span>(<span class="kw">function</span>(err) <span class="fn">warn</span>(err.message) <span class="kw">end</span>)</code></pre>
-
-        <p>For push events fired from a port (<code>port:Push()</code> / <code>port:PushAll()</code>), subscribe with a Listener on the same port name:</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> combatListener <span class="op">=</span> RoExpress(<span class="str">"Listener"</span>, <span class="str">"combat"</span>)
-
-combatListener:<span class="fn">On</span>(<span class="str">"hit.confirmed"</span>, <span class="kw">function</span>(data)
-    <span class="fn">print</span>(<span class="str">"damage:"</span>, data.damage)
-<span class="kw">end</span>)</code></pre>
-
-        <p>Each port name is cached | calling <code>RoExpress("Network", "combat")</code> from multiple scripts returns the same instance.</p>
+          <a class="dir-card" href="./port-settings.html">
+            <div class="dir-pills"><span class="rtag">config</span></div>
+            <div class="dir-title">Port Settings</div>
+            <div class="dir-desc">Per-port rate limiting via TokenBucket settings. Tune maxTokens, refillRate, startTokens, and cost independently per port.</div>
+            <div class="dir-foot">
+              <span class="dir-methods">maxTokens &nbsp;·&nbsp; refillRate &nbsp;·&nbsp; startTokens &nbsp;·&nbsp; cost</span>
+              <span class="dir-arrow">→</span>
+            </div>
+          </a>
+        </div>
 
         <h2>See also</h2>
         <p>
-          <a href="./app.html">App</a> | the main pipeline Ports are attached to &nbsp;·&nbsp;
+          <a href="./app.html">App</a> | the main pipeline ports are attached to &nbsp;·&nbsp;
           <a href="./tokenbucket.html">TokenBucket</a> | per-port rate limiting config &nbsp;·&nbsp;
-          <a href="./router.html">Router</a> | route syntax used inside Ports &nbsp;·&nbsp;
-          <a href="./pipeline.html">Request Pipeline</a> | Ports run an identical pipeline &nbsp;·&nbsp;
+          <a href="./router.html">Router</a> | route syntax used inside ports &nbsp;·&nbsp;
+          <a href="./pipeline.html">Request Pipeline</a> | ports run an identical pipeline &nbsp;·&nbsp;
           <a href="./guides-combat.html">Combat Guide</a> | isolation by weapon type &nbsp;·&nbsp;
-          <a href="./examples-gun.html">Gun Example</a> | combat Port in full context
+          <a href="./examples-gun.html">Gun Example</a> | combat port in full context
         </p>
-
       </section>
     </main>
   </div>

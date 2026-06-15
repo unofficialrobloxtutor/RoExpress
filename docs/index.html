@@ -190,23 +190,57 @@ listener:<span class="fn">On</span>(<span class="str">"round.end"</span>, <span 
         </table>
         <p>Next: YouTube gun framework showcase, then awesome-roblox submission. See the <a href="pages/roadmap.html">Roadmap</a> for the full picture.</p>
 
-        <h2>Where to go next</h2>
-        <table class="tbl">
-          <thead><tr><th>Goal</th><th>Start here</th></tr></thead>
-          <tbody>
-            <tr><td>First time using RoExpress</td><td><a href="#quickstart">Quick Start</a> above, then <a href="pages/pipeline.html">Request Pipeline</a></td></tr>
-            <tr><td>Understand the route + middleware flow</td><td><a href="pages/guide-middleware.html">Middleware Guide</a></td></tr>
-            <tr><td>Sync player positions every tick</td><td><a href="pages/stream.html">Stream</a> &middot; <a href="pages/guide-stream.html">FPS Stream Guide</a></td></tr>
-            <tr><td>Detect and kick exploiters</td><td><a href="pages/tamper.html">Tamper</a> &middot; <a href="pages/guide-tamper.html">Exploit Detection Guide</a></td></tr>
-            <tr><td>Push events from server to client</td><td><a href="pages/push.html">Server Push</a> &middot; <a href="pages/listener.html">Listener</a></td></tr>
-            <tr><td>Compress large payloads</td><td><a href="pages/codec.html">Codec</a></td></tr>
-            <tr><td>Isolate a system on its own remote</td><td><a href="pages/port.html">Ports</a> &middot; <a href="pages/guide-ports.html">Ports Guide</a></td></tr>
-            <tr><td>See a complete worked example</td><td><a href="pages/ex-killfeed.html">Kill Feed</a> &middot; <a href="pages/ex-round.html">Round Manager</a> &middot; <a href="pages/ex-shop.html">Shop</a></td></tr>
-            <tr><td>Look up a specific API</td><td><a href="pages/app.html">App</a> &middot; <a href="pages/network.html">Network</a> &middot; <a href="pages/types.html">Types</a></td></tr>
-            <tr><td>Upgrade from v2.3</td><td><a href="pages/guides-migration.html">Migration Guide</a></td></tr>
-            <tr><td>Get help or report a bug</td><td><a href="pages/community-discord.html">Discord</a> &middot; <a href="pages/community-github.html">GitHub</a></td></tr>
-          </tbody>
-        </table>
+        <h2>Explore the docs</h2>
+        <p style="color:var(--text3);font-size:12.5px;margin-bottom:20px">A random selection of guides, references, and examples — shuffles on every visit.</p>
+        <div id="disc" style="display:grid;gap:14px;margin-bottom:16px"></div>
+        <button onclick="shuffle()" style="font-family:var(--font);font-size:12px;color:var(--text3);background:none;border:1px solid var(--border);border-radius:var(--radius);padding:6px 14px;cursor:pointer;transition:color var(--ease),border-color var(--ease)" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--border2)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">Shuffle →</button>
+
+        <script>
+        (function(){
+          var P='pages/';
+          var PAGES=[
+            {tag:'guide',   title:'Middleware',        desc:'Chain auth, logging, and validation before any handler runs.',             url:P+'guide-middleware.html'},
+            {tag:'guide',   title:'MVC Pattern',       desc:'Separate models, views, and controllers cleanly with RoExpress.',         url:P+'guide-mvc.html'},
+            {tag:'guide',   title:'Exploit Detection', desc:'Strike-based kick system for malformed and spoofed requests.',            url:P+'guide-tamper.html'},
+            {tag:'guide',   title:'FPS Stream Guide',  desc:'Position sync at 20 Hz with lag compensation and history rewind.',       url:P+'guide-stream.html'},
+            {tag:'guide',   title:'Authentication',    desc:'Lock down routes with middleware auth guards and role checks.',           url:P+'guides-auth.html'},
+            {tag:'guide',   title:'Combat System',     desc:'Guns, hit detection, and damage flow across Stream and Ports.',          url:P+'guides-combat.html'},
+            {tag:'guide',   title:'Migration v2.3→2.4',desc:'Breaking changes, new accessors, and Stream API updates.',              url:P+'guides-migration.html'},
+            {tag:'guide',   title:'Promise Guide',     desc:'Chain async network calls with Then, Catch, and Finally.',               url:P+'guide-promise.html'},
+            {tag:'api',     title:'App',               desc:'HTTP-style routing with typed params, middleware, and server push.',     url:P+'app.html'},
+            {tag:'api',     title:'Stream',            desc:'Schema-defined binary channels with delta compression.',                 url:P+'stream.html'},
+            {tag:'api',     title:'Stream: Server',    desc:'All six send methods, rate limiting, delta compression explained.',      url:P+'guide-stream-server.html'},
+            {tag:'api',     title:'Stream: Client',    desc:'Sending, throttling, subscribing, and one-shot receives.',              url:P+'guide-stream-client.html'},
+            {tag:'api',     title:'Harpy',             desc:'Outbound HTTP client with base URL, headers, and automatic retry.',     url:P+'harpy.html'},
+            {tag:'api',     title:'TokenBucket',       desc:'RFC 2697 rate limiter — consume, grant, and grant-all per player.',     url:P+'tokenbucket.html'},
+            {tag:'api',     title:'Router',            desc:'Typed params, wildcards, globs, and constraints on any route.',         url:P+'router.html'},
+            {tag:'api',     title:'Codec',             desc:'Deflate compression (LZ77 + Huffman) opt-in per route.',               url:P+'codec.html'},
+            {tag:'api',     title:'Ports',             desc:'Isolated App instances each on their own RemoteEvent.',                 url:P+'port.html'},
+            {tag:'api',     title:'Bridge',            desc:'Named internal event bus — decouples controllers without requires.',    url:P+'bridge.html'},
+            {tag:'api',     title:'Tamper',            desc:'Passive strike tracking on malformed payloads and version spoofs.',     url:P+'tamper.html'},
+            {tag:'example', title:'Kill Feed',         desc:'Push broadcast with Bridge and typed wildcard params.',                 url:P+'ex-killfeed.html'},
+            {tag:'example', title:'Gun Framework',     desc:'Shoot, hit-scan, damage, and replication across Stream and Ports.',    url:P+'examples-gun.html'},
+            {tag:'example', title:'Live Streaming',    desc:'20 Hz CFrame sync with server relay and client interpolation.',        url:P+'examples-streaming.html'},
+            {tag:'example', title:'Round Manager',     desc:'Countdown, push, and Bridge coordination for game rounds.',            url:P+'ex-round.html'},
+            {tag:'example', title:'Shop / Purchase',   desc:'Validate, deduct currency, and push inventory updates.',               url:P+'ex-shop.html'},
+            {tag:'example', title:'Admin Commands',    desc:'Middleware-gated admin actions with role and whitelist checks.',        url:P+'ex-admin.html'},
+            {tag:'example', title:'Inventory System',  desc:'Slot management, equip/unequip, and push-based sync.',                 url:P+'examples-inventory.html'},
+          ];
+          var COLORS={guide:'background:rgba(96,165,250,.12);color:#60a5fa',api:'background:rgba(139,120,255,.12);color:var(--accent2)',example:'background:rgba(74,222,154,.1);color:#4ade9a'};
+          function render(){
+            var pool=[].concat(PAGES).sort(function(){return Math.random()-.5}).slice(0,6);
+            document.getElementById('disc').innerHTML=pool.map(function(p){
+              return '<a href="'+p.url+'" style="text-decoration:none;display:block;background:var(--code-bg);border:1px solid var(--border);border-radius:10px;padding:18px 16px;transition:border-color var(--ease),background var(--ease)" onmouseover="this.style.borderColor=\'var(--border2)\';this.style.background=\'var(--bg2)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.background=\'var(--code-bg)\'">'
+                +'<span style="font-size:10px;padding:2px 7px;border-radius:3px;letter-spacing:.04em;'+COLORS[p.tag]+'">'+p.tag+'</span>'
+                +'<div style="font-size:13px;font-weight:500;color:var(--text);margin-top:10px;margin-bottom:6px;line-height:1.3">'+p.title+'</div>'
+                +'<div style="font-size:12px;color:var(--text3);line-height:1.6">'+p.desc+'</div>'
+                +'</a>';
+            }).join('');
+          }
+          window.shuffle=render;
+          document.addEventListener('DOMContentLoaded',render);
+        })();
+        </script>
 
       </section>
     </main>

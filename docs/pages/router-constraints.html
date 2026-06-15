@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Constraints | RoExpress Docs</title>
+  <meta name="description" content="RoExpress Router constraints: restrict named param values with inline Lua patterns. Combine with type coercion for precise segment matching.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow"><a href="./router.html">Router</a> → Constraints</div>
+        <h1>Constraints</h1>
+        <p class="lead">Wrap a Lua pattern in <code>()</code> after a param name to restrict which segment values the route will match. The pattern is anchored — the entire segment must match for the route to be selected.</p>
+
+        <h2>Inline constraint syntax</h2>
+        <p>The full form for a constrained, typed param is: <code>:name(pattern)=type</code>. Each part is optional except <code>:name</code>.</p>
+        <table class="tbl">
+          <thead><tr><th>Form</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><code>:id(%d+)</code></td><td>Segment must match <code>%d+</code> — captured as string</td></tr>
+            <tr><td><code>:id(%d+)=number</code></td><td>Must match <code>%d+</code>, then coerced to number</td></tr>
+            <tr><td><code>:action(%a+)</code></td><td>Segment must be letters only — captured as string</td></tr>
+            <tr><td><code>:slug(%w[%w%-]+)</code></td><td>Alphanumeric with hyphens — captured as string</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Examples</h2>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- digits only, raw string</span>
+app:<span class="fn">Get</span>(<span class="str">"user/:id(%d+)"</span>, <span class="kw">function</span>(req, res)
+    <span class="fn">print</span>(req.params.id)  <span class="cm">-- "123" — string</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- digits only, coerced to number</span>
+app:<span class="fn">Get</span>(<span class="str">"user/:id(%d+)=number"</span>, <span class="kw">function</span>(req, res)
+    <span class="fn">print</span>(req.params.id)  <span class="cm">-- 123 — number</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- lowercase letters only</span>
+app:<span class="fn">Get</span>(<span class="str">"cmd/:action(%a+)"</span>, <span class="kw">function</span>(req, res)
+    <span class="fn">print</span>(req.params.action)  <span class="cm">-- "fire", "reload" | rejects "fire2"</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- page number: digits, returned as integer</span>
+app:<span class="fn">Get</span>(<span class="str">"page/:n(%d+)=int"</span>, <span class="kw">function</span>(req, res)
+    res:<span class="fn">Send</span>({ page <span class="op">=</span> req.params.n })
+<span class="kw">end</span>)</code></pre>
+
+        <h2>Common Lua pattern classes</h2>
+        <table class="tbl">
+          <thead><tr><th>Class</th><th>Matches</th></tr></thead>
+          <tbody>
+            <tr><td><code>%d</code></td><td>Any digit (0–9)</td></tr>
+            <tr><td><code>%a</code></td><td>Any letter (A–Z, a–z)</td></tr>
+            <tr><td><code>%w</code></td><td>Any alphanumeric (letter or digit)</td></tr>
+            <tr><td><code>%l</code></td><td>Lowercase letter</td></tr>
+            <tr><td><code>%u</code></td><td>Uppercase letter</td></tr>
+            <tr><td><code>%p</code></td><td>Punctuation</td></tr>
+            <tr><td><code>.</code></td><td>Any character</td></tr>
+          </tbody>
+        </table>
+        <p>See the <a href="https://www.lua.org/manual/5.1/manual.html#5.4.1" target="_blank">Lua 5.1 pattern reference</a> for the full specification.</p>
+
+        <h2>Non-match behaviour</h2>
+        <p>When a segment does not satisfy the constraint pattern, the route is <strong>skipped entirely</strong> — it results in a 404, not a 400. The next route in priority order is tried. This is different from type coercion failure (see below).</p>
+
+        <div class="cl info"><strong>Constraint vs coercion failure.</strong> A constraint mismatch (pattern not satisfied) skips the route silently and continues matching. A coercion failure (pattern matched but <code>=type</code> conversion failed) triggers <code>OnParamError</code> or responds 400 automatically.</div>
+
+        <h2>Interaction with OnParamError</h2>
+        <p><code>OnParamError</code> is called only when a segment satisfies the Lua pattern but the <code>=type</code> coercion step fails. Use it to customise the error response.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>app:<span class="fn">OnParamError</span>(<span class="kw">function</span>(req, res, paramName, value)
+    res:<span class="fn">Status</span>(<span class="num">422</span>):<span class="fn">Send</span>({
+        error <span class="op">=</span> <span class="str">"Cannot coerce param '"</span> <span class="op">..</span> paramName <span class="op">..</span> <span class="str">"': "</span> <span class="op">..</span> <span class="fn">tostring</span>(value)
+    })
+<span class="kw">end</span>)</code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./router.html">← Router</a> &nbsp;·&nbsp;
+          <a href="./router-params.html">Named Params</a> | full type annotation list &nbsp;·&nbsp;
+          <a href="./router-wildcards.html">Wildcards &amp; Globs</a> | unnamed captures &nbsp;·&nbsp;
+          <a href="./app.html">App</a> | OnParamError handler
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

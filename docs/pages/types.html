@@ -1,23 +1,14 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Exported Types | RoExpress Docs</title>
   <meta name="description" content="All exported Luau types from RoExpress: Payload, Request, Response, NetworkPayload, NetworkResponse, RouteHandler, MiddlewareHandler, App, Network, Port, Stream, TokenBucket.">
-  <meta name="keywords" content="roblox, luau, roexpress, types, export, payload, request, response, routehandler, middlewarehandler, typecoercer">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://roexpress.dev/docs/types/">
   <meta name="theme-color" content="#8b78ff">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://roexpress.dev/docs/types/">
-  <meta property="og:title" content="Exported Types | RoExpress Docs">
-  <meta property="og:description" content="All exported Luau types from RoExpress v2.4.">
-  <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../public/css/styles.css">
   <script src="../nav.js"></script>
@@ -26,102 +17,55 @@
   <div id="overlay" onclick="toggleSidebar()"></div>
   <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
   <header id="hdr"></header>
-  <div id="lay">
-    <nav id="sb"></nav>
-    <main id="ct">
-      <section class="doc">
-        <div class="eyebrow">Reference</div>
-        <h1>Exported Types</h1>
-        <p class="lead">All types are exported from the root <code>RoExpress</code> module. Import them with <code>require(RoExpress).TypeName</code>. All types forward directly from their source module | they can never drift out of sync.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
-<span class="kw">type</span> Request <span class="op">=</span> RoExpress.Request
-<span class="kw">type</span> Response <span class="op">=</span> RoExpress.Response</code></pre>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
 
-        <h2>Request / response types</h2>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">export type</span> Payload <span class="op">=</span> {
-    method  : <span class="str">"GET"</span> | <span class="str">"POST"</span> | <span class="str">"PUT"</span> | <span class="str">"DELETE"</span>,
-    route   : string,
-    data    : any?,
-    version : string?,
-}
+    <div class="eyebrow">Reference</div>
+    <h1>Exported Types</h1>
+    <p class="lead">All types are exported from the root <code>RoExpress</code> module and forward directly from their source module — they can never drift out of sync. Import them with <code>require(RoExpress).TypeName</code> or use the typed accessor helpers.</p>
 
-<span class="kw">export type</span> Request <span class="op">=</span> {
-    params   : { [string]: any },
-    captures : { any },
-    query    : { [string]: string },
-    data     : any,
-    player   : Player?,
-    raw      : Payload?,
-}
+    <div class="import-block">
+      <span>Import</span>
+      <code><span class="cm">-- Types are inferred automatically via GetApp() and GetNetwork()</span></code>
+      <button class="cb" onclick="cp(this)" style="position:relative;top:0;right:0">copy</button>
+    </div>
 
-<span class="kw">export type</span> Response <span class="op">=</span> {
-    Send   : (self: Response, data: any?) -> (),
-    Error  : (self: Response, message: string) -> (),
-    Status : (self: Response, code: number) -> Response,
-}</code></pre>
+    <div class="dir-grid">
 
-        <h2>Network types</h2>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">export type</span> NetworkPayload <span class="op">=</span> {
-    requestId : number,
-    method    : string,
-    route     : string,
-    data      : any?,
-}
+      <a class="dir-card" href="./types-request.html">
+        <div class="dir-pills">
+          <span class="rtag">types</span>
+        </div>
+        <div class="dir-title">Request Types</div>
+        <div class="dir-desc">The incoming side of a route handler. Covers the <code>Request</code> object fields, the raw <code>Payload</code> envelope, and the <code>RouteHandler</code> function signature including both compact and legacy forms.</div>
+        <div class="dir-foot">
+          <span class="dir-methods">Request · Payload · RouteHandler</span>
+          <span class="dir-arrow">→</span>
+        </div>
+      </a>
 
-<span class="kw">export type</span> NetworkResponse <span class="op">=</span> {
-    type       : <span class="str">"success"</span> | <span class="str">"error"</span> | <span class="str">"timeout"</span>,
-    status     : number?,
-    data       : any?,
-    message    : string?,
-    compressed : boolean?,
-}</code></pre>
+      <a class="dir-card" href="./types-response.html">
+        <div class="dir-pills">
+          <span class="rtag">types</span>
+        </div>
+        <div class="dir-title">Response Types</div>
+        <div class="dir-desc">The outgoing side of a route handler. Covers the <code>Response</code> object methods, the <code>NetworkResponse</code> received by the client, and the <code>MiddlewareHandler</code> signature.</div>
+        <div class="dir-foot">
+          <span class="dir-methods">Response · NetworkResponse · MiddlewareHandler</span>
+          <span class="dir-arrow">→</span>
+        </div>
+      </a>
 
-        <h2>Handler types</h2>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Modern handler: (req, res) → ()</span>
-<span class="kw">export type</span> RouteHandlerCompact <span class="op">=</span> (req: Request, res: Response) -> ()
+    </div>
 
-<span class="cm">-- Legacy handler: (Player, Payload, req, res) → ()</span>
-<span class="kw">export type</span> RouteHandlerLegacy  <span class="op">=</span>
-    (Player: Player, Payload: Payload, req: Request, res: Response) -> ()
+    <h2>See also</h2>
+    <p>
+      <a href="./app.html">App</a> | Request, Response, RouteHandler in use &nbsp;·&nbsp;
+      <a href="./network.html">Network</a> | NetworkResponse in use &nbsp;·&nbsp;
+      <a href="./pipeline.html">Request Pipeline</a> | how Payload flows through stages &nbsp;·&nbsp;
+      <a href="./reference.html">Reference Overview</a> | module context matrix &nbsp;·&nbsp;
+      <a href="./guides-migration.html">Migration Guide</a> | how types changed in v2.4
+    </p>
 
-<span class="cm">-- Union | accepted by app:Get() / app:Post() etc.</span>
-<span class="kw">export type</span> RouteHandler <span class="op">=</span> RouteHandlerCompact | RouteHandlerLegacy
-
-<span class="kw">export type</span> MiddlewareHandler <span class="op">=</span>
-    (Player: Player, Payload: Payload) -> (boolean?)</code></pre>
-
-        <h2>Module instance types</h2>
-        <table class="tbl">
-          <thead><tr><th>Type name</th><th>What it represents</th></tr></thead>
-          <tbody>
-            <tr><td><code>RoExpress.App</code></td><td>App instance shape (returned by <code>GetApp()</code>)</td></tr>
-            <tr><td><code>RoExpress.Network</code></td><td>Network instance shape (returned by <code>GetNetwork()</code>)</td></tr>
-            <tr><td><code>RoExpress.Port</code></td><td>Port instance shape (returned by <code>app:GetPort()</code>)</td></tr>
-            <tr><td><code>RoExpress.Stream</code></td><td>Stream module table type</td></tr>
-            <tr><td><code>RoExpress.TokenBucket</code></td><td>TokenBucket instance type</td></tr>
-            <tr><td><code>RoExpress.Broadcast</code></td><td>Broadcast module table type</td></tr>
-          </tbody>
-        </table>
-
-        <h2>Typed accessors</h2>
-        <p>Prefer <code>RoExpress.GetApp()</code> and <code>RoExpress.GetNetwork()</code> over <code>RoExpress("App")</code> and <code>RoExpress("Network")</code> | the typed accessors return fully-typed instances without requiring an explicit type annotation.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Returns RoExpress.App | no annotation needed</span>
-<span class="kw">local</span> app <span class="op">=</span> RoExpress.<span class="fn">GetApp</span>()
-
-<span class="cm">-- Returns RoExpress.Network | no annotation needed</span>
-<span class="kw">local</span> network <span class="op">=</span> RoExpress.<span class="fn">GetNetwork</span>()</code></pre>
-
-        <h2>See also</h2>
-        <p>
-          <a href="./app.html">App</a> | Request, Response, RouteHandler in use &nbsp;·&nbsp;
-          <a href="./network.html">Network</a> | NetworkResponse in use &nbsp;·&nbsp;
-          <a href="./pipeline.html">Request Pipeline</a> | how Payload flows through stages &nbsp;·&nbsp;
-          <a href="./reference.html">Reference Overview</a> | module context matrix &nbsp;·&nbsp;
-          <a href="./guides-migration.html">Migration Guide</a> | how types changed in v2.4
-        </p>
-
-      </section>
-    </main>
-  </div>
+  </section></main></div>
 </body>
 </html>
