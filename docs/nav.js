@@ -3,6 +3,12 @@
    Pages at /docs/pages/*.html use: ../css/styles.css  ../nav.js
 */
 (function () {
+  // Apply saved theme immediately — before body renders — so there's no flash
+  try {
+    if (localStorage.getItem('rx-theme') === 'light')
+      document.documentElement.dataset.theme = 'light';
+  } catch(e) {}
+
   const BASE = '/docs';
   const P    = BASE + '/pages/';   // flat page directory
 
@@ -38,8 +44,8 @@
       </div>
     </div>
     <div class="ns">
-      <button class="nsh open" onclick="tn(this)">Server <span class="chv">▶</span></button>
-      <div class="ni open">
+      <button class="nsh" onclick="tn(this)">Server <span class="chv">▶</span></button>
+      <div class="ni">
         ${nl(P + 'app.html',       'app',       'App')}
         ${nl(P + 'broadcast.html', 'broadcast', 'Broadcast')}
         ${nl(P + 'push.html',      'push',      'Push')}
@@ -49,8 +55,8 @@
       </div>
     </div>
     <div class="ns">
-      <button class="nsh open" onclick="tn(this)">Client <span class="chv">▶</span></button>
-      <div class="ni open">
+      <button class="nsh" onclick="tn(this)">Client <span class="chv">▶</span></button>
+      <div class="ni">
         ${nl(P + 'network.html',   'network',   'Network')}
         ${nl(P + 'listener.html',  'listener',  'Listener')}
         ${nl(P + 'promise.html',   'promise',   'Promise')}
@@ -58,8 +64,8 @@
       </div>
     </div>
     <div class="ns">
-      <button class="nsh open" onclick="tn(this)">Stream <span class="chv">▶</span></button>
-      <div class="ni open">
+      <button class="nsh" onclick="tn(this)">Stream <span class="chv">▶</span></button>
+      <div class="ni">
         ${nl(P + 'stream.html',              'stream',              'Overview')}
         ${nl(P + 'guide-stream-server.html', 'guide-stream-server', 'Server Side')}
         ${nl(P + 'guide-stream-client.html', 'guide-stream-client', 'Client Side')}
@@ -68,8 +74,8 @@
       </div>
     </div>
     <div class="ns">
-      <button class="nsh open" onclick="tn(this)">Shared <span class="chv">▶</span></button>
-      <div class="ni open">
+      <button class="nsh" onclick="tn(this)">Shared <span class="chv">▶</span></button>
+      <div class="ni">
         ${nl(P + 'router.html',      'router',      'Router')}
         ${nl(P + 'codec.html',       'codec',       'Codec')}
         ${nl(P + 'bridge.html',      'bridge',      'Bridge')}
@@ -111,8 +117,8 @@
       </div>
     </div>
     <div class="ns">
-      <button class="nsh open" onclick="tn(this)">Community <span class="chv">▶</span></button>
-      <div class="ni open">
+      <button class="nsh" onclick="tn(this)">Community <span class="chv">▶</span></button>
+      <div class="ni">
         ${nl(P + 'community-discord.html', 'community-discord', '◈ Discord')}
         ${nl(P + 'community-github.html',  'community-github',  '⌥ GitHub')}
         ${nl(P + 'youtube.html',           'youtube',           '▶ YouTube')}
@@ -120,8 +126,8 @@
       </div>
     </div>
     <div class="ns">
-      <button class="nsh open" onclick="tn(this)">Reference <span class="chv">▶</span></button>
-      <div class="ni open">
+      <button class="nsh" onclick="tn(this)">Reference <span class="chv">▶</span></button>
+      <div class="ni">
         ${nl(P + 'comparison.html',       'comparison',       'Comparison')}
         ${nl(P + 'design-consensus.html', 'design-consensus', 'Design Consensus')}
         ${nl(P + 'story.html',            'story',            'The Story ✦')}
@@ -232,6 +238,10 @@
     const sb = document.getElementById('sb');
     if (sb) sb.innerHTML = SIDEBAR;
 
+    // Sync theme button icon to saved theme
+    const tgl = document.getElementById('tgl');
+    if (tgl && document.documentElement.dataset.theme === 'light') tgl.textContent = '☀';
+
     // Auto-expand collapsed sections when current page is inside them
     if (sb) {
       const activeLink = sb.querySelector('.nl.active');
@@ -299,10 +309,12 @@
   // Global helpers
   window.tn = function (btn) { btn.classList.toggle('open'); btn.nextElementSibling.classList.toggle('open'); };
   window.toggleTheme = function () {
-    const b = document.body, d = b.dataset.theme === 'dark';
-    b.dataset.theme = d ? 'light' : 'dark';
+    const html = document.documentElement;
+    const isLight = html.dataset.theme === 'light';
+    html.dataset.theme = isLight ? 'dark' : 'light';
     const tgl = document.getElementById('tgl');
-    if (tgl) tgl.textContent = d ? '☀' : '☽';
+    if (tgl) tgl.textContent = isLight ? '☽' : '☀';
+    try { localStorage.setItem('rx-theme', html.dataset.theme); } catch(e) {}
   };
   window.toggleSidebar = function () {
     const sb = document.getElementById('sb'), ov = document.getElementById('overlay');
