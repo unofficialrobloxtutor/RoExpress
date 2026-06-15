@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stream Benchmarks | RoExpress Docs</title>
+  <meta name="description" content="Planned bandwidth and performance benchmarks for RoExpress Stream: delta compression savings, tick rate vs player count, fixed vs variable schema overhead.">
+  <meta name="keywords" content="roblox, luau, roexpress, stream, benchmark, bandwidth, delta compression, performance, tick rate">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/benchmark-stream.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/benchmark-stream.html">
+  <meta property="og:title" content="Stream Benchmarks | RoExpress Docs">
+  <meta property="og:description" content="Planned Stream bandwidth and delta compression benchmarks.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Reference</div>
+        <h1>Stream Benchmarks</h1>
+        <p class="lead">Planned bandwidth and performance measurements for RoExpress Stream. This page will be updated with real in-engine numbers once the benchmark suite is complete.</p>
+
+        <div class="cl new"><strong>Coming soon.</strong> These benchmarks are planned for a future release. The figures shown in this page are estimates based on wire format analysis — they will be replaced with measured values from actual Roblox sessions.</div>
+
+        <h2>What will be measured</h2>
+        <p>The benchmark suite will cover five areas:</p>
+        <table class="tbl">
+          <thead><tr><th>Area</th><th>What it captures</th></tr></thead>
+          <tbody>
+            <tr><td>Full packet bandwidth</td><td>Raw bytes per second at N players × T tick rate for a fixed schema</td></tr>
+            <tr><td>Delta compression savings</td><td>Byte reduction when only 1 of 5 fields changes vs all 5 changing</td></tr>
+            <tr><td>SendExcept vs BroadcastDelta at scale</td><td>Server CPU cost of per-player relay vs shared broadcast</td></tr>
+            <tr><td>Fixed vs variable schema</td><td>Pack/unpack time and byte count with and without string fields</td></tr>
+            <tr><td>Rate limiter overhead</td><td>TokenBucket cost per dropped packet under flood conditions</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Wire size estimates</h2>
+        <p>Based on the wire format (<code>[channelId: u16][seq: u16][payload]</code>), estimated packet sizes for the standard player-movement schema:</p>
+
+        <h3>Schema: userId (f64) + cf (CFrameLight) + health (u8)</h3>
+        <table class="tbl">
+          <thead><tr><th>Field</th><th>Type</th><th>Wire bytes</th></tr></thead>
+          <tbody>
+            <tr><td>Channel ID + seq</td><td>header</td><td>4 B</td></tr>
+            <tr><td>userId</td><td>f64</td><td>8 B</td></tr>
+            <tr><td>cf</td><td>CFrameLight</td><td>16 B</td></tr>
+            <tr><td>health</td><td>u8</td><td>1 B</td></tr>
+            <tr><td><strong>Total (full packet)</strong></td><td></td><td><strong>29 B</strong></td></tr>
+          </tbody>
+        </table>
+
+        <h3>Estimated bandwidth at scale (full packets, no delta)</h3>
+        <table class="tbl">
+          <thead><tr><th>Players</th><th>Tick rate</th><th>Packets/s (server recv)</th><th>Bytes/s (server recv)</th></tr></thead>
+          <tbody>
+            <tr><td>10</td><td>20 Hz</td><td>200</td><td>~5.7 KB/s</td></tr>
+            <tr><td>20</td><td>20 Hz</td><td>400</td><td>~11.4 KB/s</td></tr>
+            <tr><td>50</td><td>20 Hz</td><td>1,000</td><td>~28.5 KB/s</td></tr>
+            <tr><td>100</td><td>20 Hz</td><td>2,000</td><td>~57 KB/s</td></tr>
+            <tr><td>100</td><td>30 Hz</td><td>3,000</td><td>~85 KB/s</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Delta compression estimate (CFrameLight moving player)</h3>
+        <p>When a player is moving, typically only <code>cf</code> changes each tick (<code>userId</code> and <code>health</code> are constant). The delta payload contains a 1-byte bitmask plus the changed fields only:</p>
+        <table class="tbl">
+          <thead><tr><th>Scenario</th><th>Payload bytes</th><th>vs full packet</th></tr></thead>
+          <tbody>
+            <tr><td>All 3 fields changed</td><td>1 (mask) + 25 = 26 B</td><td>No savings (mask overhead)</td></tr>
+            <tr><td>cf only changed (moving player)</td><td>1 (mask) + 16 = 17 B</td><td>~34% smaller payload</td></tr>
+            <tr><td>health only changed (hit)</td><td>1 (mask) + 1 = 2 B</td><td>~92% smaller payload</td></tr>
+            <tr><td>Nothing changed (standing still)</td><td>1 (mask) = 1 B</td><td>~96% smaller payload</td></tr>
+          </tbody>
+        </table>
+        <p>Delta compression is most effective for fields that change rarely — health, animation state, flags. For a position field that changes every frame, the savings are modest (mask overhead applies).</p>
+
+        <h2>Schema design guidance</h2>
+        <p>Until measured benchmarks are available, these rules of thumb apply:</p>
+        <table class="tbl">
+          <thead><tr><th>Rule</th><th>Reason</th></tr></thead>
+          <tbody>
+            <tr><td>Prefer <code>CFrameLight</code> over <code>CFrame</code> for humanoids</td><td>16 B vs 28 B — humanoids only rotate on Y axis</td></tr>
+            <tr><td>Use <code>u8</code> for health (0–255) not <code>f32</code></td><td>1 B vs 4 B</td></tr>
+            <tr><td>Pack boolean groups into <code>{ "flags", ... }</code></td><td>Up to 8 booleans in 1 byte vs 8 bytes</td></tr>
+            <tr><td>Avoid <code>string</code> fields in high-frequency channels</td><td>Variable size disables delta compression and pre-allocation</td></tr>
+            <tr><td>Use <code>Vector3int16</code> for tile-snapped positions</td><td>6 B vs 12 B for <code>Vector3</code></td></tr>
+          </tbody>
+        </table>
+
+        <h2>Test methodology (planned)</h2>
+        <p>Benchmarks will be run inside Roblox Studio using <a href="./benchmark.html">Benchmark</a> (the built-in micro-benchmark module) and a controlled multiplayer test environment with simulated players. Each configuration will run for 30 seconds at stable load and report median, p95, and p99 latency alongside total bytes transferred.</p>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./stream.html">Stream</a> | API reference &nbsp;·&nbsp;
+          <a href="./guide-stream-server.html">Stream: Server Side</a> | send methods and delta &nbsp;·&nbsp;
+          <a href="./guide-stream-client.html">Stream: Client Side</a> | throttling recommendations &nbsp;·&nbsp;
+          <a href="./benchmark.html">Benchmark</a> | the micro-benchmark module used in testing
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

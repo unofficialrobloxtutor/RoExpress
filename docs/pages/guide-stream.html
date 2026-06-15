@@ -1,18 +1,18 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stream Guide | RoExpress Docs</title>
-  <meta name="description" content="Build an FPS game using RoExpress Stream: server channel setup, client subscription, lag compensation for hit validation.">
+  <title>FPS with Stream | RoExpress Docs</title>
+  <meta name="description" content="Build an FPS game using RoExpress Stream: shared channel setup, client send, server relay, and manual lag compensation for hit validation.">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://roexpress.dev/docs/pages/guide-stream.html">
   <meta name="theme-color" content="#8b78ff">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://roexpress.dev/docs/pages/guide-stream.html">
-  <meta property="og:title" content="Stream Guide | RoExpress Docs">
-  <meta property="og:description" content="FPS server+client setup with Stream channels and lag compensation.">
+  <meta property="og:title" content="FPS with Stream | RoExpress Docs">
+  <meta property="og:description" content="FPS server+client setup with Stream channels and manual lag compensation.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,71 +31,152 @@
       <section class="doc">
         <div class="eyebrow">Guide</div>
         <h1>FPS with Stream</h1>
-        <p class="lead">Stream sends player state to all clients every tick | one packed buffer, one <code>FireAllClients</code>. This guide walks through a typical FPS setup with lag compensation for hit validation.</p>
+        <p class="lead">Stream sends typed binary packets over <code>UnreliableRemoteEvent</code> — one packed buffer per fire, no JSON. This guide covers a complete FPS position-sync setup: shared schema, server relay with a history buffer, and client movement at 20 Hz. Lag compensation is done manually with the history buffer since there is no built-in rewind.</p>
 
-        <div class="cl info"><strong>Stream uses generic channels.</strong> The steps below use a single <code>players</code> channel. You can add more channels for bullets, vehicles, or any other high-frequency state | see <a href="./stream.html">Stream</a>.</div>
+        <div class="cl info"><strong>Two separate pages exist for deeper coverage.</strong> This guide shows the full picture end-to-end. For a focused breakdown of each side see <a href="./guide-stream-server.html">Stream: Server Side</a> and <a href="./guide-stream-client.html">Stream: Client Side</a>.</div>
 
-        <h2>Server setup</h2>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Stream <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Stream"</span>)
+        <h2>How data flows</h2>
+        <div class="pipe">
+          <div class="ps"><div class="pn">1</div><div class="pl">Client sends <code>{ userId, cf, health }</code> at 20 Hz via <code>channel:Send(data)</code></div></div>
+          <div class="ps"><div class="pn">2</div><div class="pl">Server receives via <code>channel:On(function(data, player))</code> — <code>player</code> is the real sender</div></div>
+          <div class="ps"><div class="pn">3</div><div class="pl">Server overwrites <code>data.userId</code> with <code>player.UserId</code> (prevents spoofing), appends snapshot to history buffer</div></div>
+          <div class="ps"><div class="pn">4</div><div class="pl">Server calls <code>channel:SendExcept(player, data)</code> — relays to every other client in one pass</div></div>
+          <div class="ps"><div class="pn">5</div><div class="pl">Other clients receive via <code>channel:On(function(data, _))</code> and apply position</div></div>
+        </div>
 
-<span class="cm">-- define schema: fields broadcast every tick</span>
-<span class="kw">local</span> ch <span class="op">=</span> Stream.<span class="fn">Channel</span>(<span class="str">"players"</span>, {
-    x       <span class="op">=</span> Stream.Types.Float32,
-    y       <span class="op">=</span> Stream.Types.Float32,
-    z       <span class="op">=</span> Stream.Types.Float32,
-    rotY    <span class="op">=</span> Stream.Types.Float16,
-    health  <span class="op">=</span> Stream.Types.UInt8,
+        <h2>Shared module</h2>
+        <p>Define the schema and channel in one file and <code>require</code> it on both server and client. Both sides must call the same <code>Stream.Channel()</code> definitions before <code>Stream.Init()</code>.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- ReplicatedStorage/StreamChannels.luau  (required on BOTH sides)</span>
+<span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> Stream    <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Stream"</span>)
+
+<span class="kw">local</span> posSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>({
+    { <span class="str">"userId"</span>, <span class="str">"f64"</span>         },  <span class="cm">-- 8 B: exact for any Roblox UserId</span>
+    { <span class="str">"cf"</span>,     <span class="str">"CFrameLight"</span> },  <span class="cm">-- 16 B: position + Y-yaw</span>
+    { <span class="str">"health"</span>, <span class="str">"u8"</span>          },  <span class="cm">-- 1 B:  0–255</span>
 })
 
-game:<span class="fn">GetService</span>(<span class="str">"RunService"</span>).Heartbeat:<span class="fn">Connect</span>(<span class="kw">function</span>()
-    <span class="kw">for</span> _, player <span class="kw">in</span> <span class="fn">ipairs</span>(game.Players:<span class="fn">GetPlayers</span>()) <span class="kw">do</span>
-        <span class="kw">local</span> char <span class="op">=</span> player.Character
-        <span class="kw">if not</span> (char <span class="kw">and</span> char:FindFirstChild(<span class="str">"HumanoidRootPart"</span>)) <span class="kw">then continue end</span>
-        <span class="kw">local</span> cf <span class="op">=</span> char.HumanoidRootPart.CFrame
-        ch:<span class="fn">Set</span>(player.UserId, {
-            x = cf.X, y = cf.Y, z = cf.Z,
-            rotY = cf.LookVector.X,
-            health = char.Humanoid.Health,
-        })
-    <span class="kw">end</span>
-    ch:<span class="fn">Flush</span>()   <span class="cm">-- one FireAllClients with all records</span>
+<span class="kw">local</span> players <span class="op">=</span> Stream.<span class="fn">Channel</span>(<span class="str">"players"</span>, posSchema, {
+    maxRate <span class="op">=</span> <span class="num">30</span>,  <span class="cm">-- server drops anything above 30 fires/sec per client</span>
+})
+
+Stream.<span class="fn">Init</span>()   <span class="cm">-- call once after all Channel() definitions</span>
+
+<span class="kw">return</span> { players <span class="op">=</span> players }</code></pre>
+
+        <div class="cl info"><strong>CFrameLight vs CFrame.</strong> <code>CFrameLight</code> is 16 bytes (position + Y-yaw only). Use it for humanoid characters that only rotate horizontally. Use <code>CFrame</code> (28 bytes) if you need full roll/pitch — e.g. vehicles or ragdolls.</div>
+
+        <h2>Server</h2>
+        <p>The server receives each client's position update, overwrites <code>userId</code> to prevent spoofing, records a snapshot for lag compensation, then relays to all other clients.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- ServerScriptService/MovementServer.server.luau</span>
+<span class="kw">local</span> ch <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.StreamChannels).players
+
+<span class="cm">-- Snapshot history for lag compensation (see section below)</span>
+<span class="kw">local</span> history: { [Player]: { { t: number, pos: Vector3 } } } <span class="op">=</span> {}
+<span class="kw">local</span> MAX_SNAPSHOTS <span class="op">=</span> <span class="num">30</span>   <span class="cm">-- ~1s at 30 Hz</span>
+
+ch:<span class="fn">On</span>(<span class="kw">function</span>(data, player)
+    <span class="cm">-- Always trust the server's knowledge of who sent this</span>
+    data.userId <span class="op">=</span> player.UserId
+
+    <span class="cm">-- Record position snapshot for lag comp</span>
+    <span class="kw">if not</span> history[player] <span class="kw">then</span> history[player] <span class="op">=</span> {} <span class="kw">end</span>
+    <span class="kw">local</span> buf <span class="op">=</span> history[player]
+    buf[#buf <span class="op">+</span> <span class="num">1</span>] <span class="op">=</span> { t <span class="op">=</span> os.<span class="fn">clock</span>(), pos <span class="op">=</span> data.cf.Position }
+    <span class="kw">if</span> #buf <span class="op">></span> MAX_SNAPSHOTS <span class="kw">then</span> <span class="fn">table.remove</span>(buf, <span class="num">1</span>) <span class="kw">end</span>
+
+    <span class="cm">-- Relay to every other connected client</span>
+    ch:<span class="fn">SendExcept</span>(player, data)
+<span class="kw">end</span>)
+
+game:GetService(<span class="str">"Players"</span>).PlayerRemoving:<span class="fn">Connect</span>(<span class="kw">function</span>(player)
+    history[player] <span class="op">=</span> <span class="kw">nil</span>
 <span class="kw">end</span>)</code></pre>
 
-        <h2>Client subscription</h2>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Stream <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Stream"</span>)
+        <h2>Client</h2>
+        <p>The client sends its own position at 20 Hz and subscribes to receive every other player's position as it arrives.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- StarterPlayerScripts/MovementClient.client.luau</span>
+<span class="kw">local</span> RunService  <span class="op">=</span> game:<span class="fn">GetService</span>(<span class="str">"RunService"</span>)
+<span class="kw">local</span> Players     <span class="op">=</span> game:<span class="fn">GetService</span>(<span class="str">"Players"</span>)
+<span class="kw">local</span> LocalPlayer <span class="op">=</span> Players.LocalPlayer
+<span class="kw">local</span> ch          <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.StreamChannels).players
 
-Stream:<span class="fn">Subscribe</span>(<span class="str">"players"</span>, <span class="kw">function</span>(userId, state)
-    <span class="kw">local</span> indicator <span class="op">=</span> NameplateService:<span class="fn">Get</span>(userId)
-    <span class="kw">if</span> indicator <span class="kw">then</span>
-        indicator.Position <span class="op">=</span> Vector3.<span class="fn">new</span>(state.x, state.y, state.z)
-        indicator.Health   <span class="op">=</span> state.health
-    <span class="kw">end</span>
+<span class="cm">-- Send own state at ~20 Hz using an accumulator</span>
+<span class="kw">local</span> accum <span class="op">=</span> <span class="num">0</span>
+RunService.Heartbeat:<span class="fn">Connect</span>(<span class="kw">function</span>(dt)
+    accum <span class="op">+=</span> dt
+    <span class="kw">if</span> accum <span class="op"><</span> <span class="num">0.05</span> <span class="kw">then return end</span>   <span class="cm">-- 0.05s = 20 Hz</span>
+    accum <span class="op">=</span> <span class="num">0</span>
+
+    <span class="kw">local</span> char <span class="op">=</span> LocalPlayer.Character
+    <span class="kw">if not</span> char <span class="kw">then return end</span>
+    <span class="kw">local</span> hrp <span class="op">=</span> char:FindFirstChild(<span class="str">"HumanoidRootPart"</span>)
+    <span class="kw">if not</span> hrp <span class="kw">then return end</span>
+
+    ch:<span class="fn">Send</span>({
+        userId <span class="op">=</span> LocalPlayer.UserId,      <span class="cm">-- server will override to prevent spoofing</span>
+        cf     <span class="op">=</span> hrp.CFrame,
+        health <span class="op">=</span> <span class="fn">math.floor</span>(char.Humanoid.Health),
+    })
+<span class="kw">end</span>)
+
+<span class="cm">-- Receive other players' positions</span>
+ch:<span class="fn">On</span>(<span class="kw">function</span>(data, _)
+    <span class="cm">-- data.userId  — who this belongs to (set server-side)</span>
+    <span class="cm">-- data.cf      — CFrame (position + Y-yaw)</span>
+    <span class="cm">-- data.health  — 0-255</span>
+    <span class="kw">local</span> target <span class="op">=</span> Players:<span class="fn">GetPlayerByUserId</span>(data.userId)
+    <span class="kw">if not</span> (target <span class="kw">and</span> target.Character) <span class="kw">then return end</span>
+    <span class="kw">local</span> hrp <span class="op">=</span> target.Character:FindFirstChild(<span class="str">"HumanoidRootPart"</span>)
+    <span class="kw">if</span> hrp <span class="kw">then</span> hrp.CFrame <span class="op">=</span> data.cf <span class="kw">end</span>
 <span class="kw">end</span>)</code></pre>
+
+        <div class="cl info"><strong>Sender is always nil on the client.</strong> The second argument to <code>channel:On</code> is a <code>Player</code> on the server and <code>nil</code> on the client. The underscore <code>_</code> above is idiomatic Luau for an ignored parameter.</div>
 
         <h2>Lag compensation</h2>
-        <p>Stream records a history buffer server-side. When a hit claim arrives, look back to the timestamp the client was at when they fired.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code>app:<span class="fn">Post</span>(<span class="str">"combat/hit"</span>, <span class="kw">function</span>(Player, Payload, req, res)
-    <span class="kw">local</span> ts     <span class="op">=</span> req.data.timestamp  <span class="cm">-- client clock at fire</span>
-    <span class="kw">local</span> target <span class="op">=</span> req.data.targetId
+        <p>Stream does not have a built-in rewind. Store snapshots manually (the server already does this above) and search the buffer for the closest timestamp when a hit claim arrives.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- inside the same server script, using the history table from above</span>
+<span class="kw">local</span> app <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"App"</span>)
 
-    <span class="cm">-- rewind channel to when client fired</span>
-    <span class="kw">local</span> snapshot <span class="op">=</span> ch:<span class="fn">Rewind</span>(target, ts)
-    <span class="kw">if not</span> snapshot <span class="kw">then</span> res:<span class="fn">Status</span>(<span class="num">400</span>):<span class="fn">Error</span>(<span class="str">"No snapshot"</span>); <span class="kw">return end</span>
+app:<span class="fn">Post</span>(<span class="str">"combat/hit"</span>, <span class="kw">function</span>(req, res)
+    <span class="kw">local</span> ts       <span class="op">=</span> req.data.timestamp   <span class="cm">-- os.clock() value from client at fire</span>
+    <span class="kw">local</span> targetId <span class="op">=</span> req.data.targetId
+    <span class="kw">local</span> target   <span class="op">=</span> game:GetService(<span class="str">"Players"</span>):<span class="fn">GetPlayerByUserId</span>(targetId)
+    <span class="kw">if not</span> target <span class="kw">then</span> res:<span class="fn">Status</span>(<span class="num">400</span>):<span class="fn">Error</span>(<span class="str">"Unknown target"</span>); <span class="kw">return end</span>
 
-    <span class="kw">local</span> hitPos <span class="op">=</span> Vector3.<span class="fn">new</span>(snapshot.x, snapshot.y, snapshot.z)
+    <span class="kw">local</span> buf <span class="op">=</span> history[target]
+    <span class="kw">if not</span> buf <span class="kw">or</span> #buf <span class="op">==</span> <span class="num">0</span> <span class="kw">then</span>
+        res:<span class="fn">Status</span>(<span class="num">400</span>):<span class="fn">Error</span>(<span class="str">"No position history"</span>); <span class="kw">return</span>
+    <span class="kw">end</span>
+
+    <span class="cm">-- Find the snapshot closest to when the client fired</span>
+    <span class="kw">local</span> best, bestDt <span class="op">=</span> <span class="kw">nil</span>, <span class="fn">math.huge</span>
+    <span class="kw">for</span> _, snap <span class="kw">in</span> <span class="fn">ipairs</span>(buf) <span class="kw">do</span>
+        <span class="kw">local</span> dt <span class="op">=</span> <span class="fn">math.abs</span>(snap.t <span class="op">-</span> ts)
+        <span class="kw">if</span> dt <span class="op"><</span> bestDt <span class="kw">then</span> best, bestDt <span class="op">=</span> snap, dt <span class="kw">end</span>
+    <span class="kw">end</span>
+
+    <span class="kw">if</span> bestDt <span class="op">></span> <span class="num">0.5</span> <span class="kw">then</span>
+        res:<span class="fn">Status</span>(<span class="num">400</span>):<span class="fn">Error</span>(<span class="str">"Timestamp too old"</span>); <span class="kw">return</span>
+    <span class="kw">end</span>
+
     <span class="kw">local</span> claimPos <span class="op">=</span> req.data.hitPosition
-    <span class="kw">if</span> (hitPos <span class="op">-</span> claimPos).Magnitude <span class="op">&gt;</span> <span class="num">8</span> <span class="kw">then</span>
+    <span class="kw">if</span> (best.pos <span class="op">-</span> claimPos).Magnitude <span class="op">></span> <span class="num">8</span> <span class="kw">then</span>
         res:<span class="fn">Status</span>(<span class="num">400</span>):<span class="fn">Error</span>(<span class="str">"Position mismatch"</span>); <span class="kw">return</span>
     <span class="kw">end</span>
 
-    <span class="cm">-- valid hit | apply damage</span>
-    DamageService:<span class="fn">Apply</span>(target, req.data.damage)
-    res:<span class="fn">Send</span>({ confirmed = <span class="kw">true</span> })
+    <span class="cm">-- Valid hit — apply damage</span>
+    <span class="fn">DamageService</span>:<span class="fn">Apply</span>(targetId, req.data.damage)
+    res:<span class="fn">Send</span>({ confirmed <span class="op">=</span> <span class="kw">true</span> })
 <span class="kw">end</span>)</code></pre>
+
+        <div class="cl info"><strong>Client clock vs server clock.</strong> <code>os.clock()</code> is not synchronized between server and client. A production lag-comp implementation should measure round-trip time and apply a clock offset. This example illustrates the snapshot lookup pattern; clock sync is outside the scope of Stream.</div>
 
         <h2>See also</h2>
         <p>
-          <a href="./stream.html">Stream</a> | API reference &nbsp;·&nbsp;
+          <a href="./stream.html">Stream</a> | full API reference &nbsp;·&nbsp;
+          <a href="./guide-stream-server.html">Stream: Server Side</a> | all six send methods, rate limiting, delta &nbsp;·&nbsp;
+          <a href="./guide-stream-client.html">Stream: Client Side</a> | throttling sends, unsubscribing &nbsp;·&nbsp;
           <a href="./app.html">App</a> | combat/hit route &nbsp;·&nbsp;
           <a href="./research.html">Research Papers</a> | Bernier lag compensation algorithm &nbsp;·&nbsp;
           <a href="./guide-tamper.html">Tamper Guide</a> | combining exploit detection with lag compensation

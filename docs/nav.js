@@ -100,8 +100,10 @@
         ${nl(P + 'guide-routes.html',     'guide-routes',     'Route Organisation')}
         ${nl(P + 'guide-promise.html',    'guide-promise',    'Promise')}
         ${nl(P + 'guide-typecoercer.html','guide-typecoercer','TypeCoercer')}
-        ${nl(P + 'guide-stream.html',     'guide-stream',     'FPS Stream')}
-        ${nl(P + 'guide-ports.html',      'guide-ports',      'Ports')}
+        ${nl(P + 'guide-stream.html',        'guide-stream',        'FPS Stream')}
+        ${nl(P + 'guide-stream-server.html','guide-stream-server','Stream: Server Side')}
+        ${nl(P + 'guide-stream-client.html','guide-stream-client','Stream: Client Side')}
+        ${nl(P + 'guide-ports.html',        'guide-ports',         'Ports')}
         ${nl(P + 'guide-tamper.html',     'guide-tamper',     'Exploit Detection')}
         ${nl(P + 'guides-auth.html',      'guides-auth',      'Authentication'   + nb('new', 'background:var(--accent-bg);color:var(--accent2)'))}
         ${nl(P + 'guides-combat.html',    'guides-combat',    'Combat System'    + nb('new', 'background:var(--accent-bg);color:var(--accent2)'))}
@@ -129,6 +131,7 @@
         ${nl(P + 'research.html',         'research',         'Research Papers')}
         ${nl(P + 'changelog.html',        'changelog',        'Changelog')}
         ${nl(P + 'reference.html',        'reference',        'API Reference')}
+        ${nl(P + 'benchmark-stream.html', 'benchmark-stream', 'Stream Benchmarks' + nb('planned', 'background:#b45309;color:#fef3c7'))}
       </div>
     </div>`;
 
@@ -196,7 +199,9 @@
     { s:'guide-mvc',   url:P+'guide-mvc.html',              t:'guide',   n:'MVC Pattern',          x:'model view controller pattern service architecture decouple' },
     { s:'guide-promise',url:P+'guide-promise.html',         t:'guide',   n:'Promise Guide',        x:'then catch chain async await promise resolve reject' },
     { s:'guide-typecoercer',url:P+'guide-typecoercer.html', t:'guide',   n:'TypeCoercer Guide',    x:'typed params coerce number int enum instance custom' },
-    { s:'guide-stream',url:P+'guide-stream.html',           t:'guide',   n:'FPS Stream Guide',     x:'fps stream shooting hit validation lag compensation movement' },
+    { s:'guide-stream',       url:P+'guide-stream.html',        t:'guide',   n:'FPS Stream Guide',        x:'fps stream shooting hit validation lag compensation movement history rewind' },
+    { s:'guide-stream-server',url:P+'guide-stream-server.html',t:'guide',   n:'Stream: Server Side',     x:'stream server sendto sendexcept broadcast sendtolist broadcastdelta delta rate limit reliable playerremoving' },
+    { s:'guide-stream-client',url:P+'guide-stream-client.html',t:'guide',   n:'Stream: Client Side',     x:'stream client send throttle heartbeat accumulator on once unsubscribe reliable unreliable' },
     { s:'guide-ports', url:P+'guide-ports.html',            t:'guide',   n:'Ports Guide',          x:'ports isolated pipeline named rate limit separate channel' },
     { s:'guide-tamper',url:P+'guide-tamper.html',           t:'guide',   n:'Exploit Detection',    x:'exploit tamper detection strike autokick version spoof' },
     { s:'guides-auth', url:P+'guides-auth.html',            t:'guide',   n:'Authentication',       x:'auth middleware role permission whitelist banlist 403' },
@@ -211,7 +216,8 @@
     { s:'updates',     url:P+'updates.html',                t:'ref',     n:'Updates',              x:'updates changelog v2.4 v2.3 release notes' },
     { s:'changelog',   url:P+'changelog.html',              t:'ref',     n:'Changelog',            x:'changelog version history added changed removed breaking' },
     { s:'reference',   url:P+'reference.html',              t:'ref',     n:'API Reference',        x:'reference overview api index types pipeline' },
-    { s:'examples-gun',url:P+'examples-gun.html',           t:'example', n:'Gun Framework',        x:'gun shoot hit damage replication health player combat port stream' },
+    { s:'examples-gun',    url:P+'examples-gun.html',       t:'example', n:'Gun Framework',        x:'gun shoot hit damage replication health player combat port stream' },
+    { s:'benchmark-stream',url:P+'benchmark-stream.html',   t:'ref',     n:'Stream Benchmarks',    x:'stream benchmark bandwidth delta compression tick rate player count bytes performance planned' },
   ];
 
   // ── DOM ready ─────────────────────────────────────────────────────────

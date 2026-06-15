@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stream: Client Side | RoExpress Docs</title>
+  <meta name="description" content="How RoExpress Stream works from the client: sending packets, throttling with Heartbeat accumulators, subscribing, Once, and unsubscribing.">
+  <meta name="keywords" content="roblox, luau, roexpress, stream, client, send, subscribe, on, once, unsubscribe, throttle, heartbeat">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/guide-stream-client.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/guide-stream-client.html">
+  <meta property="og:title" content="Stream: Client Side | RoExpress Docs">
+  <meta property="og:description" content="Client-side Stream: sending, throttling, subscribing, one-shot receives.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Guide</div>
+        <h1>Stream: Client Side</h1>
+        <p class="lead">Everything Stream does on the client — defining channels to match the server, waiting for the server's remotes, sending your own state, throttling sends to a target rate, and subscribing to receive world state.</p>
+
+        <div class="cl info"><strong>Read this alongside the server guide.</strong> Both sides define the same channels before calling <code>Stream.Init()</code>. See <a href="./guide-stream-server.html">Stream: Server Side</a> for the server half.</div>
+
+        <h2>How the client connects</h2>
+        <p>When the client calls <code>Stream.Init()</code>, Stream calls <code>WaitForChild</code> on the server's <code>RoExpressStream</code> folder (10-second timeout). This means:</p>
+        <ul>
+          <li>The server <strong>must</strong> call <code>Stream.Init()</code> before the client does.</li>
+          <li>The client will yield until the server's remotes appear — no manual waiting needed.</li>
+          <li>If the server folder does not appear within 10 seconds, Stream errors with a descriptive message.</li>
+        </ul>
+
+        <h2>Channel definitions must match the server</h2>
+        <p>Both sides must call <code>Stream.Channel()</code> with the same name and schema for every channel. Channel IDs are derived from the name hash — if the names match, the IDs match, regardless of the order the definitions appear in your code.</p>
+        <p>The cleanest pattern is a shared <code>ModuleScript</code> in <code>ReplicatedStorage</code> that both the server and client require:</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- ReplicatedStorage/StreamChannels.luau  (shared — required by both sides)</span>
+<span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> Stream    <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Stream"</span>)
+
+<span class="kw">local</span> moveSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>({
+    { <span class="str">"userId"</span>, <span class="str">"f64"</span>         },
+    { <span class="str">"cf"</span>,     <span class="str">"CFrameLight"</span> },
+    { <span class="str">"health"</span>, <span class="str">"u8"</span>          },
+})
+
+<span class="kw">local</span> move <span class="op">=</span> Stream.<span class="fn">Channel</span>(<span class="str">"playerMove"</span>, moveSchema, { maxRate <span class="op">=</span> <span class="num">30</span> })
+
+Stream.<span class="fn">Init</span>()
+
+<span class="kw">return</span> { move <span class="op">=</span> move }</code></pre>
+
+        <div class="cl info"><strong>Stream.Init() in a shared module.</strong> When a shared module calls <code>Stream.Init()</code>, it runs once on each side (server and client) at require time. On the server it creates the remotes; on the client it waits for them. This is the recommended pattern.</div>
+
+        <h2>Sending to the server</h2>
+        <p><code>channel:Send(data)</code> is the only send method available on the client. Calling any server-only method (<code>SendTo</code>, <code>Broadcast</code>, etc.) from a client will error.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> move <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.StreamChannels).move
+
+move:<span class="fn">Send</span>({
+    userId <span class="op">=</span> game.Players.LocalPlayer.UserId,
+    cf     <span class="op">=</span> hrp.CFrame,
+    health <span class="op">=</span> <span class="fn">math.floor</span>(humanoid.Health),
+})</code></pre>
+        <p>All schema fields are required. <code>Pack</code> will error if any field is <code>nil</code>.</p>
+
+        <h2>Throttling sends</h2>
+        <p>Stream has no built-in send throttle on the client — it fires exactly when you call <code>Send</code>. Use a Heartbeat accumulator to target a specific tick rate:</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RunService <span class="op">=</span> game:<span class="fn">GetService</span>(<span class="str">"RunService"</span>)
+<span class="kw">local</span> accum <span class="op">=</span> <span class="num">0</span>
+
+RunService.Heartbeat:<span class="fn">Connect</span>(<span class="kw">function</span>(dt)
+    accum <span class="op">+=</span> dt
+    <span class="kw">if</span> accum <span class="op"><</span> <span class="num">0.05</span> <span class="kw">then return end</span>  <span class="cm">-- 0.05 s = 20 Hz</span>
+    accum <span class="op">=</span> <span class="num">0</span>
+
+    <span class="kw">local</span> char <span class="op">=</span> game.Players.LocalPlayer.Character
+    <span class="kw">if not</span> char <span class="kw">then return end</span>
+    <span class="kw">local</span> hrp <span class="op">=</span> char:FindFirstChild(<span class="str">"HumanoidRootPart"</span>)
+    <span class="kw">if not</span> hrp <span class="kw">then return end</span>
+
+    move:<span class="fn">Send</span>({
+        userId <span class="op">=</span> game.Players.LocalPlayer.UserId,
+        cf     <span class="op">=</span> hrp.CFrame,
+        health <span class="op">=</span> <span class="fn">math.floor</span>(char.Humanoid.Health),
+    })
+<span class="kw">end</span>)</code></pre>
+
+        <table class="tbl">
+          <thead><tr><th>Target rate</th><th>Accumulator threshold</th><th>Use case</th></tr></thead>
+          <tbody>
+            <tr><td>60 Hz</td><td><code>0.0167</code></td><td>Vehicles, physics objects that need smooth replication</td></tr>
+            <tr><td>30 Hz</td><td><code>0.0333</code></td><td>Player characters — good balance of fidelity vs bandwidth</td></tr>
+            <tr><td>20 Hz</td><td><code>0.05</code></td><td>Default for most FPS movement</td></tr>
+            <tr><td>10 Hz</td><td><code>0.1</code></td><td>Slow-moving objects, ambient state like NPC health</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Receiving from the server</h2>
+        <p><code>channel:On</code> works identically on the client and server. The difference is the second argument: on the client, <code>sender</code> is always <code>nil</code> — Stream has no way to identify which server-side source produced a packet.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code"><span class="cm">-- Persistent subscription</span>
+<span class="kw">local</span> unsub <span class="op">=</span> move:<span class="fn">On</span>(<span class="kw">function</span>(data, _)
+    <span class="cm">-- data.userId, data.cf, data.health</span>
+    <span class="cm">-- _ is nil on the client — using _ signals we know and don't care</span>
+    <span class="kw">local</span> player <span class="op">=</span> game.Players:<span class="fn">GetPlayerByUserId</span>(data.userId)
+    <span class="kw">if</span> player <span class="kw">and</span> player.Character <span class="kw">then</span>
+        <span class="kw">local</span> hrp <span class="op">=</span> player.Character:FindFirstChild(<span class="str">"HumanoidRootPart"</span>)
+        <span class="kw">if</span> hrp <span class="kw">then</span> hrp.CFrame <span class="op">=</span> data.cf <span class="kw">end</span>
+    <span class="kw">end</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- Stop listening when done (e.g. when a UI closes)</span>
+unsub()</code></pre>
+
+        <h2>One-shot receives with Once</h2>
+        <p>Use <code>channel:Once</code> when you need exactly one packet — for example, an initial world-state snapshot sent when the player joins.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Auto-unsubscribes after the first packet arrives</span>
+move:<span class="fn">Once</span>(<span class="kw">function</span>(data, _)
+    <span class="fn">print</span>(<span class="str">"Initial world state received"</span>, data)
+<span class="kw">end</span>)
+
+<span class="cm">-- Or capture the unsubscribe function to cancel it early if needed</span>
+<span class="kw">local</span> unsub <span class="op">=</span> move:<span class="fn">Once</span>(<span class="kw">function</span>(data, _) <span class="kw">end</span>)
+unsub()  <span class="cm">-- cancel before first fire</span></code></pre>
+
+        <h2>Reliable vs unreliable on the client</h2>
+        <p>The channel's <code>reliable</code> option is set at definition time and applies equally to both sides. A reliable channel uses <code>RemoteEvent</code> on both the client send path and the receive path.</p>
+        <table class="tbl">
+          <thead><tr><th></th><th>Unreliable (default)</th><th>Reliable</th></tr></thead>
+          <tbody>
+            <tr><td>Transport</td><td>UnreliableRemoteEvent</td><td>RemoteEvent</td></tr>
+            <tr><td>Delivery</td><td>Best-effort, may drop</td><td>Guaranteed, ordered</td></tr>
+            <tr><td>Latency</td><td>Lower</td><td>Higher (retransmit on loss)</td></tr>
+            <tr><td>Good for</td><td>Position, rotation, health</td><td>Chat, inventory, ability activations</td></tr>
+          </tbody>
+        </table>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./stream.html">Stream</a> | full API reference &nbsp;·&nbsp;
+          <a href="./guide-stream-server.html">Stream: Server Side</a> | all send methods, rate limiting, delta &nbsp;·&nbsp;
+          <a href="./guide-stream.html">FPS Guide</a> | end-to-end with lag compensation &nbsp;·&nbsp;
+          <a href="./examples-streaming.html">Live Streaming Example</a> | complete movement replication &nbsp;·&nbsp;
+          <a href="./benchmark-stream.html">Stream Benchmarks</a> | bandwidth measurements
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

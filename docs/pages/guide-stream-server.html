@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stream: Server Side | RoExpress Docs</title>
+  <meta name="description" content="How RoExpress Stream works from the server: receiving client packets, all six send methods, rate limiting, delta compression, and reliable channels.">
+  <meta name="keywords" content="roblox, luau, roexpress, stream, server, channel, sendto, sendexcept, broadcast, delta, rate limit">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/guide-stream-server.html">
+  <meta name="theme-color" content="#8b78ff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/guide-stream-server.html">
+  <meta property="og:title" content="Stream: Server Side | RoExpress Docs">
+  <meta property="og:description" content="Server-side Stream: receiving, relaying, delta compression, rate limiting.">
+  <meta property="og:site_name" content="RoExpress">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay">
+    <nav id="sb"></nav>
+    <main id="ct">
+      <section class="doc">
+        <div class="eyebrow">Guide</div>
+        <h1>Stream: Server Side</h1>
+        <p class="lead">Everything Stream does on the server — defining channels, receiving client packets, all six send methods, rate limiting, delta compression, and when to use reliable vs unreliable channels.</p>
+
+        <div class="cl info"><strong>Read this alongside the client guide.</strong> Both sides must define identical channels before calling <code>Stream.Init()</code>. See <a href="./guide-stream-client.html">Stream: Client Side</a> for the client half.</div>
+
+        <h2>How the server bootstraps</h2>
+        <p>On the first call to <code>Stream.Init()</code> from the server, Stream creates a <code>Folder</code> in <code>ReplicatedStorage</code> named <code>RoExpressStream</code> and places two remotes inside it:</p>
+        <table class="tbl">
+          <thead><tr><th>Remote</th><th>Type</th><th>Used for</th></tr></thead>
+          <tbody>
+            <tr><td><code>StreamUnreliable</code></td><td>UnreliableRemoteEvent</td><td>All channels with <code>reliable = false</code> (the default)</td></tr>
+            <tr><td><code>StreamReliable</code></td><td>RemoteEvent</td><td>Channels created with <code>reliable = true</code></td></tr>
+          </tbody>
+        </table>
+        <p>The client's <code>Stream.Init()</code> uses <code>WaitForChild</code> on these remotes with a 10-second timeout, so the server must call <code>Stream.Init()</code> first — typically in a <code>Script</code> that runs before any <code>LocalScript</code>.</p>
+
+        <h2>Defining channels</h2>
+        <p>Call <code>Stream.Channel()</code> for every channel your game needs, then call <code>Stream.Init()</code> once. Order of <code>Channel()</code> calls does not matter — IDs are derived from a hash of the channel name.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
+<span class="kw">local</span> Stream    <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Stream"</span>)
+
+<span class="kw">local</span> moveSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>({
+    { <span class="str">"userId"</span>, <span class="str">"f64"</span>         },
+    { <span class="str">"cf"</span>,     <span class="str">"CFrameLight"</span> },
+    { <span class="str">"health"</span>, <span class="str">"u8"</span>          },
+})
+
+<span class="kw">local</span> chatSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>({
+    { <span class="str">"userId"</span>,  <span class="str">"f64"</span>    },
+    { <span class="str">"message"</span>, <span class="str">"string"</span> },  <span class="cm">-- variable-size: no delta compression</span>
+})
+
+<span class="kw">local</span> move <span class="op">=</span> Stream.<span class="fn">Channel</span>(<span class="str">"playerMove"</span>, moveSchema, { maxRate <span class="op">=</span> <span class="num">30</span> })
+<span class="kw">local</span> chat <span class="op">=</span> Stream.<span class="fn">Channel</span>(<span class="str">"chat"</span>, chatSchema, { reliable <span class="op">=</span> <span class="kw">true</span> })
+
+Stream.<span class="fn">Init</span>()   <span class="cm">-- creates remotes; clients can now connect</span></code></pre>
+
+        <h2>Receiving from clients</h2>
+        <p><code>channel:On</code> is how the server listens for packets sent by clients. The callback receives <code>(data, player)</code> — <code>player</code> is always a <code>Player</code> instance on the server, never <code>nil</code>.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>move:<span class="fn">On</span>(<span class="kw">function</span>(data, player)
+    <span class="cm">-- data: the unpacked table — { userId, cf, health }</span>
+    <span class="cm">-- player: the Player who fired — always non-nil on the server</span>
+    <span class="fn">print</span>(player.Name, data.cf.Position, data.health)
+<span class="kw">end</span>)
+
+<span class="cm">-- One-shot: fires exactly once then auto-removes</span>
+move:<span class="fn">Once</span>(<span class="kw">function</span>(data, player)
+    <span class="fn">print</span>(player.Name, <span class="str">"first packet received"</span>)
+<span class="kw">end</span>)
+
+<span class="cm">-- Unsubscribe manually at any time</span>
+<span class="kw">local</span> unsub <span class="op">=</span> move:<span class="fn">On</span>(<span class="kw">function</span>(data, player) <span class="kw">end</span>)
+unsub()   <span class="cm">-- removes this callback</span></code></pre>
+
+        <div class="cl info"><strong>Never trust client-provided identity fields.</strong> If your schema includes a <code>userId</code> or similar identity field, always overwrite it on the server with the real <code>player.UserId</code> before relaying. Clients can put any value in a schema field.</div>
+
+        <h2>Server send API</h2>
+        <p>All six send methods are server-only. Calling any of them from a client will error.</p>
+        <table class="tbl">
+          <thead><tr><th>Method</th><th>When to use</th></tr></thead>
+          <tbody>
+            <tr><td><code>channel:SendTo(player, data)</code></td><td>One specific player — e.g., sending that player's private inventory</td></tr>
+            <tr><td><code>channel:SendExcept(except, data)</code></td><td>All players except one — the standard relay pattern after receiving a client update</td></tr>
+            <tr><td><code>channel:Broadcast(data)</code></td><td>Every connected player — server-authoritative world events</td></tr>
+            <tr><td><code>channel:SendToList(players, data)</code></td><td>An explicit subset — e.g., players in the same zone or team</td></tr>
+            <tr><td><code>channel:SendToDelta(player, data)</code></td><td>One player with delta compression — only changed fields sent</td></tr>
+            <tr><td><code>channel:BroadcastDelta(data)</code></td><td>All players with delta compression — each player gets its own delta against its own last-known state</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Relay pattern (most common)</h3>
+        <p>Receive from one client, relay to everyone else. This is the standard movement replication pattern.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>move:<span class="fn">On</span>(<span class="kw">function</span>(data, player)
+    data.userId <span class="op">=</span> player.UserId   <span class="cm">-- inject real sender</span>
+    move:<span class="fn">SendExcept</span>(player, data)  <span class="cm">-- relay to all others</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h3>Targeted send</h3>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Send only to one player (e.g. private data on join)</span>
+move:<span class="fn">SendTo</span>(player, { userId <span class="op">=</span> <span class="num">0</span>, cf <span class="op">=</span> spawnCFrame, health <span class="op">=</span> <span class="num">100</span> })
+
+<span class="cm">-- Send to a zone's player list</span>
+move:<span class="fn">SendToList</span>(zoneMembers, data)</code></pre>
+
+        <h2>Rate limiting</h2>
+        <p>Rate limiting applies to <strong>incoming client→server</strong> packets only. Server→client sends are never rate-limited by Stream.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> move <span class="op">=</span> Stream.<span class="fn">Channel</span>(<span class="str">"playerMove"</span>, moveSchema, {
+    maxRate <span class="op">=</span> <span class="num">30</span>,    <span class="cm">-- drop anything above 30 fires/sec per client</span>
+    onDrop  <span class="op">=</span> <span class="kw">function</span>(player, reason)
+        <span class="fn">warn</span>(player.Name, <span class="str">"dropped:"</span>, reason)
+    <span class="kw">end</span>,
+})</code></pre>
+        <p><code>maxRate</code> is implemented with a <a href="./tokenbucket.html">TokenBucket</a> per player. When the bucket runs dry, the packet is silently dropped (or <code>onDrop</code> is called if provided).</p>
+
+        <h2>Delta compression</h2>
+        <p>Delta compression sends only the fields that changed since the last packet. It requires a <strong>fixed-size schema</strong> — no <code>string</code> fields. Schema size is pre-computed at channel definition time.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- SendToDelta: per-player delta (each player tracks its own last-known state)</span>
+move:<span class="fn">SendToDelta</span>(player, newData)
+
+<span class="cm">-- BroadcastDelta: per-player delta broadcast</span>
+<span class="cm">-- Each player may have joined at a different time and have different state,</span>
+<span class="cm">-- so each gets its own independent delta rather than a shared one.</span>
+move:<span class="fn">BroadcastDelta</span>(newData)</code></pre>
+        <p>A full packet is automatically forced on the first send to each player, and every <code>deltaInterval</code> packets after that (default: 10). This ensures clients resync even after unreliable packet loss.</p>
+
+        <table class="tbl">
+          <thead><tr><th>Schema has string fields?</th><th>Delta available?</th><th>Size known at compile time?</th></tr></thead>
+          <tbody>
+            <tr><td>No (all fixed types)</td><td>✓</td><td>✓</td></tr>
+            <tr><td>Yes</td><td>✗</td><td>✗</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Reliable channels</h2>
+        <p>Use <code>reliable = true</code> for data that must arrive in order and is not time-sensitive enough to tolerate drops. Examples: chat messages, inventory grants, ability activations.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> chat <span class="op">=</span> Stream.<span class="fn">Channel</span>(<span class="str">"chat"</span>, chatSchema, { reliable <span class="op">=</span> <span class="kw">true</span> })
+<span class="cm">-- Reliable channels use RemoteEvent (ordered, guaranteed delivery)</span>
+<span class="cm">-- No sequence numbers — delta compression is still available for fixed schemas</span></code></pre>
+        <p>Unreliable channels (the default) use <code>UnreliableRemoteEvent</code>. Packets may arrive out-of-order or not at all, but they have lower latency and no head-of-line blocking. Stream filters duplicate and out-of-order packets via a rolling sequence number.</p>
+
+        <h2>PlayerRemoving cleanup</h2>
+        <p>Stream automatically frees all per-player state (rate-limit buckets, delta caches, sequence numbers) when a player leaves. You only need to clean up your own application-level state:</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Stream handles its own cleanup. Clean up your game state:</span>
+game:GetService(<span class="str">"Players"</span>).PlayerRemoving:<span class="fn">Connect</span>(<span class="kw">function</span>(player)
+    myHistory[player] <span class="op">=</span> <span class="kw">nil</span>
+    myInventory[player] <span class="op">=</span> <span class="kw">nil</span>
+<span class="kw">end</span>)</code></pre>
+
+        <h2>See also</h2>
+        <p>
+          <a href="./stream.html">Stream</a> | full API reference &nbsp;·&nbsp;
+          <a href="./guide-stream-client.html">Stream: Client Side</a> | sending, throttling, subscribing &nbsp;·&nbsp;
+          <a href="./guide-stream.html">FPS Guide</a> | end-to-end example with lag compensation &nbsp;·&nbsp;
+          <a href="./tokenbucket.html">TokenBucket</a> | rate limiting internals &nbsp;·&nbsp;
+          <a href="./benchmark-stream.html">Stream Benchmarks</a> | bandwidth and delta compression measurements
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

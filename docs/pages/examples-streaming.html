@@ -1,19 +1,19 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Live Streaming Example | RoExpress Docs</title>
-  <meta name="description" content="Player movement replication using RoExpress Stream: 20 Hz CFrame sync, delta compression, server distribution via Broadcast, smooth client interpolation.">
-  <meta name="keywords" content="roblox, luau, roexpress, stream, movement, replication, 20hz, delta, cframe, broadcast, interpolation">
+  <meta name="description" content="Player movement replication using RoExpress Stream: 20 Hz CFrame sync, delta compression, server relay via SendExcept, smooth client interpolation.">
+  <meta name="keywords" content="roblox, luau, roexpress, stream, movement, replication, 20hz, delta, cframe, interpolation">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://roexpress.dev/docs/examples/streaming/">
+  <link rel="canonical" href="https://roexpress.dev/docs/pages/examples-streaming.html">
   <meta name="theme-color" content="#8b78ff">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://roexpress.dev/docs/examples/streaming/">
+  <meta property="og:url" content="https://roexpress.dev/docs/pages/examples-streaming.html">
   <meta property="og:title" content="Live Streaming Example | RoExpress Docs">
-  <meta property="og:description" content:"Player movement at 20 Hz with binary delta compression and smooth interpolation.">
+  <meta property="og:description" content="Player movement at 20 Hz with binary delta compression and smooth interpolation.">
   <meta property="og:site_name" content="RoExpress">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,56 +32,55 @@
       <section class="doc">
         <div class="eyebrow">Example</div>
         <h1>Live Streaming</h1>
-        <p class="lead">Player movement replication at 20 Hz using <a href="./stream/">Stream</a>'s binary delta-compressed channels. The server re-broadcasts positions via <a href="./broadcast/">Broadcast</a>, and clients interpolate smoothly between received frames.</p>
+        <p class="lead">Player movement replication at 20 Hz using <a href="./stream.html">Stream</a>'s binary channels. Clients send their own CFrame and velocity. The server relays each update to everyone else via <code>channel:SendExcept</code>. Clients interpolate smoothly between received frames.</p>
 
         <h2>How it works</h2>
         <div class="pipe">
-          <div class="ps"><div class="pn">1</div><div class="pl">Client sends CFrame + velocity at 20 Hz over UnreliableRemoteEvent via <code>channel:Send()</code></div></div>
-          <div class="ps"><div class="pn">2</div><div class="pl">Stream delta-compresses the packet | only changed fields are sent in full</div></div>
-          <div class="ps"><div class="pn">3</div><div class="pl">Server receives via <code>channel:Subscribe()</code>, stores position, re-broadcasts to other players</div></div>
-          <div class="ps"><div class="pn">4</div><div class="pl">Other clients receive via <code>listener:On("pos")</code>, push to interpolation buffer</div></div>
-          <div class="ps"><div class="pn">5</div><div class="pl">Client interpolates between buffered frames on RunService.Heartbeat</div></div>
+          <div class="ps"><div class="pn">1</div><div class="pl">Client sends <code>{ userId, cf, vel, anim, health }</code> at 20 Hz via <code>channel:Send()</code></div></div>
+          <div class="ps"><div class="pn">2</div><div class="pl">Server receives via <code>channel:On(function(data, player))</code>, overwrites <code>data.userId</code> with the real sender</div></div>
+          <div class="ps"><div class="pn">3</div><div class="pl">Server calls <code>channel:SendExcept(player, data)</code> — one relay pass, no extra module needed</div></div>
+          <div class="ps"><div class="pn">4</div><div class="pl">Other clients receive via <code>channel:On(function(data, _))</code>, push frame to interpolation buffer</div></div>
+          <div class="ps"><div class="pn">5</div><div class="pl">Client interpolates between buffered frames on <code>RunService.Heartbeat</code></div></div>
         </div>
 
         <h2>Shared schema</h2>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- ReplicatedStorage/Schemas/PlayerState.luau</span>
+        <p>Define channels in a shared module required by both the server and the client. Both sides must see the same <code>Stream.Channel()</code> calls before <code>Stream.Init()</code> is called.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- ReplicatedStorage/StreamChannels.luau</span>
 <span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
-<span class="kw">return</span> RoExpress.Stream:<span class="fn">Schema</span>({
-    cf       <span class="op">=</span> <span class="str">"CFrame"</span>,   <span class="cm">-- root part CFrame</span>
-    vel      <span class="op">=</span> <span class="str">"Vector3"</span>, <span class="cm">-- linear velocity</span>
-    anim     <span class="op">=</span> <span class="str">"uint8"</span>,   <span class="cm">-- animation state ID</span>
-    health   <span class="op">=</span> <span class="str">"uint8"</span>,   <span class="cm">-- 0-100</span>
-})</code></pre>
+<span class="kw">local</span> Stream    <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Stream"</span>)
+
+<span class="kw">local</span> stateSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>({
+    { <span class="str">"userId"</span>, <span class="str">"f64"</span>         },  <span class="cm">-- 8 B: set server-side</span>
+    { <span class="str">"cf"</span>,     <span class="str">"CFrame"</span>      },  <span class="cm">-- 28 B: full rotation</span>
+    { <span class="str">"vel"</span>,    <span class="str">"Vector3"</span>     },  <span class="cm">-- 12 B: linear velocity</span>
+    { <span class="str">"anim"</span>,   <span class="str">"u8"</span>          },  <span class="cm">-- 1 B:  animation state ID</span>
+    { <span class="str">"health"</span>, <span class="str">"u8"</span>          },  <span class="cm">-- 1 B:  0–255</span>
+})
+
+<span class="kw">local</span> playerState <span class="op">=</span> Stream.<span class="fn">Channel</span>(<span class="str">"playerState"</span>, stateSchema, { maxRate <span class="op">=</span> <span class="num">30</span> })
+
+Stream.<span class="fn">Init</span>()
+
+<span class="kw">return</span> { playerState <span class="op">=</span> playerState }</code></pre>
 
         <h2>Server: MovementServer.luau</h2>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
-<span class="kw">local</span> Schema    <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.Schemas.PlayerState)
-<span class="kw">local</span> broadcast <span class="op">=</span> RoExpress(<span class="str">"Broadcast"</span>)
-<span class="kw">local</span> channel   <span class="op">=</span> RoExpress.Stream:<span class="fn">Channel</span>(<span class="str">"playerState"</span>, Schema)
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> channels <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.StreamChannels)
+<span class="kw">local</span> ch        <span class="op">=</span> channels.playerState
 
-channel:<span class="fn">Subscribe</span>(<span class="kw">function</span>(player, data)
-    <span class="cm">-- Fan out to everyone except the sender</span>
-    <span class="kw">local</span> others <span class="op">=</span> {}
-    <span class="kw">for</span> _, p <span class="kw">in</span> game.Players:GetPlayers() <span class="kw">do</span>
-        <span class="kw">if</span> p <span class="op">~=</span> player <span class="kw">then</span>
-            others[#others <span class="op">+</span> <span class="num">1</span>] <span class="op">=</span> p
-        <span class="kw">end</span>
-    <span class="kw">end</span>
-    broadcast:<span class="fn">EmitTo</span>(others, <span class="str">"pos"</span>, {
-        id   <span class="op">=</span> player.UserId,
-        cf   <span class="op">=</span> data.cf,
-        vel  <span class="op">=</span> data.vel,
-        anim <span class="op">=</span> data.anim,
-    })
+ch:<span class="fn">On</span>(<span class="kw">function</span>(data, player)
+    <span class="cm">-- Override userId so clients can't claim to be someone else</span>
+    data.userId <span class="op">=</span> player.UserId
+    <span class="cm">-- Relay to every other client in one call</span>
+    ch:<span class="fn">SendExcept</span>(player, data)
 <span class="kw">end</span>)</code></pre>
 
         <h2>Client: MovementClient.luau</h2>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RunService <span class="op">=</span> game:GetService(<span class="str">"RunService"</span>)
-<span class="kw">local</span> Schema     <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.Schemas.PlayerState)
-<span class="kw">local</span> channel    <span class="op">=</span> RoExpress.Stream:<span class="fn">Channel</span>(<span class="str">"playerState"</span>, Schema)
-<span class="kw">local</span> listener   <span class="op">=</span> RoExpress(<span class="str">"Listener"</span>)
-<span class="kw">local</span> buffers    <span class="op">=</span> {}  <span class="cm">-- { [userId] = { cf, vel, t } }</span>
-<span class="kw">local</span> localChar  <span class="op">=</span> game.Players.LocalPlayer.Character
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RunService  <span class="op">=</span> game:<span class="fn">GetService</span>(<span class="str">"RunService"</span>)
+<span class="kw">local</span> Players     <span class="op">=</span> game:<span class="fn">GetService</span>(<span class="str">"Players"</span>)
+<span class="kw">local</span> LocalPlayer <span class="op">=</span> Players.LocalPlayer
+<span class="kw">local</span> channels   <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.StreamChannels)
+<span class="kw">local</span> ch          <span class="op">=</span> channels.playerState
+<span class="kw">local</span> buffers     <span class="op">=</span> {}   <span class="cm">-- { [userId] = { cf, vel, t } }</span>
 
 <span class="cm">-- Send own state at 20 Hz</span>
 <span class="kw">local</span> accum <span class="op">=</span> <span class="num">0</span>
@@ -89,39 +88,42 @@ RunService.Heartbeat:<span class="fn">Connect</span>(<span class="kw">function</
     accum <span class="op">+=</span> dt
     <span class="kw">if</span> accum <span class="op"><</span> <span class="num">0.05</span> <span class="kw">then return end</span>
     accum <span class="op">=</span> <span class="num">0</span>
-    <span class="kw">if not</span> localChar <span class="kw">then return end</span>
-    <span class="kw">local</span> hrp <span class="op">=</span> localChar:FindFirstChild(<span class="str">"HumanoidRootPart"</span>)
+    <span class="kw">local</span> char <span class="op">=</span> LocalPlayer.Character
+    <span class="kw">if not</span> char <span class="kw">then return end</span>
+    <span class="kw">local</span> hrp <span class="op">=</span> char:FindFirstChild(<span class="str">"HumanoidRootPart"</span>)
     <span class="kw">if not</span> hrp <span class="kw">then return end</span>
-    channel:<span class="fn">Send</span>({
+    ch:<span class="fn">Send</span>({
+        userId <span class="op">=</span> LocalPlayer.UserId,   <span class="cm">-- server overwrites this</span>
         cf     <span class="op">=</span> hrp.CFrame,
         vel    <span class="op">=</span> hrp.AssemblyLinearVelocity,
         anim   <span class="op">=</span> <span class="fn">getCurrentAnim</span>(),
-        health <span class="op">=</span> <span class="fn">math.floor</span>(game.Players.LocalPlayer.Character.Humanoid.Health),
+        health <span class="op">=</span> <span class="fn">math.floor</span>(char.Humanoid.Health),
     })
 <span class="kw">end</span>)
 
-<span class="cm">-- Receive others' positions</span>
-listener:<span class="fn">On</span>(<span class="str">"pos"</span>, <span class="kw">function</span>(data)
-    buffers[data.id] <span class="op">=</span> { cf <span class="op">=</span> data.cf, vel <span class="op">=</span> data.vel, t <span class="op">=</span> tick() }
+<span class="cm">-- Receive other players' state</span>
+<span class="cm">-- Note: second arg is nil on the client — use _ to signal it's intentionally ignored</span>
+ch:<span class="fn">On</span>(<span class="kw">function</span>(data, _)
+    buffers[data.userId] <span class="op">=</span> { cf <span class="op">=</span> data.cf, vel <span class="op">=</span> data.vel, t <span class="op">=</span> os.<span class="fn">clock</span>() }
 <span class="kw">end</span>)
 
 <span class="cm">-- Interpolate on every frame</span>
 RunService.Heartbeat:<span class="fn">Connect</span>(<span class="kw">function</span>(dt)
     <span class="kw">for</span> userId, buf <span class="kw">in</span> buffers <span class="kw">do</span>
-        <span class="kw">local</span> char <span class="op">=</span> <span class="fn">getCharForUserId</span>(userId)
-        <span class="kw">if</span> char <span class="kw">then</span>
-            <span class="fn">smoothMove</span>(char, buf.cf, buf.vel, dt)
+        <span class="kw">local</span> player <span class="op">=</span> Players:<span class="fn">GetPlayerByUserId</span>(userId)
+        <span class="kw">if</span> player <span class="kw">and</span> player.Character <span class="kw">then</span>
+            <span class="fn">smoothMove</span>(player.Character, buf.cf, buf.vel, dt)
         <span class="kw">end</span>
     <span class="kw">end</span>
 <span class="kw">end</span>)</code></pre>
 
         <h2>See also</h2>
         <p>
-          <a href="./stream/">Stream</a> | schema, channels, delta compression &nbsp;·&nbsp;
-          <a href="./broadcast/">Broadcast</a> | unreliable fan-out &nbsp;·&nbsp;
-          <a href="./listener/">Listener</a> | client subscription
+          <a href="./stream.html">Stream</a> | schema, channels, delta compression &nbsp;·&nbsp;
+          <a href="./guide-stream.html">FPS Guide</a> | lag compensation with history buffer &nbsp;·&nbsp;
+          <a href="./guide-stream-server.html">Stream: Server Side</a> | all send methods, rate limiting &nbsp;·&nbsp;
+          <a href="./guide-stream-client.html">Stream: Client Side</a> | throttling, unsubscribing
         </p>
-
       </section>
     </main>
   </div>

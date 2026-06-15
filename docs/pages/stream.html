@@ -60,7 +60,7 @@
 
         <h2>Quick start</h2>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Both server and client define the same channels</span>
-<span class="kw">local</span> Stream <span class="op">=</span> RoExpress.Stream
+<span class="kw">local</span> Stream <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Stream"</span>)
 
 <span class="kw">local</span> move <span class="op">=</span> Stream.<span class="fn">Channel</span>(<span class="str">"playerMove"</span>, Stream.<span class="fn">Schema</span>({
     { <span class="str">"pos"</span>,   <span class="str">"Vector3"</span> },
@@ -207,7 +207,7 @@ channel:<span class="fn">BroadcastDelta</span>(newData)</code></pre>
         <h2>Full example | player movement</h2>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- shared.luau (required on both server and client)</span>
 <span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
-<span class="kw">local</span> Stream    <span class="op">=</span> RoExpress.Stream
+<span class="kw">local</span> Stream    <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Stream"</span>)
 
 <span class="kw">local</span> moveSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>({
     { <span class="str">"pos"</span>,    <span class="str">"Vector3"</span>                       },
