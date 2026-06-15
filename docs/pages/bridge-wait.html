@@ -71,7 +71,7 @@
     <p><code>Has</code> returns immediately with a boolean — it does not yield. Use it to check whether any listeners are currently bound to an event name:</p>
 
     <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">if</span> Bridge:<span class="fn">Has</span>(<span class="str">"playerDied"</span>) <span class="kw">then</span>
-    Bridge:<span class="fn">Fire</span>(<span class="str">"playerDied"</span>, player, killer)
+    Bridge.<span class="fn">Emit</span>(<span class="str">"playerDied"</span>, { player <span class="op">=</span> player, killer <span class="op">=</span> killer })
 <span class="kw">end</span></code></pre>
 
     <div class="cl info">Wait, WaitUntil, and WaitFirst all yield the calling coroutine. Call them inside a task.spawn or coroutine if you do not want to block the current thread.</div>
@@ -79,7 +79,7 @@
     <h2>See also</h2>
     <p>
       <a href="./bridge.html">← Bridge</a> &nbsp;&middot;&nbsp;
-      <a href="./bridge-bind.html">Bind &amp; Fire</a> | register and fire listeners &nbsp;&middot;&nbsp;
+      <a href="./bridge-bind.html">On &amp; Emit</a> | register listeners and emit &nbsp;&middot;&nbsp;
       <a href="./broadcast.html">Broadcast</a> | server-to-client events &nbsp;&middot;&nbsp;
       <a href="./listener.html">Listener</a> | client-side event subscription
     </p>

@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bridge Bind &amp; Fire | RoExpress Docs</title>
-  <meta name="description" content="Bridge.Bind, BindOnce, Unbind, Fire — register persistent or one-shot listeners on named events and fire them across server modules.">
+  <title>Bridge On &amp; Emit | RoExpress Docs</title>
+  <meta name="description" content="Bridge.On, Once, Emit, Clear, Has — register persistent or one-shot listeners on named channels and emit events across server modules. Both On and Once return a BridgeConnection.">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#8b78ff">
@@ -19,71 +19,106 @@
   <header id="hdr"></header>
   <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
 
-    <div class="eyebrow"><a href="./bridge.html">Bridge</a> → Bind &amp; Fire</div>
-    <h1>Bind &amp; Fire</h1>
-    <p class="lead">Register persistent or one-shot listeners on named events, remove them by id, and fire events to all current listeners with any number of arguments.</p>
+    <div class="eyebrow"><a href="./bridge.html">Bridge</a> → On &amp; Emit</div>
+    <h1>On &amp; Emit</h1>
+    <p class="lead">Register persistent or one-shot listeners on named channels and emit events to all current listeners. Both <code>On</code> and <code>Once</code> return a <code>BridgeConnection</code> — anonymous handlers are always cleanable without holding a function reference.</p>
 
     <h2>API</h2>
 
-    <div class="sig">Bridge:<span class="fn">Bind</span>(event: string, callback: (...any) → ()) → id</div>
-    <div class="sig">Bridge:<span class="fn">BindOnce</span>(event: string, callback: (...any) → ()) → id</div>
-    <div class="sig">Bridge:<span class="fn">Unbind</span>(id)</div>
-    <div class="sig">Bridge:<span class="fn">Fire</span>(event: string, ...)</div>
+    <div class="sig">Bridge.<span class="fn">On</span>(channel: string, handler: (data: any) → ()) → BridgeConnection</div>
+    <div class="sig">Bridge.<span class="fn">Once</span>(channel: string, handler: (data: any) → ()) → BridgeConnection</div>
+    <div class="sig">Bridge.<span class="fn">Emit</span>(channel: string, data: any)</div>
+    <div class="sig">Bridge.<span class="fn">Clear</span>(channel: string)</div>
+    <div class="sig">Bridge.<span class="fn">Has</span>(channel: string) → boolean</div>
 
-    <h2>Bind and fire</h2>
+    <!-- ── On ───────────────────────────────────────────────────────── -->
+    <h2 id="on">On</h2>
+    <p><code>On</code> registers a persistent listener. It stays active until you call <code>:Disconnect()</code> on the returned connection or call <code>Bridge.Clear</code> on the channel.</p>
 
-    <p><code>Bind</code> registers a listener that stays active until explicitly removed. <code>Fire</code> calls all listeners currently bound to that event name.</p>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Module A: emits</span>
+Bridge.<span class="fn">Emit</span>(<span class="str">"player.died"</span>, { player <span class="op">=</span> player, killer <span class="op">=</span> killer })
 
-    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Module A: fires event</span>
-Bridge:<span class="fn">Fire</span>(<span class="str">"playerDied"</span>, player, killer)
-
-<span class="cm">-- Module B: reacts</span>
-Bridge:<span class="fn">Bind</span>(<span class="str">"playerDied"</span>, <span class="kw">function</span>(player, killer)
-    <span class="fn">updateLeaderboard</span>(killer)
+<span class="cm">-- Module B: listens</span>
+Bridge.<span class="fn">On</span>(<span class="str">"player.died"</span>, <span class="kw">function</span>(data)
+    <span class="fn">updateLeaderboard</span>(data.killer)
 <span class="kw">end</span>)</code></pre>
 
-    <h2>One-shot listener</h2>
+    <!-- ── Once ─────────────────────────────────────────────────────── -->
+    <h2 id="once">Once</h2>
+    <p><code>Once</code> registers a one-shot listener that automatically disconnects itself after the handler fires once.</p>
 
-    <p><code>BindOnce</code> registers a listener that automatically removes itself after firing once:</p>
-
-    <pre><button class="cb" onclick="cp(this)">copy</button><code>Bridge:<span class="fn">BindOnce</span>(<span class="str">"roundStarted"</span>, <span class="kw">function</span>(roundData)
-    <span class="fn">InitRoundUI</span>(roundData)
+    <pre><button class="cb" onclick="cp(this)">copy</button><code>Bridge.<span class="fn">Once</span>(<span class="str">"round.started"</span>, <span class="kw">function</span>(data)
+    <span class="fn">initRoundUI</span>(data)
 <span class="kw">end</span>)</code></pre>
 
-    <h2>Removing a listener</h2>
+    <!-- ── BridgeConnection ──────────────────────────────────────────── -->
+    <h2 id="connection">BridgeConnection</h2>
+    <p>Both <code>On</code> and <code>Once</code> return a <code>BridgeConnection</code> — a table with a single <code>:Disconnect()</code> method. This is the same shape as an <code>RBXScriptConnection</code>, so it works directly with <a href="./maid.html">Maid</a>.</p>
 
-    <p><code>Bind</code> and <code>BindOnce</code> both return an id. Pass it to <code>Unbind</code> to remove the listener at any time:</p>
-
-    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> id <span class="op">=</span> Bridge:<span class="fn">Bind</span>(<span class="str">"itemPurchased"</span>, <span class="kw">function</span>(item)
-    <span class="fn">LogPurchase</span>(item)
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> conn <span class="op">=</span> Bridge.<span class="fn">On</span>(<span class="str">"item.purchased"</span>, <span class="kw">function</span>(data)
+    <span class="fn">logPurchase</span>(data)
 <span class="kw">end</span>)
 
 <span class="cm">-- Later, when this module is shutting down:</span>
-Bridge:<span class="fn">Unbind</span>(id)</code></pre>
+conn:<span class="fn">Disconnect</span>()</code></pre>
 
-    <h2>Shop → inventory example</h2>
+    <p>Pass the connection to a Maid to have it cleaned up automatically:</p>
 
-    <p>A shop module fires an event; the inventory module reacts without either module needing a direct reference to the other:</p>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> maid <span class="op">=</span> RoExpress(<span class="str">"Maid"</span>)
 
-    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- ShopModule.lua</span>
+maid:<span class="fn">Add</span>(Bridge.<span class="fn">On</span>(<span class="str">"round.tick"</span>, onTick))
+maid:<span class="fn">Add</span>(Bridge.<span class="fn">On</span>(<span class="str">"round.end"</span>,  onEnd))
+
+<span class="cm">-- end of round: all connections cleaned up at once</span>
+maid:<span class="fn">Destroy</span>()</code></pre>
+
+    <!-- ── Emit ──────────────────────────────────────────────────────── -->
+    <h2 id="emit">Emit</h2>
+    <p>Calls all listeners currently registered on the channel. Pass a single value as data — use a table if you need multiple fields.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Single value</span>
+Bridge.<span class="fn">Emit</span>(<span class="str">"player.joined"</span>, player)
+
+<span class="cm">-- Multiple fields via table</span>
+Bridge.<span class="fn">Emit</span>(<span class="str">"player.died"</span>, { player <span class="op">=</span> player, killer <span class="op">=</span> killer, reason <span class="op">=</span> <span class="str">"fall"</span> })</code></pre>
+
+    <!-- ── Clear ─────────────────────────────────────────────────────── -->
+    <h2 id="clear">Clear</h2>
+    <p>Removes all listeners on a channel at once. Equivalent to calling <code>:Disconnect()</code> on every connection registered to that channel name.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code>Bridge.<span class="fn">Clear</span>(<span class="str">"round.tick"</span>)  <span class="cm">-- all listeners gone</span></code></pre>
+
+    <!-- ── Has ───────────────────────────────────────────────────────── -->
+    <h2 id="has">Has</h2>
+    <p>Returns <code>true</code> if at least one listener is registered on the channel. Does not yield.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">if</span> Bridge.<span class="fn">Has</span>(<span class="str">"player.died"</span>) <span class="kw">then</span>
+    Bridge.<span class="fn">Emit</span>(<span class="str">"player.died"</span>, { player <span class="op">=</span> player, killer <span class="op">=</span> killer })
+<span class="kw">end</span></code></pre>
+
+    <!-- ── Shop example ───────────────────────────────────────────────── -->
+    <h2 id="example">Shop → inventory example</h2>
+    <p>A shop module emits an event; the inventory module reacts without either needing a direct reference to the other:</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- ShopModule.luau</span>
 <span class="kw">local function</span> <span class="fn">Purchase</span>(player, itemId)
     <span class="cm">-- ... validate, charge currency ...</span>
-    Bridge:<span class="fn">Fire</span>(<span class="str">"itemPurchased"</span>, player, itemId)
+    Bridge.<span class="fn">Emit</span>(<span class="str">"item.purchased"</span>, { player <span class="op">=</span> player, itemId <span class="op">=</span> itemId })
 <span class="kw">end</span>
 
-<span class="cm">-- InventoryModule.lua</span>
-Bridge:<span class="fn">Bind</span>(<span class="str">"itemPurchased"</span>, <span class="kw">function</span>(player, itemId)
-    <span class="fn">AddToInventory</span>(player, itemId)
+<span class="cm">-- InventoryModule.luau</span>
+Bridge.<span class="fn">On</span>(<span class="str">"item.purchased"</span>, <span class="kw">function</span>(data)
+    <span class="fn">addToInventory</span>(data.player, data.itemId)
 <span class="kw">end</span>)</code></pre>
 
-    <div class="cl info">Bridge is a server-only internal bus. It does not cross the client/server boundary. For server-to-client events use <a href="./broadcast.html">Broadcast</a>; for client-side subscriptions use <a href="./listener.html">Listener</a>.</div>
+    <div class="cl info">Bridge is a server-side internal bus. It does not cross the client/server boundary. For server-to-client events use <a href="./broadcast.html">Broadcast</a>; for client-side subscriptions use <a href="./listener.html">Listener</a>.</div>
 
     <h2>See also</h2>
     <p>
       <a href="./bridge.html">← Bridge</a> &nbsp;&middot;&nbsp;
-      <a href="./bridge-wait.html">Wait &amp; Query</a> | yield until an event fires &nbsp;&middot;&nbsp;
-      <a href="./broadcast.html">Broadcast</a> | server-to-client events &nbsp;&middot;&nbsp;
-      <a href="./listener.html">Listener</a> | client-side event subscription
+      <a href="./bridge-wait.html">Wait &amp; Query</a> | yield until a channel emits &nbsp;&middot;&nbsp;
+      <a href="./maid.html">Maid</a> | bulk-manage Bridge connections &nbsp;&middot;&nbsp;
+      <a href="./broadcast.html">Broadcast</a> | server-to-client events
     </p>
 
   </section></main></div>
