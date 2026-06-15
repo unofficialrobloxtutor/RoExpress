@@ -49,7 +49,7 @@
 <span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
 <span class="kw">local</span> Stream    <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Stream"</span>)
 
-<span class="kw">local</span> stateSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>({
+<span class="kw">local</span> stateSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>.<span class="fn">New</span>({
     { <span class="str">"userId"</span>, <span class="str">"f64"</span>         },  <span class="cm">-- 8 B: set server-side</span>
     { <span class="str">"cf"</span>,     <span class="str">"CFrame"</span>      },  <span class="cm">-- 28 B: full rotation</span>
     { <span class="str">"vel"</span>,    <span class="str">"Vector3"</span>     },  <span class="cm">-- 12 B: linear velocity</span>

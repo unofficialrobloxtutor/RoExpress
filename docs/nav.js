@@ -32,82 +32,82 @@
       <div class="ni open">
         ${nl(BASE + '/', 'overview', 'Overview')}
         ${nl(P + 'installation.html', 'installation', 'Installation')}
-        ${nl(BASE + '/#quickstart', 'quickstart', 'Quick Start')}
-        ${nl(P + 'accessors.html', 'accessors', 'Module Accessors')}
-        ${nl(P + 'pipeline.html', 'pipeline', 'Request Pipeline')}
-        ${nl(P + 'roadmap.html',  'roadmap',  'Roadmap' + nb('2.4+', 'background:#b45309;color:#fef3c7'))}
+        ${nl(P + 'accessors.html',    'accessors',    'Module Accessors')}
+        ${nl(P + 'pipeline.html',     'pipeline',     'Request Pipeline')}
+        ${nl(P + 'roadmap.html',      'roadmap',      'Roadmap' + nb('2.4+', 'background:#b45309;color:#fef3c7'))}
       </div>
     </div>
     <div class="ns">
-      <button class="nsh open" onclick="tn(this)">Server API <span class="chv">▶</span></button>
+      <button class="nsh open" onclick="tn(this)">Server <span class="chv">▶</span></button>
       <div class="ni open">
         ${nl(P + 'app.html',       'app',       'App')}
         ${nl(P + 'broadcast.html', 'broadcast', 'Broadcast')}
+        ${nl(P + 'push.html',      'push',      'Push')}
+        ${nl(P + 'port.html',      'port',      'Port')}
         ${nl(P + 'tamper.html',    'tamper',    'Tamper')}
-        ${nl(P + 'harpy.html',     'harpy',     'Harpy' + nb('new', 'background:var(--accent-bg);color:var(--accent2)'))}
+        ${nl(P + 'harpy.html',     'harpy',     'Harpy')}
       </div>
     </div>
     <div class="ns">
-      <button class="nsh open" onclick="tn(this)">Client API <span class="chv">▶</span></button>
+      <button class="nsh open" onclick="tn(this)">Client <span class="chv">▶</span></button>
       <div class="ni open">
         ${nl(P + 'network.html',   'network',   'Network')}
         ${nl(P + 'listener.html',  'listener',  'Listener')}
+        ${nl(P + 'promise.html',   'promise',   'Promise')}
         ${nl(P + 'benchmark.html', 'benchmark', 'Benchmark')}
       </div>
     </div>
     <div class="ns">
-      <button class="nsh open" onclick="tn(this)">New in v2 <span class="chv">▶</span></button>
+      <button class="nsh open" onclick="tn(this)">Stream <span class="chv">▶</span></button>
       <div class="ni open">
-        ${nl(P + 'router.html',      'router',      'Router'    + nb('v2'))}
-        ${nl(P + 'push.html',        'push',        'Server Push' + nb('v2'))}
-        ${nl(P + 'codec.html',       'codec',       'Codec'     + nb('v2'))}
-        ${nl(P + 'bridge.html',      'bridge',      'Bridge'    + nb('v2'))}
-        ${nl(P + 'port.html',        'port',        'Ports'     + nb('v2'))}
-        ${nl(P + 'stream.html',      'stream',      'Stream'    + nb('v2.4', 'background:#b45309;color:#fef3c7'))}
-        ${nl(P + 'typecoercer.html', 'typecoercer', 'TypeCoercer' + nb('v2.2'))}
-        ${nl(P + 'promise.html',     'promise',     'Promise'   + nb('v2.2'))}
+        ${nl(P + 'stream.html',              'stream',              'Overview')}
+        ${nl(P + 'guide-stream-server.html', 'guide-stream-server', 'Server Side')}
+        ${nl(P + 'guide-stream-client.html', 'guide-stream-client', 'Client Side')}
+        ${nl(P + 'guide-stream.html',        'guide-stream',        'FPS Guide')}
+        ${nl(P + 'benchmark-stream.html',    'benchmark-stream',    'Benchmarks' + nb('soon', 'background:#b45309;color:#fef3c7'))}
       </div>
     </div>
     <div class="ns">
       <button class="nsh open" onclick="tn(this)">Shared <span class="chv">▶</span></button>
       <div class="ni open">
+        ${nl(P + 'router.html',      'router',      'Router')}
+        ${nl(P + 'codec.html',       'codec',       'Codec')}
+        ${nl(P + 'bridge.html',      'bridge',      'Bridge')}
+        ${nl(P + 'typecoercer.html', 'typecoercer', 'TypeCoercer')}
         ${nl(P + 'tokenbucket.html', 'tokenbucket', 'TokenBucket')}
         ${nl(P + 'base64.html',      'base64',      'Base64')}
         ${nl(P + 'types.html',       'types',       'Types')}
       </div>
     </div>
     <div class="ns">
-      <button class="nsh open" onclick="tn(this)">Examples <span class="chv">▶</span></button>
-      <div class="ni open">
-        ${nl(P + 'ex-killfeed.html',  'ex-killfeed',  'Kill Feed')}
-        ${nl(P + 'ex-round.html',     'ex-round',     'Round Manager')}
-        ${nl(P + 'ex-shop.html',      'ex-shop',      'Shop / Purchase')}
-        ${nl(P + 'ex-admin.html',     'ex-admin',     'Admin Commands')}
-        ${nl(P + 'ex-friendzone.html','ex-friendzone','Friend Zone')}
-        ${nl(P + 'ex-leaderboard.html','ex-leaderboard','Leaderboard')}
-        ${nl(P + 'ex-playerdata.html','ex-playerdata', 'Player Data')}
-        ${nl(P + 'ex-matchmaking.html','ex-matchmaking','Matchmaking')}
-        ${nl(P + 'examples-gun.html', 'examples-gun',  'Gun Framework' + nb('new', 'background:var(--accent-bg);color:var(--accent2)'))}
-        ${nl(P + 'examples-inventory.html','examples-inventory','Inventory System' + nb('new', 'background:var(--accent-bg);color:var(--accent2)'))}
-        ${nl(P + 'examples-streaming.html','examples-streaming','Live Streaming'   + nb('new', 'background:var(--accent-bg);color:var(--accent2)'))}
+      <button class="nsh" onclick="tn(this)">Examples <span class="chv">▶</span></button>
+      <div class="ni">
+        ${nl(P + 'ex-killfeed.html',          'ex-killfeed',          'Kill Feed')}
+        ${nl(P + 'ex-round.html',             'ex-round',             'Round Manager')}
+        ${nl(P + 'ex-shop.html',              'ex-shop',              'Shop / Purchase')}
+        ${nl(P + 'ex-admin.html',             'ex-admin',             'Admin Commands')}
+        ${nl(P + 'ex-friendzone.html',        'ex-friendzone',        'Friend Zone')}
+        ${nl(P + 'ex-leaderboard.html',       'ex-leaderboard',       'Leaderboard')}
+        ${nl(P + 'ex-playerdata.html',        'ex-playerdata',        'Player Data')}
+        ${nl(P + 'ex-matchmaking.html',       'ex-matchmaking',       'Matchmaking')}
+        ${nl(P + 'examples-gun.html',         'examples-gun',         'Gun Framework')}
+        ${nl(P + 'examples-inventory.html',   'examples-inventory',   'Inventory System')}
+        ${nl(P + 'examples-streaming.html',   'examples-streaming',   'Live Streaming')}
       </div>
     </div>
     <div class="ns">
-      <button class="nsh open" onclick="tn(this)">Guides <span class="chv">▶</span></button>
-      <div class="ni open">
-        ${nl(P + 'guide-middleware.html', 'guide-middleware', 'Middleware')}
-        ${nl(P + 'guide-mvc.html',        'guide-mvc',        'MVC Pattern')}
-        ${nl(P + 'guide-routes.html',     'guide-routes',     'Route Organisation')}
-        ${nl(P + 'guide-promise.html',    'guide-promise',    'Promise')}
-        ${nl(P + 'guide-typecoercer.html','guide-typecoercer','TypeCoercer')}
-        ${nl(P + 'guide-stream.html',        'guide-stream',        'FPS Stream')}
-        ${nl(P + 'guide-stream-server.html','guide-stream-server','Stream: Server Side')}
-        ${nl(P + 'guide-stream-client.html','guide-stream-client','Stream: Client Side')}
-        ${nl(P + 'guide-ports.html',        'guide-ports',         'Ports')}
-        ${nl(P + 'guide-tamper.html',     'guide-tamper',     'Exploit Detection')}
-        ${nl(P + 'guides-auth.html',      'guides-auth',      'Authentication'   + nb('new', 'background:var(--accent-bg);color:var(--accent2)'))}
-        ${nl(P + 'guides-combat.html',    'guides-combat',    'Combat System'    + nb('new', 'background:var(--accent-bg);color:var(--accent2)'))}
-        ${nl(P + 'guides-migration.html', 'guides-migration', 'Migration v2.3→2.4' + nb('new', 'background:var(--accent-bg);color:var(--accent2)'))}
+      <button class="nsh" onclick="tn(this)">Guides <span class="chv">▶</span></button>
+      <div class="ni">
+        ${nl(P + 'guide-middleware.html',  'guide-middleware',  'Middleware')}
+        ${nl(P + 'guide-mvc.html',         'guide-mvc',         'MVC Pattern')}
+        ${nl(P + 'guide-routes.html',      'guide-routes',      'Route Organisation')}
+        ${nl(P + 'guide-promise.html',     'guide-promise',     'Promise')}
+        ${nl(P + 'guide-typecoercer.html', 'guide-typecoercer', 'TypeCoercer')}
+        ${nl(P + 'guide-ports.html',       'guide-ports',       'Ports')}
+        ${nl(P + 'guide-tamper.html',      'guide-tamper',      'Exploit Detection')}
+        ${nl(P + 'guides-auth.html',       'guides-auth',       'Authentication')}
+        ${nl(P + 'guides-combat.html',     'guides-combat',     'Combat System')}
+        ${nl(P + 'guides-migration.html',  'guides-migration',  'Migration v2.3→2.4')}
       </div>
     </div>
     <div class="ns">
@@ -115,10 +115,8 @@
       <div class="ni open">
         ${nl(P + 'community-discord.html', 'community-discord', '◈ Discord')}
         ${nl(P + 'community-github.html',  'community-github',  '⌥ GitHub')}
-        ${nl(P + 'community-twitter.html', 'community-twitter', '𝕏 Twitter')}
-        ${nl(P + 'community-website.html', 'community-website', '🌐 Website')}
         ${nl(P + 'youtube.html',           'youtube',           '▶ YouTube')}
-        ${nl(P + 'support.html',           'support',           'Support ♥')}
+        ${nl(P + 'support.html',           'support',           '♥ Donate')}
       </div>
     </div>
     <div class="ns">
@@ -127,12 +125,14 @@
         ${nl(P + 'comparison.html',       'comparison',       'Comparison')}
         ${nl(P + 'design-consensus.html', 'design-consensus', 'Design Consensus')}
         ${nl(P + 'story.html',            'story',            'The Story ✦')}
-        ${nl(P + 'updates.html',          'updates',          'Updates' + nb('v2.4', 'background:#b45309;color:#fef3c7'))}
+        ${nl(P + 'updates.html',          'updates',          'Updates')}
         ${nl(P + 'research.html',         'research',         'Research Papers')}
         ${nl(P + 'changelog.html',        'changelog',        'Changelog')}
         ${nl(P + 'reference.html',        'reference',        'API Reference')}
-        ${nl(P + 'benchmark-stream.html', 'benchmark-stream', 'Stream Benchmarks' + nb('planned', 'background:#b45309;color:#fef3c7'))}
       </div>
+    </div>
+    <div id="sb-donate">
+      <a class="sb-donate-btn" href="${P}support.html">♥ &nbsp;Support the project</a>
     </div>`;
 
   // ── Header ────────────────────────────────────────────────────────────
@@ -159,6 +159,7 @@
       <div id="sr"></div>
     </div>
     <div class="hright">
+      <a class="hdr-donate" href="${P}support.html" title="Support the project">♥</a>
       <button id="tgl" title="Toggle theme" onclick="toggleTheme()">☽</button>
     </div>`;
 
@@ -216,8 +217,12 @@
     { s:'updates',     url:P+'updates.html',                t:'ref',     n:'Updates',              x:'updates changelog v2.4 v2.3 release notes' },
     { s:'changelog',   url:P+'changelog.html',              t:'ref',     n:'Changelog',            x:'changelog version history added changed removed breaking' },
     { s:'reference',   url:P+'reference.html',              t:'ref',     n:'API Reference',        x:'reference overview api index types pipeline' },
-    { s:'examples-gun',    url:P+'examples-gun.html',       t:'example', n:'Gun Framework',        x:'gun shoot hit damage replication health player combat port stream' },
-    { s:'benchmark-stream',url:P+'benchmark-stream.html',   t:'ref',     n:'Stream Benchmarks',    x:'stream benchmark bandwidth delta compression tick rate player count bytes performance planned' },
+    { s:'examples-gun',      url:P+'examples-gun.html',       t:'example', n:'Gun Framework',        x:'gun shoot hit damage replication health player combat port stream' },
+    { s:'examples-inventory',url:P+'examples-inventory.html',t:'example', n:'Inventory System',     x:'inventory item grant purchase shop slot equip unequip push bridge' },
+    { s:'examples-streaming',url:P+'examples-streaming.html',t:'example', n:'Live Streaming',       x:'streaming movement replication 20hz cframe delta interpolation sendexcept' },
+    { s:'benchmark-stream',  url:P+'benchmark-stream.html',  t:'ref',     n:'Stream Benchmarks',    x:'stream benchmark bandwidth delta compression tick rate player count bytes performance planned' },
+    { s:'design-consensus',  url:P+'design-consensus.html',  t:'ref',     n:'Design Consensus',     x:'design consensus decisions architecture tradeoffs philosophy' },
+    { s:'research',          url:P+'research.html',           t:'ref',     n:'Research Papers',      x:'research papers whitepaper performance latency networking' },
   ];
 
   // ── DOM ready ─────────────────────────────────────────────────────────
@@ -226,6 +231,19 @@
     if (hdr) hdr.innerHTML = HEADER;
     const sb = document.getElementById('sb');
     if (sb) sb.innerHTML = SIDEBAR;
+
+    // Auto-expand collapsed sections when current page is inside them
+    if (sb) {
+      const activeLink = sb.querySelector('.nl.active');
+      if (activeLink) {
+        const ni = activeLink.closest('.ni');
+        if (ni && !ni.classList.contains('open')) {
+          ni.classList.add('open');
+          const nsh = ni.previousElementSibling;
+          if (nsh && nsh.classList.contains('nsh')) nsh.classList.add('open');
+        }
+      }
+    }
 
     // Search
     const si = document.getElementById('si');

@@ -62,7 +62,7 @@
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Both server and client define the same channels</span>
 <span class="kw">local</span> Stream <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Stream"</span>)
 
-<span class="kw">local</span> move <span class="op">=</span> Stream.<span class="fn">Channel</span>(<span class="str">"playerMove"</span>, Stream.<span class="fn">Schema</span>({
+<span class="kw">local</span> move <span class="op">=</span> Stream.<span class="fn">Channel</span>(<span class="str">"playerMove"</span>, Stream.<span class="fn">Schema</span>.<span class="fn">New</span>({
     { <span class="str">"pos"</span>,   <span class="str">"Vector3"</span> },
     { <span class="str">"vel"</span>,   <span class="str">"Vector3"</span> },
     { <span class="str">"state"</span>, { <span class="str">"flags"</span>, <span class="str">"jumping"</span>, <span class="str">"sprinting"</span> } },
@@ -101,14 +101,14 @@ move:<span class="fn">Send</span>({
         <div class="sig"><span class="fn">Stream.Schema</span>(<span class="tp">definition</span>: {{ string | {any} }}) → Schema</div>
         <p>Compiles a schema from an ordered array of field definitions. Fixed-size schemas (no <code>string</code> fields) pre-compute byte offsets and are eligible for delta compression.</p>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Fixed-size | all fields have known byte widths</span>
-<span class="kw">local</span> posSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>({
+<span class="kw">local</span> posSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>.<span class="fn">New</span>({
     { <span class="str">"pos"</span>,     <span class="str">"Vector3"</span> },   <span class="cm">-- 12 bytes</span>
     { <span class="str">"health"</span>,  <span class="str">"u16"</span>     },   <span class="cm">--  2 bytes</span>
     { <span class="str">"alive"</span>,   <span class="str">"bool"</span>    },   <span class="cm">--  1 byte</span>
 })
 
 <span class="cm">-- Variable-size | string field makes it non-fixed</span>
-<span class="kw">local</span> chatSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>({
+<span class="kw">local</span> chatSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>.<span class="fn">New</span>({
     { <span class="str">"name"</span>,    <span class="str">"string"</span>  },
     { <span class="str">"message"</span>, <span class="str">"string"</span>  },
 })</code></pre>
@@ -209,7 +209,7 @@ channel:<span class="fn">BroadcastDelta</span>(newData)</code></pre>
 <span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
 <span class="kw">local</span> Stream    <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Stream"</span>)
 
-<span class="kw">local</span> moveSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>({
+<span class="kw">local</span> moveSchema <span class="op">=</span> Stream.<span class="fn">Schema</span>.<span class="fn">New</span>({
     { <span class="str">"pos"</span>,    <span class="str">"Vector3"</span>                       },
     { <span class="str">"vel"</span>,    <span class="str">"Vector3"</span>                       },
     { <span class="str">"cf"</span>,     <span class="str">"CFrameLight"</span>                   },

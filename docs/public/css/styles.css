@@ -54,7 +54,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 #lay{display:flex;padding-top:var(--header-h);min-height:100vh}
 
 /* ── SIDEBAR ── */
-#sb{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--header-h);bottom:0;left:0;overflow-y:auto;border-right:1px solid var(--border);background:var(--bg);padding:14px 0 60px}
+#sb{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:var(--header-h);bottom:0;left:0;overflow-y:auto;border-right:1px solid var(--border);background:var(--bg);padding:14px 0 0}
 .ns{margin-bottom:2px}
 .nsh{width:100%;background:none;border:none;padding:7px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;color:var(--text3);font-family:var(--font);font-size:10.5px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;transition:color var(--ease);user-select:none}
 .nsh:hover,.nsh.open{color:var(--text2)}
@@ -186,6 +186,13 @@ pre code{background:none;border:none;padding:0;font-size:12.5px;color:var(--text
 #burger{display:none;width:34px;height:34px;border-radius:var(--radius);background:var(--bg2);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-size:18px;align-items:center;justify-content:center;flex-shrink:0;margin-right:4px}
 #overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:98;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
 #overlay.open{display:block}
+
+/* ── DONATE ── */
+.hdr-donate{width:32px;height:32px;border-radius:var(--radius);background:var(--bg2);border:1px solid var(--border);color:var(--red);font-size:14px;display:flex;align-items:center;justify-content:center;text-decoration:none;transition:background var(--ease),border-color var(--ease),transform var(--ease);flex-shrink:0}
+.hdr-donate:hover{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.3);transform:scale(1.1);text-decoration:none}
+#sb-donate{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--border);padding:10px 12px;flex-shrink:0}
+.sb-donate-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 12px;border-radius:var(--radius);background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.18);color:var(--red);font-family:var(--font);font-size:11.5px;font-weight:500;text-decoration:none;transition:background var(--ease),border-color var(--ease)}
+.sb-donate-btn:hover{background:rgba(248,113,113,.14);border-color:rgba(248,113,113,.32);text-decoration:none;color:var(--red)}
 
 @media(max-width:768px){
   #burger{display:flex}
