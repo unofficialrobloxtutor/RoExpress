@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hook — Priority System | RoExpress Docs</title>
+  <meta name="description" content="Hook priority ordering — lower number runs first. Named aliases: first, high, normal, low, last.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow"><a href="./hook.html">Hook</a> → Priority System</div>
+    <h1>Priority System</h1>
+    <p class="lead">Handlers run in ascending priority order — lower number fires first. Handlers at the same priority run in registration order.</p>
+
+    <h2>Named aliases</h2>
+
+    <table class="tbl">
+      <thead><tr><th>Name</th><th>Value</th><th>Use for</th></tr></thead>
+      <tbody>
+        <tr><td><code>"first"</code></td><td>0</td><td>Critical operations that must run before anything else — DataStore saves, security checks</td></tr>
+        <tr><td><code>"high"</code></td><td>25</td><td>Early processing — inventory cleanup, session teardown</td></tr>
+        <tr><td><code>"normal"</code></td><td>50</td><td>Default — general game logic, UI updates</td></tr>
+        <tr><td><code>"low"</code></td><td>75</td><td>Non-critical work that should follow core logic</td></tr>
+        <tr><td><code>"last"</code></td><td>100</td><td>Logging, analytics, telemetry — always after everything else</td></tr>
+      </tbody>
+    </table>
+
+    <p>Numbers and aliases are interchangeable. Use whichever is clearer:</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code>Hook(<span class="str">"PlayerRemoving"</span>, <span class="str">"first"</span>, <span class="kw">function</span>(player)
+    DataStore:<span class="fn">Save</span>(player)         <span class="cm">-- priority 0 — runs first</span>
+<span class="kw">end</span>)
+
+Hook(<span class="str">"PlayerRemoving"</span>, <span class="num">10</span>, <span class="kw">function</span>(player)
+    Inventory:<span class="fn">Wipe</span>(player)         <span class="cm">-- priority 10 — after save</span>
+<span class="kw">end</span>)
+
+Hook(<span class="str">"PlayerRemoving"</span>, <span class="str">"normal"</span>, <span class="kw">function</span>(player)
+    Party:<span class="fn">Remove</span>(player)           <span class="cm">-- priority 50 — mid</span>
+<span class="kw">end</span>)
+
+Hook(<span class="str">"PlayerRemoving"</span>, <span class="str">"last"</span>, <span class="kw">function</span>(player)
+    Analytics:<span class="fn">LogLeave</span>(player)    <span class="cm">-- priority 100 — always last</span>
+<span class="kw">end</span>)</code></pre>
+
+    <h2>Why priority matters</h2>
+
+    <p>Without priority, the order handlers run in depends on when <code>:Connect</code> was called — which is effectively the order your scripts happened to require their modules. That order is fragile: a new module added to the game changes it.</p>
+
+    <p>A concrete example where order breaks things: if your inventory cleanup runs <em>before</em> your DataStore save, the save writes an empty inventory. Priority prevents this class of bug entirely by making order explicit and stable regardless of require order.</p>
+
+    <div class="cl info">Omitting priority defaults to <code>50</code> ("normal"). If ordering between two handlers doesn't matter, omit priority on both — they'll still run consistently relative to handlers that do declare a priority.</div>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./hook.html">← Hook</a> &nbsp;·&nbsp;
+      <a href="./hook-subscribe.html">Subscribing</a> | Hook(), Once, Off, Clear &nbsp;·&nbsp;
+      <a href="./hook-signals.html">Signal Catalog</a> | all mapped Roblox events
+    </p>
+
+  </section></main></div>
+</body>
+</html>

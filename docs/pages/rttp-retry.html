@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Harpy Retry &amp; Backoff | RoExpress Docs</title>
-  <meta name="description" content="Harpy automatic retry with exponential backoff. Configure maxAttempts, understand what triggers a retry, and disable retries per client.">
+  <title>RTTP Retry &amp; Backoff | RoExpress Docs</title>
+  <meta name="description" content="RTTP automatic retry with exponential backoff. Configure maxAttempts, understand what triggers a retry, and disable retries per client.">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#8b78ff">
@@ -19,13 +19,13 @@
   <header id="hdr"></header>
   <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
 
-    <div class="eyebrow"><a href="./harpy.html">Harpy</a> → Retry &amp; Backoff</div>
+    <div class="eyebrow"><a href="./rttp.html">RTTP</a> → Retry &amp; Backoff</div>
     <h1>Retry &amp; Backoff</h1>
-    <p class="lead">Harpy retries failed requests automatically using exponential backoff — configure the attempt limit once and get resilience for free.</p>
+    <p class="lead">RTTP retries failed requests automatically using exponential backoff — configure the attempt limit once and get resilience for free.</p>
 
     <h2>How it works</h2>
 
-    <p>On a 5xx response or a connection error, Harpy waits and retries automatically before giving up. The default maximum is 3 retries (4 total attempts):</p>
+    <p>On a 5xx response or a connection error, RTTP waits and retries automatically before giving up. The default maximum is 3 retries (4 total attempts):</p>
 
     <table class="tbl">
       <thead><tr><th>Attempt</th><th>Wait before retry</th></tr></thead>
@@ -57,26 +57,26 @@
 
     <p>Set <code>retries</code> in the constructor or call <code>:SetRetries</code> at any time:</p>
 
-    <div class="sig">Harpy.<span class="fn">New</span>({ retries = n })</div>
-    <div class="sig">harpy:<span class="fn">SetRetries</span>(n)</div>
+    <div class="sig">RTTP.<span class="fn">New</span>({ retries = n })</div>
+    <div class="sig">rttp:<span class="fn">SetRetries</span>(n)</div>
 
     <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Conservative client: 5 retries</span>
-<span class="kw">local</span> safeClient <span class="op">=</span> Harpy.<span class="fn">New</span>({
+<span class="kw">local</span> safeClient <span class="op">=</span> RTTP.<span class="fn">New</span>({
     base    <span class="op">=</span> <span class="str">"https://critical-api.example.com"</span>,
     retries <span class="op">=</span> <span class="num">5</span>,
 })
 
 <span class="cm">-- Webhook: only 1 retry, don't want to spam</span>
-<span class="kw">local</span> webhook <span class="op">=</span> Harpy.<span class="fn">New</span>({
+<span class="kw">local</span> webhook <span class="op">=</span> RTTP.<span class="fn">New</span>({
     base    <span class="op">=</span> DISCORD_WEBHOOK_URL,
     retries <span class="op">=</span> <span class="num">1</span>,
 })</code></pre>
 
     <h2>Disabling retries</h2>
 
-    <p>Pass <code>retries = 0</code> to make Harpy fail immediately on any error without retrying:</p>
+    <p>Pass <code>retries = 0</code> to make RTTP fail immediately on any error without retrying:</p>
 
-    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> client <span class="op">=</span> Harpy.<span class="fn">New</span>({ base <span class="op">=</span> <span class="str">"https://api.example.com"</span>, retries <span class="op">=</span> <span class="num">0</span> })
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> client <span class="op">=</span> RTTP.<span class="fn">New</span>({ base <span class="op">=</span> <span class="str">"https://api.example.com"</span>, retries <span class="op">=</span> <span class="num">0</span> })
 
 <span class="cm">-- Or update an existing client</span>
 client:<span class="fn">SetRetries</span>(<span class="num">0</span>)</code></pre>
@@ -85,9 +85,9 @@ client:<span class="fn">SetRetries</span>(<span class="num">0</span>)</code></pr
 
     <h2>See also</h2>
     <p>
-      <a href="./harpy.html">← Harpy</a> &nbsp;&middot;&nbsp;
-      <a href="./harpy-config.html">Configuration</a> | constructor and runtime methods &nbsp;&middot;&nbsp;
-      <a href="./harpy-methods.html">HTTP Methods</a> | Get, Post, Put, Delete
+      <a href="./rttp.html">← RTTP</a> &nbsp;&middot;&nbsp;
+      <a href="./rttp-config.html">Configuration</a> | constructor and runtime methods &nbsp;&middot;&nbsp;
+      <a href="./rttp-methods.html">HTTP Methods</a> | Get, Post, Put, Delete
     </p>
 
   </section></main></div>

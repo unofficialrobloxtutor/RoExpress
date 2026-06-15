@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bridge | RoExpress Docs</title>
-  <meta name="description" content="RoExpress Bridge module: internal server-side event bus. Bind, Unbind, Fire, Has, Wait, WaitUntil, WaitFirst for decoupled module-to-module communication.">
+  <meta name="description" content="RoExpress Bridge module: named-channel event bus. On, Once, Emit, Clear, BridgeConnection, Wait, WaitUntil, WaitFirst for decoupled module-to-module communication.">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#8b78ff">
@@ -21,12 +21,18 @@
 
     <div class="eyebrow">Shared</div>
     <h1>Bridge</h1>
-    <p class="lead">Internal server-side event bus that decouples modules from each other — fire named events without knowing who is listening, and yield until events arrive.</p>
+    <p class="lead">Named-channel event bus — any module can emit or listen on any channel by string name. No shared references needed. Returns connection objects so anonymous handlers can always be cleaned up.</p>
 
     <div class="import-block">
       <span>Import</span>
       <code><span class="kw">local</span> Bridge <span class="op">=</span> RoExpress.Bridge</code>
       <button class="cb" onclick="cp(this)" style="position:relative;top:0;right:0">copy</button>
+    </div>
+
+    <div class="cl info" style="margin-bottom:1.5rem">
+      <strong>v2.5 rename</strong> — <code>Bind</code> → <code>On</code>, <code>BindOnce</code> → <code>Once</code>,
+      <code>Fire</code> → <code>Emit</code>, <code>UnbindAll</code> → <code>Clear</code>.
+      Both <code>On</code> and <code>Once</code> now return a <code>BridgeConnection</code> so anonymous handlers are always cleanable.
     </div>
 
     <div class="dir-grid">
@@ -35,10 +41,10 @@
         <div class="dir-pills">
           <span class="rtag">events</span>
         </div>
-        <div class="dir-title">Bind &amp; Fire</div>
-        <div class="dir-desc">Register persistent or one-shot listeners on named events. Remove a listener by id. Fire an event to all current listeners with any number of arguments.</div>
+        <div class="dir-title">On &amp; Emit</div>
+        <div class="dir-desc">Register persistent or one-shot listeners on named channels. Both return a BridgeConnection with :Disconnect() — no handler reference needed to clean up later.</div>
         <div class="dir-foot">
-          <span class="dir-methods">Bridge.Bind · Bridge.BindOnce · Bridge.Unbind · Bridge.Fire</span>
+          <span class="dir-methods">Bridge.On · Bridge.Once · Bridge.Emit · Bridge.Clear · Bridge.Has</span>
           <span class="dir-arrow">→</span>
         </div>
       </a>
@@ -48,9 +54,9 @@
           <span class="rtag">async</span>
         </div>
         <div class="dir-title">Wait &amp; Query</div>
-        <div class="dir-desc">Yield the current coroutine until a named event fires, a predicate is satisfied, or any one of a set of events fires first. Check existence without yielding.</div>
+        <div class="dir-desc">Yield the current coroutine until a channel emits, a predicate is satisfied, or any one of a set of channels fires first. All temporary handlers are always cleaned up on resolve or timeout.</div>
         <div class="dir-foot">
-          <span class="dir-methods">Bridge.Wait · Bridge.WaitUntil · Bridge.WaitFirst · Bridge.Has</span>
+          <span class="dir-methods">Bridge.Wait · Bridge.WaitUntil · Bridge.WaitFirst</span>
           <span class="dir-arrow">→</span>
         </div>
       </a>
@@ -59,8 +65,8 @@
 
     <h2>See also</h2>
     <p>
-      <a href="./app.html">App</a> | request/response pipeline &nbsp;&middot;&nbsp;
-      <a href="./broadcast.html">Broadcast</a> | cross-client events (Bridge is server-to-server only) &nbsp;&middot;&nbsp;
+      <a href="./maid.html">Maid</a> | group Bridge connections for bulk cleanup &nbsp;&middot;&nbsp;
+      <a href="./broadcast.html">Broadcast</a> | server → client events &nbsp;&middot;&nbsp;
       <a href="./listener.html">Listener</a> | client-side event subscription
     </p>
 

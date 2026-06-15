@@ -250,7 +250,7 @@
             </div>
             <div class="term-body">
               <span class="term-line term-inf">[RoExpress] Downloading from GitHub (main)...</span>
-              <span class="term-line term-ok">[RoExpress] Done -&gt; ReplicatedStorage/RoExpress (22 modules)</span>
+              <span class="term-line term-ok">[RoExpress] Done -&gt; ReplicatedStorage/RoExpress (28 modules, 2 remotes)</span>
               <span class="term-line term-inf">[RoExpress] require: local RoExpress =
                 require(game.ReplicatedStorage.RoExpress)</span>
             </div>
@@ -277,8 +277,10 @@
                 Studio's command bar context.</p>
             </li>
             <li>
-              <p>The installer fetches each of the 22 module source files directly from GitHub raw, creates
-                <code>ModuleScript</code> instances, and sets their <code>Source</code> property.</p>
+              <p>The installer fetches each of the 26 module source files directly from GitHub raw, creates
+                <code>ModuleScript</code> instances, and sets their <code>Source</code> property. It also creates
+                a <code>RemoteEvent</code> and an <code>UnreliableRemoteEvent</code> as children of the package
+                so both server and client can access them instantly with no timing race.</p>
             </li>
             <li>
               <p>Parents the completed <code>RoExpress</code> hierarchy to <code>ReplicatedStorage</code>. Re-running
@@ -312,9 +314,16 @@
 <span class="fn">print</span>(<span class="str">"[RoExpress] Downloading from GitHub (" </span><span class="op">..</span> BRANCH <span class="op">..</span> <span class="str">")..."</span>)
 
 <span class="kw">local</span> root <span class="op">=</span> <span class="fn">ms</span>(<span class="str">"RoExpress"</span>, <span class="fn">fetch</span>(<span class="str">"init.luau"</span>), ReplicatedStorage)
-<span class="kw">for</span> _, name <span class="kw">in</span> { <span class="str">"App"</span>,<span class="str">"Base64"</span>,<span class="str">"Benchmark"</span>,<span class="str">"Bridge"</span>,<span class="str">"Broadcast"</span>,<span class="str">"Harpy"</span>,
+
+<span class="cm">-- Pre-bake the RemoteEvents so they exist before any script requires the package</span>
+<span class="kw">local</span> re  <span class="op">=</span> Instance.<span class="fn">new</span>(<span class="str">"RemoteEvent"</span>)
+re.Name, re.Parent <span class="op">=</span> <span class="str">"RoExpressRemote"</span>, root
+<span class="kw">local</span> ure <span class="op">=</span> Instance.<span class="fn">new</span>(<span class="str">"UnreliableRemoteEvent"</span>)
+ure.Name, ure.Parent <span class="op">=</span> <span class="str">"RoExpressUnreliable"</span>, root
+
+<span class="kw">for</span> _, name <span class="kw">in</span> { <span class="str">"App"</span>,<span class="str">"Base64"</span>,<span class="str">"Benchmark"</span>,<span class="str">"Bridge"</span>,<span class="str">"Broadcast"</span>,<span class="str">"Cross"</span>,<span class="str">"Hook"</span>,<span class="str">"RTTP"</span>,
                  <span class="str">"Listener"</span>,<span class="str">"Network"</span>,<span class="str">"Port"</span>,<span class="str">"Promise"</span>,<span class="str">"Router"</span>,<span class="str">"Tamper"</span>,
-                 <span class="str">"TokenBucket"</span>,<span class="str">"TypeCoercer"</span>,<span class="str">"Version"</span> } <span class="kw">do</span>
+                 <span class="str">"TokenBucket"</span>,<span class="str">"TypeCoercer"</span>,<span class="str">"Types"</span>,<span class="str">"Version"</span> } <span class="kw">do</span>
     <span class="fn">ms</span>(name, <span class="fn">fetch</span>(name <span class="op">..</span> <span class="str">".luau"</span>), root)
 <span class="kw">end</span>
 
@@ -327,7 +336,7 @@
 <span class="fn">ms</span>(<span class="str">"Schema"</span>,  <span class="fn">fetch</span>(<span class="str">"Stream/Schema.luau"</span>),  stream)
 <span class="fn">ms</span>(<span class="str">"Types"</span>,   <span class="fn">fetch</span>(<span class="str">"Stream/Types.luau"</span>),   stream)
 
-<span class="fn">print</span>(<span class="str">"[RoExpress] Done -> ReplicatedStorage/RoExpress (22 modules)"</span>)</code></pre>
+<span class="fn">print</span>(<span class="str">"[RoExpress] Done -> ReplicatedStorage/RoExpress (28 modules, 2 remotes)"</span>)</code></pre>
         </div>
 
         <!-- ── WALLY ──────────────────────────────────────── -->
@@ -342,7 +351,7 @@
           </ol>
 
           <pre><button class="cb" onclick="cp(this)">copy</button><code>[dependencies]
-RoExpress = "unofficialrobloxtutor/roexpress@2.4.0"</code></pre>
+RoExpress = "unofficialrobloxtutor/roexpress@2.5.0"</code></pre>
 
           <ol class="steps" style="counter-reset:step 1">
             <li style="counter-increment:step 1">

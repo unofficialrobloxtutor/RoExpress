@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hook — Signal Catalog | RoExpress Docs</title>
+  <meta name="description" content="Full catalog of Roblox signals mapped by RoExpress Hook — Players, RunService, UserInputService, MarketplaceService, CollectionService, and more.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow"><a href="./hook.html">Hook</a> → Signal Catalog</div>
+    <h1>Signal Catalog</h1>
+    <p class="lead">Every key Hook recognises as a Roblox built-in signal. Any key not in this list is treated as a custom event — use <code>Hook.Fire</code> to dispatch it.</p>
+
+    <div class="cl info">Client-only signals warn and no-op if subscribed from a server script. Per-player signals pass <code>(player, ...)</code> — Hook wires them automatically for every current and future player.</div>
+
+    <h2>Players</h2>
+    <table class="tbl">
+      <thead><tr><th>Key</th><th>Args</th><th>Context</th></tr></thead>
+      <tbody>
+        <tr><td><code>"PlayerAdded"</code></td><td><code>player: Player</code></td><td>Both</td></tr>
+        <tr><td><code>"PlayerRemoving"</code></td><td><code>player: Player</code></td><td>Both</td></tr>
+        <tr><td><code>"PlayerMembershipChanged"</code></td><td><code>player: Player</code></td><td>Both</td></tr>
+        <tr><td><code>"CharacterAdded"</code></td><td><code>player: Player, character: Model</code></td><td>Both · per-player</td></tr>
+        <tr><td><code>"CharacterRemoving"</code></td><td><code>player: Player, character: Model</code></td><td>Both · per-player</td></tr>
+        <tr><td><code>"CharacterAppearanceLoaded"</code></td><td><code>player: Player, character: Model</code></td><td>Both · per-player</td></tr>
+      </tbody>
+    </table>
+
+    <h2>RunService</h2>
+    <table class="tbl">
+      <thead><tr><th>Key</th><th>Args</th><th>Context</th></tr></thead>
+      <tbody>
+        <tr><td><code>"Heartbeat"</code></td><td><code>dt: number</code></td><td>Both</td></tr>
+        <tr><td><code>"Stepped"</code></td><td><code>time: number, dt: number</code></td><td>Both</td></tr>
+        <tr><td><code>"PostSimulation"</code></td><td><code>dt: number</code></td><td>Both</td></tr>
+        <tr><td><code>"PreAnimation"</code></td><td><code>dt: number</code></td><td>Both</td></tr>
+        <tr><td><code>"PostAnimation"</code></td><td><code>dt: number</code></td><td>Both</td></tr>
+        <tr><td><code>"RenderStepped"</code></td><td><code>dt: number</code></td><td>Client only</td></tr>
+        <tr><td><code>"PreRender"</code></td><td><code>dt: number</code></td><td>Client only</td></tr>
+      </tbody>
+    </table>
+
+    <h2>UserInputService</h2>
+    <table class="tbl">
+      <thead><tr><th>Key</th><th>Args</th><th>Context</th></tr></thead>
+      <tbody>
+        <tr><td><code>"InputBegan"</code></td><td><code>input: InputObject, processed: boolean</code></td><td>Client only</td></tr>
+        <tr><td><code>"InputChanged"</code></td><td><code>input: InputObject, processed: boolean</code></td><td>Client only</td></tr>
+        <tr><td><code>"InputEnded"</code></td><td><code>input: InputObject, processed: boolean</code></td><td>Client only</td></tr>
+        <tr><td><code>"JumpRequest"</code></td><td>—</td><td>Client only</td></tr>
+        <tr><td><code>"GamepadConnected"</code></td><td><code>gamepad: Enum.UserInputType</code></td><td>Client only</td></tr>
+        <tr><td><code>"GamepadDisconnected"</code></td><td><code>gamepad: Enum.UserInputType</code></td><td>Client only</td></tr>
+        <tr><td><code>"WindowFocused"</code></td><td>—</td><td>Client only</td></tr>
+        <tr><td><code>"WindowFocusReleased"</code></td><td>—</td><td>Client only</td></tr>
+        <tr><td><code>"TouchStarted"</code></td><td><code>touch: InputObject, processed: boolean</code></td><td>Client only</td></tr>
+        <tr><td><code>"TouchMoved"</code></td><td><code>touch: InputObject, processed: boolean</code></td><td>Client only</td></tr>
+        <tr><td><code>"TouchEnded"</code></td><td><code>touch: InputObject, processed: boolean</code></td><td>Client only</td></tr>
+        <tr><td><code>"TouchTap"</code></td><td><code>positions: {Vector2}, processed: boolean</code></td><td>Client only</td></tr>
+        <tr><td><code>"TouchLongPress"</code></td><td><code>positions: {Vector2}, state: Enum.UserInputState, processed: boolean</code></td><td>Client only</td></tr>
+        <tr><td><code>"TouchSwipe"</code></td><td><code>direction: Enum.SwipeDirection, numberOfTouches: number, processed: boolean</code></td><td>Client only</td></tr>
+        <tr><td><code>"TouchPinch"</code></td><td><code>positions: {Vector2}, scale: number, velocity: number, state: Enum.UserInputState, processed: boolean</code></td><td>Client only</td></tr>
+        <tr><td><code>"TouchRotate"</code></td><td><code>positions: {Vector2}, rotation: number, velocity: number, state: Enum.UserInputState, processed: boolean</code></td><td>Client only</td></tr>
+        <tr><td><code>"DeviceAccelerationChanged"</code></td><td><code>acceleration: InputObject</code></td><td>Client only</td></tr>
+        <tr><td><code>"DeviceGravityChanged"</code></td><td><code>gravity: InputObject</code></td><td>Client only</td></tr>
+        <tr><td><code>"DeviceRotationChanged"</code></td><td><code>rotation: InputObject, cframe: CFrame</code></td><td>Client only</td></tr>
+        <tr><td><code>"PointerAction"</code></td><td><code>wheel: number, pan: Vector2, pinch: number, processed: boolean</code></td><td>Client only</td></tr>
+      </tbody>
+    </table>
+
+    <h2>MarketplaceService</h2>
+    <table class="tbl">
+      <thead><tr><th>Key</th><th>Args</th><th>Context</th></tr></thead>
+      <tbody>
+        <tr><td><code>"PromptPurchaseFinished"</code></td><td><code>player: Player, assetId: number, purchased: boolean</code></td><td>Both</td></tr>
+        <tr><td><code>"PromptGamePassPurchaseFinished"</code></td><td><code>player: Player, gamePassId: number, purchased: boolean</code></td><td>Both</td></tr>
+        <tr><td><code>"PromptBundlePurchaseFinished"</code></td><td><code>player: Player, bundleId: number, purchased: boolean</code></td><td>Both</td></tr>
+        <tr><td><code>"PromptSubscriptionPurchaseFinished"</code></td><td><code>player: Player, subscriptionId: string, purchased: boolean</code></td><td>Both</td></tr>
+      </tbody>
+    </table>
+
+    <h2>TeleportService</h2>
+    <table class="tbl">
+      <thead><tr><th>Key</th><th>Args</th><th>Context</th></tr></thead>
+      <tbody>
+        <tr><td><code>"TeleportInitFailed"</code></td><td><code>player: Player, teleportResult: Enum.TeleportResult, errorMessage: string</code></td><td>Both</td></tr>
+        <tr><td><code>"LocalPlayerArrivedFromTeleport"</code></td><td><code>loadingGui: ScreenGui, dataTable: any</code></td><td>Client only</td></tr>
+      </tbody>
+    </table>
+
+    <h2>SocialService</h2>
+    <table class="tbl">
+      <thead><tr><th>Key</th><th>Args</th><th>Context</th></tr></thead>
+      <tbody>
+        <tr><td><code>"GameInvitePromptClosed"</code></td><td><code>player: Player, recipientIds: {number}</code></td><td>Both</td></tr>
+        <tr><td><code>"PromptInviteRequested"</code></td><td><code>player: Player</code></td><td>Both</td></tr>
+      </tbody>
+    </table>
+
+    <h2>GuiService</h2>
+    <table class="tbl">
+      <thead><tr><th>Key</th><th>Args</th><th>Context</th></tr></thead>
+      <tbody>
+        <tr><td><code>"MenuOpened"</code></td><td>—</td><td>Client only</td></tr>
+        <tr><td><code>"MenuClosed"</code></td><td>—</td><td>Client only</td></tr>
+        <tr><td><code>"KeyboardVisibilityChanged"</code></td><td><code>visible: boolean</code></td><td>Client only</td></tr>
+      </tbody>
+    </table>
+
+    <h2>TextChatService</h2>
+    <table class="tbl">
+      <thead><tr><th>Key</th><th>Args</th><th>Context</th></tr></thead>
+      <tbody>
+        <tr><td><code>"MessageReceived"</code></td><td><code>message: TextChatMessage</code></td><td>Both</td></tr>
+        <tr><td><code>"SendingMessage"</code></td><td><code>message: TextChatMessage</code></td><td>Both</td></tr>
+      </tbody>
+    </table>
+
+    <h2>VoiceChatService</h2>
+    <table class="tbl">
+      <thead><tr><th>Key</th><th>Args</th><th>Context</th></tr></thead>
+      <tbody>
+        <tr><td><code>"ParticipantsStateChanged"</code></td><td><code>participants: {any}, oldState: any, newState: any</code></td><td>Both</td></tr>
+        <tr><td><code>"PlayerMicActivitySignalChange"</code></td><td><code>player: Player, isActive: boolean</code></td><td>Both</td></tr>
+      </tbody>
+    </table>
+
+    <h2>CollectionService <span style="font-weight:400;font-size:12px;color:var(--text2)">— parameterised</span></h2>
+    <p>Pass the tag name after a colon. Each unique tag gets its own priority queue.</p>
+    <table class="tbl">
+      <thead><tr><th>Key pattern</th><th>Args</th></tr></thead>
+      <tbody>
+        <tr><td><code>"TagAdded:tagName"</code></td><td><code>instance: Instance</code></td></tr>
+        <tr><td><code>"TagRemoved:tagName"</code></td><td><code>instance: Instance</code></td></tr>
+      </tbody>
+    </table>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code>Hook(<span class="str">"TagAdded:Enemy"</span>,   <span class="str">"normal"</span>, <span class="kw">function</span>(instance) <span class="fn">SetupEnemy</span>(instance) <span class="kw">end</span>)
+Hook(<span class="str">"TagRemoved:Enemy"</span>, <span class="str">"normal"</span>, <span class="kw">function</span>(instance) <span class="fn">TeardownEnemy</span>(instance) <span class="kw">end</span>)</code></pre>
+
+    <h2>Game / Lighting</h2>
+    <table class="tbl">
+      <thead><tr><th>Key</th><th>Args</th><th>Context</th></tr></thead>
+      <tbody>
+        <tr><td><code>"Close"</code></td><td>—</td><td>Both</td></tr>
+        <tr><td><code>"DescendantAdded"</code></td><td><code>descendant: Instance</code></td><td>Both</td></tr>
+        <tr><td><code>"DescendantRemoving"</code></td><td><code>descendant: Instance</code></td><td>Both</td></tr>
+        <tr><td><code>"LightingChanged"</code></td><td><code>skyboxChanged: boolean</code></td><td>Both</td></tr>
+      </tbody>
+    </table>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./hook.html">← Hook</a> &nbsp;·&nbsp;
+      <a href="./hook-subscribe.html">Subscribing</a> | Hook(), Once, Off, Clear &nbsp;·&nbsp;
+      <a href="./hook-custom.html">Custom Events</a> | Hook.Fire
+    </p>
+
+  </section></main></div>
+</body>
+</html>

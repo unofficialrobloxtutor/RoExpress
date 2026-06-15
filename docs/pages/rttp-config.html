@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Harpy Configuration | RoExpress Docs</title>
-  <meta name="description" content="Create a Harpy HTTP client with base URL, shared headers, and retry count. Update settings at runtime with SetBase, SetHeader, RemoveHeader, and SetRetries.">
+  <title>RTTP Configuration | RoExpress Docs</title>
+  <meta name="description" content="Create an RTTP HTTP client with base URL, shared headers, and retry count. Update settings at runtime with SetBase, SetHeader, RemoveHeader, and SetRetries.">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#8b78ff">
@@ -19,13 +19,13 @@
   <header id="hdr"></header>
   <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
 
-    <div class="eyebrow"><a href="./harpy.html">Harpy</a> → Configuration</div>
+    <div class="eyebrow"><a href="./rttp.html">RTTP</a> → Configuration</div>
     <h1>Configuration</h1>
-    <p class="lead">Create a Harpy client once per external API, configure its base URL and shared headers, then reuse it across every request.</p>
+    <p class="lead">Create an RTTP client once per external API, configure its base URL and shared headers, then reuse it across every request.</p>
 
     <h2>Constructor</h2>
 
-    <div class="sig">Harpy.<span class="fn">New</span>(config?) → Harpy</div>
+    <div class="sig">RTTP.<span class="fn">New</span>(config?) → RTTP</div>
 
     <p>All config fields are optional. Create as many independent clients as you need — they share no state.</p>
 
@@ -39,9 +39,9 @@
     </table>
 
     <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> RoExpress <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress)
-<span class="kw">local</span> Harpy     <span class="op">=</span> RoExpress.Harpy
+<span class="kw">local</span> RTTP     <span class="op">=</span> RoExpress.RTTP
 
-<span class="kw">local</span> client <span class="op">=</span> Harpy.<span class="fn">New</span>({
+<span class="kw">local</span> client <span class="op">=</span> RTTP.<span class="fn">New</span>({
     base    <span class="op">=</span> <span class="str">"https://api.example.com"</span>,
     retries <span class="op">=</span> <span class="num">3</span>,   <span class="cm">-- optional, default 3</span>
 })</code></pre>
@@ -50,7 +50,7 @@
 
     <p>Headers passed in the config table are merged with any headers set via <code>:SetHeader</code>. Per-request options can add further headers — they are merged in the same way, with per-request headers taking priority over client-level headers.</p>
 
-    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> client <span class="op">=</span> Harpy.<span class="fn">New</span>({
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> client <span class="op">=</span> RTTP.<span class="fn">New</span>({
     base    <span class="op">=</span> <span class="str">"https://hooks.slack.com/services/..."</span>,
     headers <span class="op">=</span> { [<span class="str">"Content-Type"</span>] <span class="op">=</span> <span class="str">"application/json"</span> },
     retries <span class="op">=</span> <span class="num">1</span>,
@@ -74,12 +74,12 @@ client:<span class="fn">SetHeader</span>(<span class="str">"X-Game-Id"</span>, <
 
     <h2>Multiple clients in one game</h2>
 
-    <p>Each Harpy client is completely independent. Base URL, headers, and retry count are per-instance.</p>
+    <p>Each RTTP client is completely independent. Base URL, headers, and retry count are per-instance.</p>
 
     <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- Each client has its own base URL and headers</span>
-<span class="kw">local</span> analyticsClient <span class="op">=</span> Harpy.<span class="fn">New</span>({ base <span class="op">=</span> <span class="str">"https://analytics.example.com"</span> })
-<span class="kw">local</span> webhookClient   <span class="op">=</span> Harpy.<span class="fn">New</span>({ base <span class="op">=</span> DISCORD_WEBHOOK_URL, retries <span class="op">=</span> <span class="num">1</span> })
-<span class="kw">local</span> scoresClient    <span class="op">=</span> Harpy.<span class="fn">New</span>({ base <span class="op">=</span> <span class="str">"https://scores.example.com"</span> })
+<span class="kw">local</span> analyticsClient <span class="op">=</span> RTTP.<span class="fn">New</span>({ base <span class="op">=</span> <span class="str">"https://analytics.example.com"</span> })
+<span class="kw">local</span> webhookClient   <span class="op">=</span> RTTP.<span class="fn">New</span>({ base <span class="op">=</span> DISCORD_WEBHOOK_URL, retries <span class="op">=</span> <span class="num">1</span> })
+<span class="kw">local</span> scoresClient    <span class="op">=</span> RTTP.<span class="fn">New</span>({ base <span class="op">=</span> <span class="str">"https://scores.example.com"</span> })
 
 analyticsClient:<span class="fn">SetHeader</span>(<span class="str">"Authorization"</span>, <span class="str">"Bearer "</span> <span class="op">..</span> ANALYTICS_SECRET)
 scoresClient:<span class="fn">SetHeader</span>(<span class="str">"X-Api-Key"</span>, SCORES_KEY)</code></pre>
@@ -88,9 +88,9 @@ scoresClient:<span class="fn">SetHeader</span>(<span class="str">"X-Api-Key"</sp
 
     <h2>See also</h2>
     <p>
-      <a href="./harpy.html">← Harpy</a> &nbsp;&middot;&nbsp;
-      <a href="./harpy-methods.html">HTTP Methods</a> | Get, Post, Put, Delete &nbsp;&middot;&nbsp;
-      <a href="./harpy-retry.html">Retry &amp; Backoff</a> | automatic resilience
+      <a href="./rttp.html">← RTTP</a> &nbsp;&middot;&nbsp;
+      <a href="./rttp-methods.html">HTTP Methods</a> | Get, Post, Put, Delete &nbsp;&middot;&nbsp;
+      <a href="./rttp-retry.html">Retry &amp; Backoff</a> | automatic resilience
     </p>
 
   </section></main></div>

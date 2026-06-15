@@ -48,6 +48,7 @@
 --
 --  HISTORY
 --  ---------------------------------------------------------------
+--  2.5.0   Types module, lazy loading, pre-baked remotes, Bridge v2 (On/Once/Emit/Clear/Connection), Maid, Debounce
 --  2.4.0   Stream rebuilt, Deflate, retry, res:Redirect, full typing, Router digit-type fix
 --  2.3.0   PUT/DELETE, compact (req,res) handler form
 --  2.2.3   Patch — wally.toml packaging fix (issue #6)
@@ -63,7 +64,7 @@ local RunService  = game:GetService("RunService")
 ------------------------------------------------------------------------
 --  VERSION
 ------------------------------------------------------------------------
-local VERSION = "2.4.0"
+local VERSION = "2.5.0"
 
 -- Write once to shared — assert catches any accidental double-write
 assert(

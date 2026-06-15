@@ -1,273 +1,214 @@
 ------------------------------------------------------------------------
 --  <> Title:       RoExpress
---  <> Version:     2.2
---  <> Date:        30/05/2026
+--  <> Version:     2.5
+--  <> Date:        15/06/2026
 --  <> Author:      DeathToTheStadium
 --  <> Description: Root module for RoExpress
 ------------------------------------------------------------------------
 -->> Services <<--
 local RunService = game:GetService("RunService")
--->> Tables <<--
-local RoExpress = {}
-RoExpress.__index = RoExpress
 -->> Variables <<--
-local IS_SERVER          = RunService:IsServer()
-local REMOTE_NAME        = "RoExpressRemote"
-local UNRELIABLE_NAME    = "RoExpressUnreliable"
+local IS_SERVER = RunService:IsServer()
 
--- Version.luau is the only module that writes shared.ROEXPRESS_VERSION
--- Require it first so the value is set before any other module reads it
-local _Version = require(script.Version)
+-- Version.luau writes shared.ROEXPRESS_VERSION — must run first.
+require(script.Version)
 
--- server creates both remotes, client waits for them
-local Remote;
-local UnreliableRemote;
-if IS_SERVER then
-	Remote = Instance.new("RemoteEvent")
-	Remote.Name = REMOTE_NAME
-	Remote.Parent = script
+-- Types module (pure export types, returns {}, essentially free to require)
+local Types = require(script.Types)
 
-	UnreliableRemote = Instance.new("UnreliableRemoteEvent")
-	UnreliableRemote.Name = UNRELIABLE_NAME
-	UnreliableRemote.Parent = script
-else
-	Remote           = script:WaitForChild(REMOTE_NAME)
-	UnreliableRemote = script:WaitForChild(UNRELIABLE_NAME)
+-- Pre-baked RemoteEvents — created by the installer and stored as children
+-- of this ModuleScript, so both server and client find them instantly with
+-- no Instance.new / WaitForChild timing race.
+local Remote           = script:FindFirstChildOfClass("RemoteEvent")           :: RemoteEvent
+local UnreliableRemote = script:FindFirstChildOfClass("UnreliableRemoteEvent") :: UnreliableRemoteEvent
+assert(Remote,           "[RoExpress] RoExpressRemote not found — re-run the installer.")
+assert(UnreliableRemote, "[RoExpress] RoExpressUnreliable not found — re-run the installer.")
+
+------------------------------------------------------------------------
+-- Lazy loader — modules are required on first access and cached.
+------------------------------------------------------------------------
+local _cache: { [string]: any } = {}
+
+local function _load(name: string): any
+	if not _cache[name] then
+		_cache[name] = require(script[name] :: ModuleScript)
+	end
+	return _cache[name]
 end
 
--- All sub-modules required as locals so they can be referenced in type
--- positions below — the Luau LSP does not support require() in type expressions.
-local Base64       = require(script.Base64)
-local Router       = require(script.Router)
-local Codec        = require(script.Codec)
-local Bridge       = require(script.Bridge)
-local Tamper       = require(script.Tamper)
-local TypeCoercer  = require(script.TypeCoercer)
-local Promise      = require(script.Promise)
-local Harpy        = require(script.Harpy)
-local App          = require(script.App)
-local Network      = require(script.Network)
-local Port         = require(script.Port)
-local Broadcast    = require(script.Broadcast)
-local Listener     = require(script.Listener)
-local Stream       = require(script.Stream)
-local Benchmark    = require(script.Benchmark)
-local TokenBucket  = require(script.TokenBucket)
-
-local _modules = if IS_SERVER
-	then {
-		App         = App,
-		Broadcast   = Broadcast,
-		Base64      = Base64,
-		Bridge      = Bridge,
-		Tamper      = Tamper,
-		Stream      = Stream,
-		TypeCoercer = TypeCoercer,
-		Version     = _Version,
-	}
-	else {
-		Network     = Network,
-		Listener    = Listener,
-		Benchmark   = Benchmark,
-		Base64      = Base64,
-		Bridge      = Bridge,
-		Stream      = Stream,
-		TypeCoercer = TypeCoercer,
-		Promise     = Promise,
-		Version     = _Version,
-	}
-
--- Broadcast and Listener need the UnreliableRemote, everything else gets Remote
--- Listener also gets the reliable Remote so it can receive server push events
-local function _getRemoteForModule(moduleName: string): any
-	if moduleName == "Broadcast" then
-		return UnreliableRemote
-	end
-	if moduleName == "Listener" then
-		-- Listener.New(unreliable, reliable) — pass both
-		return UnreliableRemote, Remote
-	end
-	return Remote
-end
-
--->> Types <<--
-export type Type = {
-	_instances: { [string]: any },
+-- Modules returned as-is when accessed as RoExpress.X
+-- (singletons or factories where the user calls .New themselves)
+local _DIRECT: { [string]: true } = {
+	Base64      = true,
+	Bridge      = true,
+	Codec       = true,
+	Cross       = true,
+	Debounce    = true,
+	Hook        = true,
+	Promise     = true,
+	RTTP        = true,
+	Router      = true,
+	Stream      = true,
+	Tamper      = true,
+	TypeCoercer = true,
 }
 
-type ServerModuleName = "App" | "Broadcast" | "Base64" | "Bridge" | "Tamper" | "Stream" | "TypeCoercer" | "Version"
-type ClientModuleName = "Network" | "Listener" | "Benchmark" | "Base64" | "Bridge" | "Stream" | "TypeCoercer" | "Promise" | "Version"
-type ModuleName = ServerModuleName | ClientModuleName
+-- Context guards for constructed modules
+local _SERVER_ONLY: { [string]: true } = { App = true, Broadcast = true }
+local _CLIENT_ONLY: { [string]: true } = { Network = true, Listener = true, Benchmark = true }
+
+-- Constructed instance cache — keyed "ModuleName" or "ModuleName:portName"
+local _instances: { [string]: any } = {}
+
 ------------------------------------------------------------------------
---	PRIVATE
+-- Instance construction
 ------------------------------------------------------------------------
-local function _getInstance(self: Type, moduleName: ModuleName): any
-	-- return cached instance if already created
-	if self._instances[moduleName] then
-		return self._instances[moduleName]
+local function _makeInstance(moduleName: string, portName: string?): any
+	local cacheKey = if portName then moduleName .. ":" .. portName else moduleName
+
+	if _instances[cacheKey] then
+		return _instances[cacheKey]
 	end
 
-	local m = _modules[moduleName]
-	assert(m, "RoExpress: '" .. moduleName .. "' is not available in this context (" .. (IS_SERVER and "Server" or "Client") .. ")")
+	if IS_SERVER and _CLIENT_ONLY[moduleName] then
+		error("[RoExpress] '" .. moduleName .. "' is client-only", 2)
+	elseif not IS_SERVER and _SERVER_ONLY[moduleName] then
+		error("[RoExpress] '" .. moduleName .. "' is server-only", 2)
+	end
 
-	-- Base64, Bridge, Tamper and Stream have no constructor — return directly.
-	-- Listener takes two remotes — unpack accordingly.
-	-- Benchmark takes a Network instance (not a remote) — wire after Network is resolved.
-	local instance
-	if moduleName == "Listener" then
-		local unreliable, reliable = _getRemoteForModule(moduleName)
-		instance = m.New(unreliable, reliable)
+	local m   = _load(moduleName)
+	local instance: any
+
+	if portName and not IS_SERVER then
+		-- Named port — client wants a Network or Listener scoped to that port
+		local folder = game:GetService("ReplicatedStorage"):WaitForChild("RoExpressPorts", 10)
+		assert(folder, "[RoExpress] RoExpressPorts not found — call app:Listen() on the server first")
+		local portRemote = folder:WaitForChild(portName, 10)
+		assert(portRemote, "[RoExpress] Port '" .. portName .. "' not found")
+
+		instance = if moduleName == "Listener"
+			then m.New(UnreliableRemote, portRemote)
+			else m.New(portRemote)
+
+	elseif moduleName == "Listener" then
+		instance = m.New(UnreliableRemote, Remote)
+
+	elseif moduleName == "Maid" then
+		instance = m.new()
+
+	elseif moduleName == "Broadcast" then
+		instance = m.New(UnreliableRemote)
+
 	elseif moduleName == "Benchmark" then
-		local network = _getInstance(self, "Network")
-		instance = m.New(network)
+		-- Benchmark wraps a Network instance rather than a remote
+		instance = m.New(_makeInstance("Network"))
+
 	elseif m.New then
-		instance = m.New(_getRemoteForModule(moduleName))
+		instance = m.New(Remote)
+
 	else
 		instance = m
 	end
-	self._instances[moduleName] = instance
 
+	_instances[cacheKey] = instance
 	return instance
 end
-------------------------------------------------------------------------
---	CONSTRUCTORS
-------------------------------------------------------------------------
-local function _new(): Type
-	local self = (setmetatable({}, RoExpress) :: any) :: Type
-	self._instances = {}
-	return self
-end
 
--- Module-level root instance — avoids storing it on the RoExpress table,
--- which would otherwise force Luau to widen all property accesses to 'any'
--- via the __index metamethod.
-local _root: Type
-
-local function _getRoot(): Type
-	if not _root then
-		_root = _new()
-	end
-	return _root
-end
+------------------------------------------------------------------------
+-- Root table
+------------------------------------------------------------------------
+local RoExpress = {}
 
 setmetatable(RoExpress, {
-	__call = function(_, moduleName: ModuleName, portName: string?)
-		-- if a portName is given, client wants a Network/Listener on a named port
-		if portName and not IS_SERVER then
-			local root = _getRoot()
-			local cacheKey = moduleName .. ":" .. portName
-			if root._instances[cacheKey] then
-				return root._instances[cacheKey]
-			end
-
-			-- find the port remote in ReplicatedStorage/RoExpressPorts
-			local folder = game:GetService("ReplicatedStorage"):WaitForChild("RoExpressPorts", 10)
-			assert(folder, "RoExpress: RoExpressPorts folder not found — did you call app:Listen() on the server?")
-			local portRemote = folder:WaitForChild(portName, 10)
-			assert(portRemote, "RoExpress: Port '" .. portName .. "' not found")
-
-			local m = _modules[moduleName]
-			assert(m, "RoExpress: '" .. moduleName .. "' is not available in this context")
-
-			local instance
-			if moduleName == "Listener" then
-				-- Listener for a port: unreliable = main unreliable, reliable = port remote
-				instance = m.New(UnreliableRemote, portRemote)
-			elseif m.New then
-				instance = m.New(portRemote)
-			else
-				instance = m
-			end
-
-			root._instances[cacheKey] = instance
-			return instance
+	-- Lazy-load singleton / factory modules on first property access
+	__index = function(t, key: string)
+		if _DIRECT[key] then
+			local m = _load(key)
+			rawset(t, key, m)
+			return m
 		end
-
-		return _getInstance(_getRoot(), moduleName)
+		return nil
+	end,
+	-- RoExpress("ModuleName") or RoExpress("ModuleName", "portName")
+	__call = function(_, moduleName: string, portName: string?)
+		return _makeInstance(moduleName, portName)
 	end,
 })
-------------------------------------------------------------------------
---	Direct module references (no instantiation needed)
-------------------------------------------------------------------------
-RoExpress.Base64      = Base64
-RoExpress.Codec       = Codec
-RoExpress.Promise     = Promise
-RoExpress.Bridge      = Bridge
-RoExpress.TypeCoercer = TypeCoercer
-RoExpress.Tamper      = Tamper
-RoExpress.Harpy       = Harpy
-RoExpress.Router      = Router
 
 ------------------------------------------------------------------------
---	Typed accessors
---  Use these instead of RoExpress("ModuleName") when you want Luau to
---  infer the correct instance type without an explicit annotation.
+-- Type re-exports
+-- All public types from Types.luau are surfaced here so consumers only
+-- need one require:
 --
---  Server:   local app = RoExpress.GetApp()
---  Client:   local net = RoExpress.GetNetwork()
-------------------------------------------------------------------------
-type _AppT = App.Type
-type _NetT = Network.Type
-
-function RoExpress.GetApp(): _AppT
-	return _getInstance(_getRoot(), "App") :: _AppT
-end
-
-function RoExpress.GetNetwork(): _NetT
-	return _getInstance(_getRoot(), "Network") :: _NetT
-end
-
-------------------------------------------------------------------------
---	TYPES
+--   local RoExpress = require(game.ReplicatedStorage.RoExpress)
+--   local app: RoExpress.App = RoExpress("App")
 ------------------------------------------------------------------------
 
--- Core envelope types forwarded from their source modules via pre-required
--- locals — the LSP does not support require() inside type expressions.
-export type Payload         = App.Payload
-export type Request         = App.Request
-export type Response        = App.Response
-export type NetworkPayload  = Network.NetworkPayload
-export type NetworkResponse = Network.NetworkResponse
+-- Module instance types
+export type App          = Types.App
+export type Network      = Types.Network
+export type Broadcast    = Types.Broadcast
+export type Listener     = Types.Listener
+export type Port         = Types.Port
+export type Maid             = Types.Maid
+export type Debounce         = Types.Debounce
+export type Bridge           = Types.Bridge
+export type BridgeConnection = Types.BridgeConnection
+export type Hook         = Types.Hook
+export type TokenBucket  = Types.TokenBucket
+export type Tamper       = Types.Tamper
+export type RTTP         = Types.RTTP
+export type RTTPInstance = Types.RTTPInstance
+export type Cross        = Types.Cross
+export type Promise      = Types.Promise
 
-export type BroadcastEnvelope = {
-	event : string,
-	data  : any,
+-- Data / handler types
+export type Payload             = Types.Payload
+export type Request             = Types.Request
+export type Response            = Types.Response
+export type NetworkPayload      = Types.NetworkPayload
+export type NetworkResponse     = Types.NetworkResponse
+export type NetworkCallback     = Types.NetworkCallback
+export type RouteHandler        = Types.RouteHandler
+export type RouteHandlerCompact = Types.RouteHandlerCompact
+export type RouteHandlerLegacy  = Types.RouteHandlerLegacy
+export type MiddlewareHandler   = Types.MiddlewareHandler
+export type ParamErrorHandler   = Types.ParamErrorHandler
+export type BroadcastEnvelope   = Types.BroadcastEnvelope
+export type MsgContext          = Types.MsgContext
+export type ServerEntry         = Types.ServerEntry
+export type TamperReport        = Types.TamperReport
+export type TamperRecord        = Types.TamperRecord
+export type TamperReason        = Types.TamperReason
+export type TamperSeverity      = Types.TamperSeverity
+export type RTTPResponse        = Types.RTTPResponse
+export type RTTPConfig          = Types.RTTPConfig
+export type RTTPCallback        = Types.RTTPCallback
+export type HookPriority        = Types.HookPriority
+export type HookOptions         = Types.HookOptions
+export type TokenBucketSettings = Types.TokenBucketSettings
+export type Method              = Types.Method
+export type RouteOptions        = Types.RouteOptions
+export type PromiseState        = Types.PromiseState
+export type CrossMemory         = Types.CrossMemory
+export type RoExpressCall       = Types.RoExpressCall
+
+-- Explicit property surface for the root table (covers lazy-loaded modules
+-- that __index sets at runtime and are invisible to typeof()).
+type _Props = {
+	Debounce    : Types.Debounce,
+	Base64      : Types.Base64,
+	Bridge      : Types.Bridge,
+	Hook        : Types.Hook,
+	Cross       : Types.Cross,
+	Tamper      : Types.Tamper,
+	RTTP        : Types.RTTP,
+	Promise     : Types.Promise,
+	Stream      : any,
+	Router      : any,
+	Codec       : any,
+	TypeCoercer : any,
 }
 
--- Handler signatures forwarded from App
-export type RouteHandlerCompact = App.RouteHandlerCompact
-export type RouteHandlerLegacy  = App.RouteHandlerLegacy
-export type RouteHandler        = App.RouteHandler
-export type MiddlewareHandler   = App.MiddlewareHandler
-export type BroadcastHandler    = (data: any) -> ()
-export type ListenerMiddleware  = (event: string, data: any) -> ()
-export type NetworkCallback     = (response: NetworkResponse) -> ()
-
--- Module instance types.
--- App, Network, Port use .Type (the instantiated shape from .New()).
--- Utility modules are typed as their module table via typeof().
-export type App         = App.Type
-export type Network     = Network.Type
-export type Port        = Port.Type
-export type Broadcast   = typeof(Broadcast)
-export type Listener    = typeof(Listener)
-export type Base64      = typeof(Base64)
-export type Router      = typeof(Router)
-export type Codec       = typeof(Codec)
-export type Bridge      = typeof(Bridge)
-export type Tamper      = typeof(Tamper)
-export type Promise     = typeof(Promise)
-export type Stream      = typeof(Stream)
-export type TokenBucket = typeof(TokenBucket)
-export type Benchmark   = typeof(Benchmark)
-export type Harpy       = typeof(Harpy)
-
--- Router sub-types
-export type ParamType      = Router.ParamType
-export type SegmentKind    = Router.SegmentKind
-export type MatchResult    = Router.MatchResult
-export type RouteBuilder<T> = Router.RouteBuilder<T>
-
-
-
-return RoExpress
+-- Double-cast through any so Luau accepts the table+callable intersection.
+return (RoExpress :: any) :: _Props & Types.RoExpressCall

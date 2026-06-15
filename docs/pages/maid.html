@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maid | RoExpress Docs</title>
+  <meta name="description" content="RoExpress Maid — lifecycle cleanup utility. Track connections, threads, instances, and functions. Destroy everything at once with :Destroy().">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow">Shared</div>
+    <h1>Maid</h1>
+    <p class="lead">Lifecycle cleanup utility. Track connections, threads, instances, and teardown functions — then clean them all up at once. Works with any object that has a natural teardown.</p>
+
+    <div class="import-block">
+      <span>Create</span>
+      <code><span class="kw">local</span> maid <span class="op">=</span> RoExpress(<span class="str">"Maid"</span>)</code>
+      <button class="cb" onclick="cp(this)" style="position:relative;top:0;right:0">copy</button>
+    </div>
+
+    <p>Each call to <code>RoExpress("Maid")</code> returns a fresh Maid instance. The Maid module itself is also accessible as <code>RoExpress.Maid</code> if you need the factory directly.</p>
+
+    <!-- ── Add ──────────────────────────────────────────────────────── -->
+    <h2 id="add">Add</h2>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> conn <span class="op">=</span> maid:<span class="fn">Add</span>(item)  <span class="cm">-- returns item unchanged</span></code></pre>
+
+    <p>Track an item for cleanup. Returns its argument unchanged so you can store and track in one expression:</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> conn <span class="op">=</span> maid:<span class="fn">Add</span>(Bridge.<span class="fn">On</span>(<span class="str">"kill"</span>, handler))
+<span class="cm">-- conn is still typed as BridgeConnection</span>
+conn:<span class="fn">Disconnect</span>()  <span class="cm">-- or let maid:Destroy() handle it</span></code></pre>
+
+    <p>Maid handles the following item types automatically:</p>
+
+    <table class="tbl">
+      <thead><tr><th>Type</th><th>What Maid calls</th></tr></thead>
+      <tbody>
+        <tr><td><code>RBXScriptConnection</code></td><td><code>:Disconnect()</code></td></tr>
+        <tr><td>Any table with <code>Disconnect</code></td><td><code>:Disconnect()</code> — covers <code>BridgeConnection</code></td></tr>
+        <tr><td>Any table with <code>Destroy</code></td><td><code>:Destroy()</code> — covers <code>Instance</code>, nested <code>Maid</code></td></tr>
+        <tr><td><code>thread</code> (coroutine)</td><td><code>task.cancel()</code></td></tr>
+        <tr><td><code>function</code></td><td>Called with no arguments — arbitrary teardown</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ── Remove ────────────────────────────────────────────────────── -->
+    <h2 id="remove">Remove</h2>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code>maid:<span class="fn">Remove</span>(item)</code></pre>
+    <p>Immediately clean and stop tracking a specific item. Useful when an item's lifetime ends before the Maid is destroyed.</p>
+
+    <!-- ── Clear ─────────────────────────────────────────────────────── -->
+    <h2 id="clear">Clear</h2>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code>maid:<span class="fn">Clear</span>()</code></pre>
+    <p>Clean all tracked items and reset the Maid to empty. The Maid itself remains usable — you can continue adding items after a <code>Clear</code>. Useful at the end of a round or phase when you want to reuse the same Maid.</p>
+
+    <!-- ── Destroy ────────────────────────────────────────────────────── -->
+    <h2 id="destroy">Destroy</h2>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code>maid:<span class="fn">Destroy</span>()</code></pre>
+    <p>Clean all tracked items and make the Maid inert. Do not use the Maid after calling <code>Destroy</code>. For module shutdown or when the owning object is destroyed.</p>
+
+    <!-- ── Nesting ─────────────────────────────────────────────────────── -->
+    <h2 id="nesting">Nesting</h2>
+    <p>Maids can be nested. A child Maid added to a parent Maid will have its own <code>:Destroy()</code> called when the parent is destroyed — useful for per-player or per-round sub-lifecycles.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> gameMaid   <span class="op">=</span> RoExpress(<span class="str">"Maid"</span>)
+<span class="kw">local</span> roundMaid  <span class="op">=</span> gameMaid:<span class="fn">Add</span>(RoExpress(<span class="str">"Maid"</span>))
+
+roundMaid:<span class="fn">Add</span>(Bridge.<span class="fn">On</span>(<span class="str">"round.tick"</span>, onTick))
+roundMaid:<span class="fn">Add</span>(Bridge.<span class="fn">On</span>(<span class="str">"round.end"</span>,  onEnd))
+
+<span class="cm">-- end of round: clean round events, keep game events</span>
+roundMaid:<span class="fn">Destroy</span>()
+
+<span class="cm">-- full shutdown: cleans everything including gameMaid children</span>
+gameMaid:<span class="fn">Destroy</span>()</code></pre>
+
+    <!-- ── Gun example ───────────────────────────────────────────────── -->
+    <h2 id="example">Gun equip / unequip</h2>
+    <p>A common pattern — create a Maid when a tool is equipped and destroy it when unequipped so all connections are always cleaned up, even with anonymous handlers.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> maid: RoExpress.Maid
+
+tool.Equipped:<span class="fn">Connect</span>(<span class="kw">function</span>()
+    maid <span class="op">=</span> RoExpress(<span class="str">"Maid"</span>)
+
+    maid:<span class="fn">Add</span>(Bridge.<span class="fn">On</span>(<span class="str">"ammo.refill"</span>, <span class="kw">function</span>(data)
+        ammo <span class="op">=</span> data.amount
+    <span class="kw">end</span>))
+
+    maid:<span class="fn">Add</span>(UserInputService.InputBegan:<span class="fn">Connect</span>(<span class="kw">function</span>(input)
+        <span class="kw">if</span> input.UserInputType <span class="op">==</span> Enum.UserInputType.MouseButton1 <span class="kw">then</span>
+            <span class="fn">shoot</span>()
+        <span class="kw">end</span>
+    <span class="kw">end</span>))
+
+    maid:<span class="fn">Add</span>(<span class="kw">function</span>() print(<span class="str">"gun unequipped"</span>) <span class="kw">end</span>)
+<span class="kw">end</span>)
+
+tool.Unequipped:<span class="fn">Connect</span>(<span class="kw">function</span>()
+    <span class="kw">if</span> maid <span class="kw">then</span> maid:<span class="fn">Destroy</span>() <span class="kw">end</span>
+<span class="kw">end</span>)</code></pre>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./bridge.html">Bridge</a> | <code>BridgeConnection</code> returned by <code>Bridge.On</code> / <code>Bridge.Once</code> &nbsp;&middot;&nbsp;
+      <a href="./hook.html">Hook</a> | Roblox signal subscriptions also return connections &nbsp;&middot;&nbsp;
+      <a href="./debounce.html">Debounce</a> | cooldown wrappers
+    </p>
+
+  </section></main></div>
+</body>
+</html>

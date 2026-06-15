@@ -3,7 +3,7 @@
 A type-safe, rate-limited, Express.js-style networking framework for Roblox.
 
 > **Author:** DeathToTheStadium
-> **Version:** 2.4.0
+> **Version:** 2.5.0
 > **License:** MIT
 > **Docs:** https://roexpress.dev
 
@@ -63,7 +63,7 @@ RoExpress
 
 ```toml
 [dependencies]
-RoExpress = "unofficialrobloxtutor/roexpress@2.4.0"
+RoExpress = "unofficialrobloxtutor/roexpress@2.5.0"
 ```
 
 ```bash

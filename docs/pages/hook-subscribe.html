@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hook — Subscribing | RoExpress Docs</title>
+  <meta name="description" content="Subscribe to Roblox signals and custom events with Hook(). Named handlers, once, off, clear, and has.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow"><a href="./hook.html">Hook</a> → Subscribing</div>
+    <h1>Subscribing</h1>
+    <p class="lead">Register handlers for any Roblox signal or custom event. Handlers run in priority order — lower number first. Named handlers can be removed individually with <code>Hook.Off</code>.</p>
+
+    <h2>Hook()</h2>
+    <div class="sig">Hook(<span class="tp">event</span>, handler)</div>
+    <div class="sig">Hook(<span class="tp">event</span>, priority, handler)</div>
+    <div class="sig">Hook(<span class="tp">event</span>, { priority?, id? }, handler)</div>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Hook <span class="op">=</span> RoExpress.Hook
+
+<span class="cm">-- omit priority → defaults to 50 ("normal")</span>
+Hook(<span class="str">"PlayerAdded"</span>, <span class="kw">function</span>(player)
+    <span class="fn">print</span>(player.Name, <span class="str">"joined"</span>)
+<span class="kw">end</span>)
+
+<span class="cm">-- number priority</span>
+Hook(<span class="str">"PlayerRemoving"</span>, <span class="num">1</span>, <span class="kw">function</span>(player)
+    DataStore:<span class="fn">Save</span>(player)   <span class="cm">-- runs first</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- named priority alias</span>
+Hook(<span class="str">"PlayerRemoving"</span>, <span class="str">"last"</span>, <span class="kw">function</span>(player)
+    Analytics:<span class="fn">LogLeave</span>(player)  <span class="cm">-- runs after everything else</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- named handler (removable)</span>
+Hook(<span class="str">"PlayerRemoving"</span>, { priority <span class="op">=</span> <span class="num">5</span>, id <span class="op">=</span> <span class="str">"inventory-cleanup"</span> }, <span class="kw">function</span>(player)
+    Inventory:<span class="fn">Clear</span>(player)
+<span class="kw">end</span>)</code></pre>
+
+    <h2>Hook.Once()</h2>
+    <div class="sig">Hook.Once(<span class="tp">event</span>, handler)</div>
+    <div class="sig">Hook.Once(<span class="tp">event</span>, priority, handler)</div>
+    <p>Fires exactly once then removes itself automatically.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- run setup logic the first time any player joins</span>
+Hook.<span class="fn">Once</span>(<span class="str">"PlayerAdded"</span>, <span class="str">"first"</span>, <span class="kw">function</span>(player)
+    <span class="fn">InitWorld</span>()
+<span class="kw">end</span>)</code></pre>
+
+    <h2>Hook.Off()</h2>
+    <div class="sig">Hook.Off(<span class="tp">event</span>, id)</div>
+    <p>Remove all handlers registered with a given <code>id</code> on an event. No-op if the id doesn't exist.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code>Hook(<span class="str">"PlayerRemoving"</span>, { priority <span class="op">=</span> <span class="num">5</span>, id <span class="op">=</span> <span class="str">"cleanup"</span> }, <span class="kw">function</span>(player)
+    Inventory:<span class="fn">Clear</span>(player)
+<span class="kw">end</span>)
+
+<span class="cm">-- later, during maintenance mode:</span>
+Hook.<span class="fn">Off</span>(<span class="str">"PlayerRemoving"</span>, <span class="str">"cleanup"</span>)</code></pre>
+
+    <h2>Hook.Clear()</h2>
+    <div class="sig">Hook.Clear(<span class="tp">event</span>)</div>
+    <p>Remove every handler for an event. The underlying Roblox signal connection stays active — registering new handlers will work immediately.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code>Hook.<span class="fn">Clear</span>(<span class="str">"Heartbeat"</span>)   <span class="cm">-- remove all tick handlers</span></code></pre>
+
+    <h2>Hook.Has()</h2>
+    <div class="sig">Hook.Has(<span class="tp">event</span>) → boolean</div>
+    <p>Returns <code>true</code> if at least one handler is currently registered for the event.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">if</span> Hook.<span class="fn">Has</span>(<span class="str">"round.start"</span>) <span class="kw">then</span>
+    Hook.<span class="fn">Fire</span>(<span class="str">"round.start"</span>, { map <span class="op">=</span> <span class="str">"Forest"</span> })
+<span class="kw">end</span></code></pre>
+
+    <div class="cl info"><strong>Per-player events</strong> — <code>CharacterAdded</code>, <code>CharacterRemoving</code>, and <code>CharacterAppearanceLoaded</code> pass <code>(player, ...)</code> as arguments. Hook handles the <code>PlayerAdded → player.CharacterAdded</code> wiring automatically for every current and future player.</div>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./hook.html">← Hook</a> &nbsp;·&nbsp;
+      <a href="./hook-priority.html">Priority System</a> | number and named tiers &nbsp;·&nbsp;
+      <a href="./hook-signals.html">Signal Catalog</a> | all mapped Roblox events &nbsp;·&nbsp;
+      <a href="./hook-custom.html">Custom Events</a> | Hook.Fire
+    </p>
+
+  </section></main></div>
+</body>
+</html>

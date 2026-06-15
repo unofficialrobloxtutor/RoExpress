@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cross — Messaging | RoExpress Docs</title>
+  <meta name="description" content="Cross.Publish, Subscribe, Once, Unsubscribe — real-time messaging between Roblox servers via MessagingService.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow"><a href="./cross.html">Cross</a> → Messaging</div>
+    <h1>Messaging</h1>
+    <p class="lead">Publish and subscribe to real-time events across every server in your game. Backed by Roblox's <strong>MessagingService</strong> with automatic JSON encoding, detached dispatch, and per-topic subscription tracking.</p>
+
+    <div class="cl info">Handlers are spawned in their own task — a slow handler won't block others. The publishing server also receives its own messages.</div>
+
+    <h2>Cross.Publish()</h2>
+    <div class="sig">Cross.Publish(<span class="tp">topic</span>, data)</div>
+    <p>Send a message to all servers (including this one) subscribed to <code>topic</code>. Does not yield — publishing happens in a background task.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Cross <span class="op">=</span> RoExpress.Cross
+
+Cross.<span class="fn">Publish</span>(<span class="str">"round.end"</span>, { winner <span class="op">=</span> <span class="str">"Player1"</span>, kills <span class="op">=</span> <span class="num">7</span> })
+Cross.<span class="fn">Publish</span>(<span class="str">"admin.announce"</span>, <span class="str">"Server shutting down in 2 minutes"</span>)
+Cross.<span class="fn">Publish</span>(<span class="str">"ban"</span>, { userId <span class="op">=</span> <span class="num">12345</span>, reason <span class="op">=</span> <span class="str">"cheating"</span> })</code></pre>
+
+    <h2>Cross.Subscribe()</h2>
+    <div class="sig">Cross.Subscribe(<span class="tp">topic</span>, handler)</div>
+    <p>Listen to a topic persistently. <code>handler</code> receives the payload and a context object with the sender's server ID and the time the message was sent.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code">Cross.<span class="fn">Subscribe</span>(<span class="str">"round.end"</span>, <span class="kw">function</span>(data, ctx)
+    <span class="fn">print</span>(ctx.serverId, <span class="str">"ended a round — winner:"</span>, data.winner)
+<span class="kw">end</span>)
+
+Cross.<span class="fn">Subscribe</span>(<span class="str">"ban"</span>, <span class="kw">function</span>(data, ctx)
+    <span class="kw">local</span> player <span class="op">=</span> Players:<span class="fn">GetPlayerByUserId</span>(data.userId)
+    <span class="kw">if</span> player <span class="kw">then</span>
+        player:<span class="fn">Kick</span>(data.reason)
+    <span class="kw">end</span>
+<span class="kw">end</span>)</code></pre>
+
+    <h3>MsgContext</h3>
+    <table class="tbl">
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>serverId</code></td><td><code>string</code></td><td>JobId of the server that published the message</td></tr>
+        <tr><td><code>time</code></td><td><code>number</code></td><td><code>os.time()</code> on the publishing server at send time</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Cross.Once()</h2>
+    <div class="sig">Cross.Once(<span class="tp">topic</span>, handler)</div>
+    <p>Subscribe to the next message on a topic only. Automatically disconnects after the first message fires.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- wait for the first map-vote result from any server</span>
+Cross.<span class="fn">Once</span>(<span class="str">"vote.result"</span>, <span class="kw">function</span>(data, ctx)
+    <span class="fn">SetNextMap</span>(data.map)
+<span class="kw">end</span>)</code></pre>
+
+    <h2>Cross.Unsubscribe()</h2>
+    <div class="sig">Cross.Unsubscribe(<span class="tp">topic</span>)</div>
+    <p>Disconnect all handlers registered on a topic from this server. No-op if the topic has no active subscriptions.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code">Cross.<span class="fn">Subscribe</span>(<span class="str">"debug.ping"</span>, <span class="kw">function</span>(data)
+    <span class="fn">print</span>(<span class="str">"pong from"</span>, data.from)
+<span class="kw">end</span>)
+
+<span class="cm">-- later, once debugging is done</span>
+Cross.<span class="fn">Unsubscribe</span>(<span class="str">"debug.ping"</span>)</code></pre>
+
+    <div class="cl warn"><strong>Topic limit</strong> — MessagingService allows up to 5 active subscriptions per server. Each unique <code>topic</code> string counts as one subscription. Calling <code>Subscribe</code> on the same topic multiple times reuses the same underlying connection.</div>
+
+    <h2>Pattern: cross-server ban enforcement</h2>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- in a shared AdminService script</span>
+<span class="kw">local</span> Cross   <span class="op">=</span> RoExpress.Cross
+<span class="kw">local</span> Players <span class="op">=</span> game:<span class="fn">GetService</span>(<span class="str">"Players"</span>)
+
+Cross.<span class="fn">Subscribe</span>(<span class="str">"admin.ban"</span>, <span class="kw">function</span>(data)
+    <span class="kw">local</span> player <span class="op">=</span> Players:<span class="fn">GetPlayerByUserId</span>(data.userId)
+    <span class="kw">if</span> player <span class="kw">then</span>
+        player:<span class="fn">Kick</span>(<span class="str">"You have been banned: "</span> <span class="op">..</span> (data.reason <span class="kw">or</span> <span class="str">"N/A"</span>))
+    <span class="kw">end</span>
+<span class="kw">end</span>)
+
+<span class="kw">local function</span> <span class="fn">BanUser</span>(userId: <span class="tp">number</span>, reason: <span class="tp">string</span>)
+    <span class="cm">-- kick locally first</span>
+    <span class="kw">local</span> player <span class="op">=</span> Players:<span class="fn">GetPlayerByUserId</span>(userId)
+    <span class="kw">if</span> player <span class="kw">then</span> player:<span class="fn">Kick</span>(reason) <span class="kw">end</span>
+    <span class="cm">-- propagate to every other server</span>
+    Cross.<span class="fn">Publish</span>(<span class="str">"admin.ban"</span>, { userId <span class="op">=</span> userId, reason <span class="op">=</span> reason })
+<span class="kw">end</span></code></pre>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./cross.html">← Cross</a> &nbsp;·&nbsp;
+      <a href="./cross-memory.html">Shared Memory</a> | persistent key-value across servers &nbsp;·&nbsp;
+      <a href="./cross-registry.html">Server Registry</a> | discover live servers
+    </p>
+
+  </section></main></div>
+</body>
+</html>

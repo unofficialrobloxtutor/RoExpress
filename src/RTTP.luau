@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------
---  <> Title:       RoExpress.Harpy
+--  <> Title:       RoExpress.RTTP
 --  <> Version:     1.0
 --  <> Date:        09/06/2026
 --  <> Author:      DeathToTheStadium
@@ -13,8 +13,8 @@
 --
 --  USAGE
 --  ---------------------------------------------------------------
---  local Harpy  = RoExpress.Harpy                    -- module reference
---  local client = Harpy.New({ base = "https://api.example.com" })
+--  local RTTP  = RoExpress.RTTP                    -- module reference
+--  local client = RTTP.New({ base = "https://api.example.com" })
 --
 --  client:SetHeader("Authorization", "Bearer " .. SECRET)
 --
@@ -44,8 +44,8 @@
 local HttpService = game:GetService("HttpService")
 local Promise     = require(script.Parent.Promise)
 
-local Harpy = {}
-Harpy.__index = Harpy
+local RTTP = {}
+RTTP.__index = RTTP
 
 ------------------------------------------------------------------------
 --  TYPES
@@ -64,7 +64,7 @@ export type Response = {
 	raw     : string,
 }
 
-export type Type = typeof(setmetatable({}, Harpy)) & {
+export type Type = typeof(setmetatable({}, RTTP)) & {
 	_base    : string,
 	_headers : { [string]: string },
 	_retries : number,
@@ -151,8 +151,8 @@ end
 ------------------------------------------------------------------------
 --  CONSTRUCTOR
 ------------------------------------------------------------------------
-function Harpy.New(config: Config?): Type
-	local self = setmetatable({}, Harpy) :: Type
+function RTTP.New(config: Config?): Type
+	local self = setmetatable({}, RTTP) :: Type
 	local cfg  = config or {}
 	self._base    = cfg.base    or ""
 	self._retries = cfg.retries or 3
@@ -172,22 +172,22 @@ end
 ------------------------------------------------------------------------
 
 --[[  SetBase(url)  — set or update the base URL. ]]
-function Harpy:SetBase(url: string)
+function RTTP:SetBase(url: string)
 	self._base = url
 end
 
 --[[  SetHeader(key, value)  — add a persistent header sent on every request. ]]
-function Harpy:SetHeader(key: string, value: string)
+function RTTP:SetHeader(key: string, value: string)
 	self._headers[key] = value
 end
 
 --[[  RemoveHeader(key)  — remove a persistent header. ]]
-function Harpy:RemoveHeader(key: string)
+function RTTP:RemoveHeader(key: string)
 	self._headers[key] = nil
 end
 
 --[[  SetRetries(n)  — change max retry count (default 3). ]]
-function Harpy:SetRetries(n: number)
+function RTTP:SetRetries(n: number)
 	self._retries = n
 end
 
@@ -203,7 +203,7 @@ end
 	    if res.ok then print(res.data.name) end
 	end)
 ]]
-function Harpy:Get(path: string, callback: ((res: Response) -> ())?): ()
+function RTTP:Get(path: string, callback: ((res: Response) -> ())?): ()
 	task.spawn(function()
 		local res = _request(self, "GET", path)
 		if callback then callback(res) end
@@ -218,7 +218,7 @@ end
 	    print(res.status)
 	end)
 ]]
-function Harpy:Post(path: string, body: any, callback: ((res: Response) -> ())?): ()
+function RTTP:Post(path: string, body: any, callback: ((res: Response) -> ())?): ()
 	task.spawn(function()
 		local res = _request(self, "POST", path, body)
 		if callback then callback(res) end
@@ -226,7 +226,7 @@ function Harpy:Post(path: string, body: any, callback: ((res: Response) -> ())?)
 end
 
 --[[  Put(path, body, callback?)  — fire a PUT request. ]]
-function Harpy:Put(path: string, body: any, callback: ((res: Response) -> ())?): ()
+function RTTP:Put(path: string, body: any, callback: ((res: Response) -> ())?): ()
 	task.spawn(function()
 		local res = _request(self, "PUT", path, body)
 		if callback then callback(res) end
@@ -234,7 +234,7 @@ function Harpy:Put(path: string, body: any, callback: ((res: Response) -> ())?):
 end
 
 --[[  Delete(path, callback?)  — fire a DELETE request. ]]
-function Harpy:Delete(path: string, callback: ((res: Response) -> ())?): ()
+function RTTP:Delete(path: string, callback: ((res: Response) -> ())?): ()
 	task.spawn(function()
 		local res = _request(self, "DELETE", path)
 		if callback then callback(res) end
@@ -271,23 +271,23 @@ end
 	    :Then(function(res) return res.data end)
 	    :Catch(function(err) warn(err.message) end)
 ]]
-function Harpy:GetAsync(path: string): Promise.Type
+function RTTP:GetAsync(path: string): Promise.Type
 	return _async(self, "GET", path)
 end
 
 --[[  PostAsync(path, body) -> Promise ]]
-function Harpy:PostAsync(path: string, body: any): Promise.Type
+function RTTP:PostAsync(path: string, body: any): Promise.Type
 	return _async(self, "POST", path, body)
 end
 
 --[[  PutAsync(path, body) -> Promise ]]
-function Harpy:PutAsync(path: string, body: any): Promise.Type
+function RTTP:PutAsync(path: string, body: any): Promise.Type
 	return _async(self, "PUT", path, body)
 end
 
 --[[  DeleteAsync(path) -> Promise ]]
-function Harpy:DeleteAsync(path: string): Promise.Type
+function RTTP:DeleteAsync(path: string): Promise.Type
 	return _async(self, "DELETE", path)
 end
 
-return Harpy
+return RTTP

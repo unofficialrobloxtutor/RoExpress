@@ -52,11 +52,22 @@ print("[RoExpress] Downloading from GitHub (" .. BRANCH .. ")...")
 -- Root (src/init.luau becomes the RoExpress ModuleScript)
 local root = ms("RoExpress", fetch("init.luau"), ReplicatedStorage)
 
+-- Pre-baked RemoteEvents — stored as children of the package so both
+-- server and client find them instantly with no timing race.
+local re      = Instance.new("RemoteEvent")
+re.Name       = "RoExpressRemote"
+re.Parent     = root
+
+local ure     = Instance.new("UnreliableRemoteEvent")
+ure.Name      = "RoExpressUnreliable"
+ure.Parent    = root
+
 -- Flat modules
 local flat = {
     "App", "Base64", "Benchmark", "Bridge", "Broadcast",
-    "Harpy", "Listener", "Network", "Port", "Promise",
-    "Router", "Tamper", "TokenBucket", "TypeCoercer", "Version",
+    "Cross", "Debounce", "Hook", "Maid", "RTTP", "Listener",
+    "Network", "Port", "Promise", "Router", "Tamper", "TokenBucket",
+    "TypeCoercer", "Types", "Version",
 }
 for _, name in ipairs(flat) do
     ms(name, fetch(name .. ".luau"), root)
@@ -76,6 +87,6 @@ ms("Types",   fetch("Stream/Types.luau"),   stream)
 ------------------------------------------------------------------------
 --  Done
 ------------------------------------------------------------------------
-local total = #flat + 1 + 2 + 1 + 3  -- flat + Codec tree + Stream tree
-print("[RoExpress] Done -> ReplicatedStorage/RoExpress (" .. total .. " modules)")
+local total = 1 + #flat + 3 + 4  -- root + flat + Codec tree + Stream tree
+print("[RoExpress] Done -> ReplicatedStorage/RoExpress (" .. total .. " modules, 2 remotes)")
 print("[RoExpress] require: local RoExpress = require(game.ReplicatedStorage.RoExpress)")

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debounce | RoExpress Docs</title>
+  <meta name="description" content="RoExpress Debounce — cooldown wrappers for functions. Global cooldown and per-key (per-player) cooldown. Returns true when the call went through, false when cooling.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow">Shared</div>
+    <h1>Debounce</h1>
+    <p class="lead">Cooldown wrappers for functions. Two variants: a global cooldown for a single shared timer, and a per-key cooldown where each unique key (typically a player) has its own independent timer.</p>
+
+    <div class="import-block">
+      <span>Import</span>
+      <code><span class="kw">local</span> Debounce <span class="op">=</span> RoExpress.Debounce</code>
+      <button class="cb" onclick="cp(this)" style="position:relative;top:0;right:0">copy</button>
+    </div>
+
+    <div class="cl info">
+      Both wrappers return <code>true</code> when the function was called and <code>false</code> when it was blocked by the cooldown. You can ignore the return value — it's there if you need it for feedback or logging.
+    </div>
+
+    <!-- ── fn ───────────────────────────────────────────────────────── -->
+    <h2 id="fn">Debounce.fn</h2>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> wrapped <span class="op">=</span> Debounce.<span class="fn">fn</span>(fn, cooldown)</code></pre>
+
+    <p>Wraps <code>fn</code> with a single shared cooldown. All calls share the same timer — the function can only fire once per <code>cooldown</code> seconds regardless of who calls it.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>fn</code></td><td><code>(...) → ()</code></td><td>The function to wrap</td></tr>
+        <tr><td><code>cooldown</code></td><td><code>number</code></td><td>Minimum seconds between calls</td></tr>
+      </tbody>
+    </table>
+
+    <p>Returns a wrapped function with the same arguments as <code>fn</code> plus a <code>boolean</code> return indicating whether the call went through.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> announceWin <span class="op">=</span> Debounce.<span class="fn">fn</span>(<span class="kw">function</span>(winner)
+    Bridge.<span class="fn">Emit</span>(<span class="str">"round.win"</span>, { winner <span class="op">=</span> winner })
+<span class="kw">end</span>, <span class="num">5</span>)
+
+announceWin(player)  <span class="cm">-- fires</span>
+announceWin(player)  <span class="cm">-- blocked, returns false</span>
+task.<span class="fn">wait</span>(<span class="num">5</span>)
+announceWin(player)  <span class="cm">-- fires again</span></code></pre>
+
+    <!-- ── key ──────────────────────────────────────────────────────── -->
+    <h2 id="key">Debounce.key</h2>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> wrapped <span class="op">=</span> Debounce.<span class="fn">key</span>(fn, cooldown)</code></pre>
+
+    <p>Wraps <code>fn</code> with a per-key cooldown. The <strong>first argument</strong> of every call is used as the key — each unique key gets its own independent timer. This is the standard pattern for per-player cooldowns.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>fn</code></td><td><code>(key, ...) → ()</code></td><td>The function to wrap. First arg is the key.</td></tr>
+        <tr><td><code>cooldown</code></td><td><code>number</code></td><td>Minimum seconds between calls <em>per key</em></td></tr>
+      </tbody>
+    </table>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> onShoot <span class="op">=</span> Debounce.<span class="fn">key</span>(<span class="kw">function</span>(player, data)
+    <span class="cm">-- player is the key — each player has their own 0.5s cooldown</span>
+    <span class="fn">fireBullet</span>(player, data.direction)
+<span class="kw">end</span>, <span class="num">0.5</span>)
+
+app:<span class="fn">Post</span>(<span class="str">"/shoot"</span>, <span class="kw">function</span>(req, res)
+    <span class="kw">local</span> fired <span class="op">=</span> <span class="fn">onShoot</span>(req.player, req.data)
+    res:<span class="fn">Send</span>({ fired <span class="op">=</span> fired })
+<span class="kw">end</span>)</code></pre>
+
+    <div class="cl tip">
+      For server-side rate limiting use <a href="./tokenbucket.html">TokenBucket</a> — it supports burst capacity, refill rates, and integrates with the request pipeline. Debounce is better for client-side or lightweight one-liner cooldowns.
+    </div>
+
+    <!-- ── Choosing ──────────────────────────────────────────────────── -->
+    <h2 id="choosing">fn vs key</h2>
+    <table class="tbl">
+      <thead><tr><th></th><th><code>Debounce.fn</code></th><th><code>Debounce.key</code></th></tr></thead>
+      <tbody>
+        <tr><td>Timer scope</td><td>Shared across all callers</td><td>Independent per first argument</td></tr>
+        <tr><td>Use case</td><td>Announcements, global events, single-caller actions</td><td>Per-player actions: shooting, purchasing, jumping</td></tr>
+        <tr><td>First argument</td><td>Passed to fn as-is</td><td>Used as the cooldown key <em>and</em> passed to fn</td></tr>
+      </tbody>
+    </table>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./tokenbucket.html">TokenBucket</a> | burst-capable server-side rate limiting &nbsp;&middot;&nbsp;
+      <a href="./maid.html">Maid</a> | lifecycle cleanup &nbsp;&middot;&nbsp;
+      <a href="./tamper.html">Tamper</a> | exploit detection for rate abuse
+    </p>
+
+  </section></main></div>
+</body>
+</html>

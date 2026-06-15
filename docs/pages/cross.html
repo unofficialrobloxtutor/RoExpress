@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cross | RoExpress Docs</title>
+  <meta name="description" content="RoExpress Cross — cross-server messaging via MessagingService and shared state via MemoryStoreService in one API.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow">Server API</div>
+    <h1>Cross</h1>
+    <p class="lead">Cross-server messaging and shared state in one module. Publish and subscribe to real-time events across every server in your game via <strong>MessagingService</strong>, and read/write persistent shared data across servers via <strong>MemoryStoreService</strong> — with a built-in server registry on top.</p>
+
+    <div class="import-block">
+      <span>Import</span>
+      <code><span class="kw">local</span> Cross <span class="op">=</span> RoExpress.Cross</code>
+      <button class="cb" onclick="cp(this)" style="position:relative;top:0;right:0">copy</button>
+    </div>
+
+    <div class="cl info">Cross is <strong>server-only</strong>. MessagingService and MemoryStoreService are unavailable on the client. Calling Cross from a LocalScript will throw.</div>
+
+    <div class="dir-grid">
+
+      <a class="dir-card" href="./cross-publish.html">
+        <div class="dir-pills">
+          <span class="rtag">core</span>
+        </div>
+        <div class="dir-title">Messaging</div>
+        <div class="dir-desc">Publish events to all servers. Subscribe persistently or once. Handlers receive the payload plus the origin server ID and timestamp.</div>
+        <div class="dir-foot">
+          <span class="dir-methods">Cross.Publish · Cross.Subscribe · Cross.Once · Cross.Unsubscribe</span>
+          <span class="dir-arrow">→</span>
+        </div>
+      </a>
+
+      <a class="dir-card" href="./cross-memory.html">
+        <div class="dir-pills">
+          <span class="rtag">state</span>
+        </div>
+        <div class="dir-title">Shared Memory</div>
+        <div class="dir-desc">Key-value store visible to all servers. Set, get, remove, and atomic update. Backed by MemoryStoreService with automatic JSON encoding.</div>
+        <div class="dir-foot">
+          <span class="dir-methods">Cross.Memory.Set · .Get · .Remove · .Update</span>
+          <span class="dir-arrow">→</span>
+        </div>
+      </a>
+
+      <a class="dir-card" href="./cross-registry.html">
+        <div class="dir-pills">
+          <span class="rtag">registry</span>
+        </div>
+        <div class="dir-title">Server Registry</div>
+        <div class="dir-desc">Register this server so other servers can discover it. Includes a heartbeat that refreshes the entry every 30 seconds and removes it when the server closes.</div>
+        <div class="dir-foot">
+          <span class="dir-methods">Cross.RegisterServer · .GetServers · .UnregisterServer · .ServerId</span>
+          <span class="dir-arrow">→</span>
+        </div>
+      </a>
+
+    </div>
+
+    <h2>At a glance</h2>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Cross <span class="op">=</span> RoExpress.Cross
+
+<span class="cm">-- register this server so others can find it</span>
+Cross.<span class="fn">RegisterServer</span>({ mode <span class="op">=</span> <span class="str">"pvp"</span>, map <span class="op">=</span> <span class="str">"Forest"</span> })
+
+<span class="cm">-- broadcast a message to all servers</span>
+Cross.<span class="fn">Publish</span>(<span class="str">"round.end"</span>, { winner <span class="op">=</span> <span class="str">"Player1"</span> })
+
+<span class="cm">-- receive messages from any server</span>
+Cross.<span class="fn">Subscribe</span>(<span class="str">"round.end"</span>, <span class="kw">function</span>(data, ctx)
+    <span class="fn">print</span>(ctx.serverId, <span class="str">"ended round, winner:"</span>, data.winner)
+<span class="kw">end</span>)
+
+<span class="cm">-- shared global counter</span>
+Cross.Memory.<span class="fn">Update</span>(<span class="str">"stats.wins"</span>, <span class="kw">function</span>(n) <span class="kw">return</span> (n <span class="kw">or</span> <span class="num">0</span>) + <span class="num">1</span> <span class="kw">end</span>)
+<span class="kw">local</span> wins <span class="op">=</span> Cross.Memory.<span class="fn">Get</span>(<span class="str">"stats.wins"</span>)
+
+<span class="cm">-- list every live server</span>
+<span class="kw">local</span> servers <span class="op">=</span> Cross.<span class="fn">GetServers</span>()
+<span class="fn">print</span>(#servers, <span class="str">"servers online"</span>)</code></pre>
+
+    <h2>Roblox service limits</h2>
+    <table class="tbl">
+      <thead><tr><th>Service</th><th>Limit</th></tr></thead>
+      <tbody>
+        <tr><td>MessagingService publish</td><td>150 messages/min per server · 600 messages/min per game</td></tr>
+        <tr><td>MessagingService message size</td><td>1 024 bytes per message</td></tr>
+        <tr><td>MessagingService subscriptions</td><td>5 active topics per server</td></tr>
+        <tr><td>MemoryStore requests</td><td>1 000 + 100 × player count per minute, per server</td></tr>
+        <tr><td>MemoryStore value size</td><td>32 KB per key</td></tr>
+        <tr><td>MemoryStore key TTL max</td><td>45 days</td></tr>
+      </tbody>
+    </table>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./bridge.html">Bridge</a> | same-server event bus &nbsp;·&nbsp;
+      <a href="./hook.html">Hook</a> | Roblox signal dispatcher &nbsp;·&nbsp;
+      <a href="./rttp.html">RTTP</a> | outbound HTTP to external services
+    </p>
+
+  </section></main></div>
+</body>
+</html>

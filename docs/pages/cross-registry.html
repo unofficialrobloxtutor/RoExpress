@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cross — Server Registry | RoExpress Docs</title>
+  <meta name="description" content="Cross server registry — register this server, list live servers, auto-heartbeat, and auto-cleanup on close.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow"><a href="./cross.html">Cross</a> → Server Registry</div>
+    <h1>Server Registry</h1>
+    <p class="lead">A live list of every server running your game. Call <code>RegisterServer</code> once at startup — the module maintains a heartbeat and removes the entry automatically when the server closes or crashes.</p>
+
+    <h2>Cross.RegisterServer()</h2>
+    <div class="sig">Cross.RegisterServer(meta?)</div>
+    <p>Register this server in the shared registry. Optionally attach any metadata table — player count, game mode, map, etc. — which is visible to <code>GetServers()</code> on other servers.</p>
+    <p>Starts a 30-second heartbeat to keep the entry alive (entries expire after 90 seconds). Also updates the player count automatically on <code>PlayerAdded</code> / <code>PlayerRemoving</code>. Registers a <code>game:BindToClose</code> handler to remove the entry on graceful shutdown.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Cross <span class="op">=</span> RoExpress.Cross
+
+<span class="cm">-- call once at the top of a server Script</span>
+Cross.<span class="fn">RegisterServer</span>({
+    mode   <span class="op">=</span> <span class="str">"pvp"</span>,
+    map    <span class="op">=</span> <span class="str">"Forest"</span>,
+    ranked <span class="op">=</span> <span class="kw">true</span>,
+})</code></pre>
+
+    <h2>Cross.GetServers()</h2>
+    <div class="sig">Cross.GetServers() → {ServerEntry}</div>
+    <p>Returns all currently registered servers as a table of <code>ServerEntry</code> objects. Entries that have not been refreshed within 90 seconds are expired automatically by MemoryStore.</p>
+
+    <h3>ServerEntry</h3>
+    <table class="tbl">
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td><code>string</code></td><td>Server's JobId (unique per server instance)</td></tr>
+        <tr><td><code>place</code></td><td><code>number</code></td><td>PlaceId the server is running</td></tr>
+        <tr><td><code>players</code></td><td><code>number</code></td><td>Current player count, refreshed on join/leave</td></tr>
+        <tr><td><code>meta</code></td><td><code>table</code></td><td>Metadata passed to <code>RegisterServer</code></td></tr>
+        <tr><td><code>ts</code></td><td><code>number</code></td><td><code>os.time()</code> of the last heartbeat</td></tr>
+      </tbody>
+    </table>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code"><span class="kw">local</span> servers <span class="op">=</span> Cross.<span class="fn">GetServers</span>()
+<span class="fn">print</span>(#servers, <span class="str">"servers online"</span>)
+
+<span class="kw">for</span> _, s <span class="kw">in</span> servers <span class="kw">do</span>
+    <span class="fn">print</span>(s.id, <span class="str">"| players:"</span>, s.players, <span class="str">"| map:"</span>, s.meta.map)
+<span class="kw">end</span></code></pre>
+
+    <h2>Cross.UnregisterServer()</h2>
+    <div class="sig">Cross.UnregisterServer()</div>
+    <p>Immediately remove this server from the registry and stop the heartbeat. Useful for maintenance mode or before a forced restart. The entry also removes itself automatically on server close.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code"><span class="cm">-- put the server into maintenance mode</span>
+Cross.<span class="fn">UnregisterServer</span>()
+Cross.<span class="fn">Publish</span>(<span class="str">"server.maintenance"</span>, { id <span class="op">=</span> Cross.<span class="fn">ServerId</span>() })
+<span class="cm">-- kick all players after a delay...</span></code></pre>
+
+    <h2>Cross.ServerId()</h2>
+    <div class="sig">Cross.ServerId() → string</div>
+    <p>Returns this server's unique identifier — <code>game.JobId</code> in a live server, a generated GUID in Studio. Stable for the lifetime of the server process.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code"><span class="fn">print</span>(<span class="str">"This server:"</span>, Cross.<span class="fn">ServerId</span>())
+
+<span class="cm">-- exclude self when routing messages to other servers</span>
+<span class="kw">local</span> others <span class="op">=</span> {}
+<span class="kw">for</span> _, s <span class="kw">in</span> Cross.<span class="fn">GetServers</span>() <span class="kw">do</span>
+    <span class="kw">if</span> s.id <span class="op">~=</span> Cross.<span class="fn">ServerId</span>() <span class="kw">then</span>
+        table.<span class="fn">insert</span>(others, s)
+    <span class="kw">end</span>
+<span class="kw">end</span></code></pre>
+
+    <h2>Pattern: matchmaking server selection</h2>
+    <pre><button class="cb" onclick="cp(this)">copy</button><code"><span class="kw">local</span> TeleportService <span class="op">=</span> game:<span class="fn">GetService</span>(<span class="str">"TeleportService"</span>)
+<span class="kw">local</span> Cross           <span class="op">=</span> RoExpress.Cross
+
+<span class="kw">local function</span> <span class="fn">FindBestServer</span>(mode: <span class="tp">string</span>)
+    <span class="kw">local</span> servers <span class="op">=</span> Cross.<span class="fn">GetServers</span>()
+    <span class="kw">local</span> best
+    <span class="kw">for</span> _, s <span class="kw">in</span> servers <span class="kw">do</span>
+        <span class="kw">if</span> s.meta.mode <span class="op">==</span> mode <span class="kw">and</span> s.players <span class="op"><</span> <span class="num">20</span> <span class="kw">then</span>
+            <span class="kw">if not</span> best <span class="kw">or</span> s.players <span class="op">></span> best.players <span class="kw">then</span>
+                best <span class="op">=</span> s   <span class="cm">-- pick least-empty server with room</span>
+            <span class="kw">end</span>
+        <span class="kw">end</span>
+    <span class="kw">end</span>
+    <span class="kw">return</span> best
+<span class="kw">end</span>
+
+<span class="kw">local function</span> <span class="fn">JoinOrCreate</span>(player: <span class="tp">Player</span>, mode: <span class="tp">string</span>)
+    <span class="kw">local</span> server <span class="op">=</span> <span class="fn">FindBestServer</span>(mode)
+    <span class="kw">if</span> server <span class="kw">then</span>
+        TeleportService:<span class="fn">TeleportToPlaceInstance</span>(game.PlaceId, server.id, player)
+    <span class="kw">else</span>
+        TeleportService:<span class="fn">TeleportAsync</span>(game.PlaceId, { player })
+    <span class="kw">end</span>
+<span class="kw">end</span></code></pre>
+
+    <div class="cl info"><strong>Crash resilience</strong> — if a server crashes without calling <code>UnregisterServer</code>, its registry entry expires after 90 seconds. <code>GetServers()</code> called after that will not include the crashed server.</div>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./cross.html">← Cross</a> &nbsp;·&nbsp;
+      <a href="./cross-publish.html">Messaging</a> | real-time events across servers &nbsp;·&nbsp;
+      <a href="./cross-memory.html">Shared Memory</a> | persistent key-value state
+    </p>
+
+  </section></main></div>
+</body>
+</html>

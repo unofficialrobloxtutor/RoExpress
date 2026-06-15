@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Harpy | RoExpress Docs</title>
-  <meta name="description" content="Harpy is RoExpress's outbound HTTP client. Set a base URL and shared headers once, then call Get/Post/Put/Delete with retry, backoff, and a chainable Promise API.">
+  <title>RTTP | RoExpress Docs</title>
+  <meta name="description" content="RTTP is RoExpress's outbound HTTP client. Set a base URL and shared headers once, then call Get/Post/Put/Delete with retry, backoff, and a chainable Promise API.">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#8b78ff">
@@ -20,32 +20,32 @@
   <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
 
     <div class="eyebrow">Server API</div>
-    <h1>Harpy</h1>
+    <h1>RTTP</h1>
     <p class="lead">Outbound HTTP client for server-to-external-API calls — set a base URL and shared headers once, then fire Get/Post/Put/Delete with automatic retry and a chainable Promise API.</p>
 
-    <div class="cl warn"><strong>Server only</strong> | <code>HttpService:RequestAsync</code> is not available on the client. Harpy will error if called from a LocalScript.</div>
+    <div class="cl warn"><strong>Server only</strong> | <code>HttpService:RequestAsync</code> is not available on the client. RTTP will error if called from a LocalScript.</div>
 
     <div class="import-block">
       <span>Import</span>
-      <code><span class="kw">local</span> harpy <span class="op">=</span> RoExpress.Harpy.<span class="fn">New</span>({ baseUrl <span class="op">=</span> <span class="str">"https://api.example.com"</span> })</code>
+      <code><span class="kw">local</span> rttp <span class="op">=</span> RoExpress.RTTP.<span class="fn">New</span>({ baseUrl <span class="op">=</span> <span class="str">"https://api.example.com"</span> })</code>
       <button class="cb" onclick="cp(this)" style="position:relative;top:0;right:0">copy</button>
     </div>
 
     <div class="dir-grid">
 
-      <a class="dir-card" href="./harpy-config.html">
+      <a class="dir-card" href="./rttp-config.html">
         <div class="dir-pills">
           <span class="rtag">setup</span>
         </div>
         <div class="dir-title">Configuration</div>
-        <div class="dir-desc">Create a Harpy client with a base URL, shared headers, and retry count. Update any setting at runtime with SetBase, SetHeader, and SetRetries.</div>
+        <div class="dir-desc">Create an RTTP client with a base URL, shared headers, and retry count. Update any setting at runtime with SetBase, SetHeader, and SetRetries.</div>
         <div class="dir-foot">
-          <span class="dir-methods">Harpy.New(config)</span>
+          <span class="dir-methods">RTTP.New(config)</span>
           <span class="dir-arrow">→</span>
         </div>
       </a>
 
-      <a class="dir-card" href="./harpy-methods.html">
+      <a class="dir-card" href="./rttp-methods.html">
         <div class="dir-pills">
           <span class="pill p-get">GET</span>
           <span class="pill p-post">POST</span>
@@ -55,12 +55,12 @@
         <div class="dir-title">HTTP Methods</div>
         <div class="dir-desc">Callback and Promise variants for every HTTP verb. Bodies are JSON-encoded automatically. Every response carries ok, status, data, headers, and raw.</div>
         <div class="dir-foot">
-          <span class="dir-methods">harpy:Get · harpy:Post · harpy:Put · harpy:Delete</span>
+          <span class="dir-methods">rttp:Get · rttp:Post · rttp:Put · rttp:Delete</span>
           <span class="dir-arrow">→</span>
         </div>
       </a>
 
-      <a class="dir-card" href="./harpy-retry.html">
+      <a class="dir-card" href="./rttp-retry.html">
         <div class="dir-pills">
           <span class="rtag">resilience</span>
         </div>

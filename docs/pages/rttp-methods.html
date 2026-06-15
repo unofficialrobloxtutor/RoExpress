@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Harpy HTTP Methods | RoExpress Docs</title>
-  <meta name="description" content="Harpy Get, Post, Put, Delete — callback and Promise variants for every HTTP verb. Bodies JSON-encoded automatically. Consistent response shape with ok, status, data, headers, raw.">
+  <title>RTTP HTTP Methods | RoExpress Docs</title>
+  <meta name="description" content="RTTP Get, Post, Put, Delete — callback and Promise variants for every HTTP verb. Bodies JSON-encoded automatically. Consistent response shape with ok, status, data, headers, raw.">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#8b78ff">
@@ -19,7 +19,7 @@
   <header id="hdr"></header>
   <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
 
-    <div class="eyebrow"><a href="./harpy.html">Harpy</a> → HTTP Methods</div>
+    <div class="eyebrow"><a href="./rttp.html">RTTP</a> → HTTP Methods</div>
     <h1>HTTP Methods</h1>
     <p class="lead">Callback and Promise variants for GET, POST, PUT, and DELETE — bodies are JSON-encoded automatically and every response has the same consistent shape.</p>
 
@@ -27,10 +27,10 @@
 
     <p>Every method fires in a new thread and calls the callback when the request completes. Omit the callback to fire-and-forget.</p>
 
-    <div class="sig">harpy:<span class="fn">Get</span>(path, callback?)</div>
-    <div class="sig">harpy:<span class="fn">Post</span>(path, body?, callback?)</div>
-    <div class="sig">harpy:<span class="fn">Put</span>(path, body?, callback?)</div>
-    <div class="sig">harpy:<span class="fn">Delete</span>(path, callback?)</div>
+    <div class="sig">rttp:<span class="fn">Get</span>(path, callback?)</div>
+    <div class="sig">rttp:<span class="fn">Post</span>(path, body?, callback?)</div>
+    <div class="sig">rttp:<span class="fn">Put</span>(path, body?, callback?)</div>
+    <div class="sig">rttp:<span class="fn">Delete</span>(path, callback?)</div>
 
     <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- GET</span>
 client:<span class="fn">Get</span>(<span class="str">"/players/123"</span>, <span class="kw">function</span>(res)
@@ -56,10 +56,10 @@ client:<span class="fn">Delete</span>(<span class="str">"/sessions/abc"</span>)<
 
     <p>The <code>*Async</code> variants return a <a href="./promise.html">Promise</a>. Resolves with the <code>Response</code> on 2xx; rejects with <code>{ message, status, response }</code> on failure.</p>
 
-    <div class="sig">harpy:<span class="fn">GetAsync</span>(path) → Promise</div>
-    <div class="sig">harpy:<span class="fn">PostAsync</span>(path, body?) → Promise</div>
-    <div class="sig">harpy:<span class="fn">PutAsync</span>(path, body?) → Promise</div>
-    <div class="sig">harpy:<span class="fn">DeleteAsync</span>(path) → Promise</div>
+    <div class="sig">rttp:<span class="fn">GetAsync</span>(path) → Promise</div>
+    <div class="sig">rttp:<span class="fn">PostAsync</span>(path, body?) → Promise</div>
+    <div class="sig">rttp:<span class="fn">PutAsync</span>(path, body?) → Promise</div>
+    <div class="sig">rttp:<span class="fn">DeleteAsync</span>(path) → Promise</div>
 
     <pre><button class="cb" onclick="cp(this)">copy</button><code>client:<span class="fn">GetAsync</span>(<span class="str">"/leaderboard"</span>)
     :<span class="fn">Then</span>(<span class="kw">function</span>(res)
@@ -96,7 +96,7 @@ client:<span class="fn">PostAsync</span>(<span class="str">"/scores"</span>, { u
 
     <h2>Webhook example</h2>
 
-    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> webhook <span class="op">=</span> Harpy.<span class="fn">New</span>({ base <span class="op">=</span> DISCORD_WEBHOOK_URL })
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> webhook <span class="op">=</span> RTTP.<span class="fn">New</span>({ base <span class="op">=</span> DISCORD_WEBHOOK_URL })
 
 <span class="kw">local function</span> <span class="fn">NotifyRoundEnd</span>(winner: string, kills: number)
     webhook:<span class="fn">Post</span>(<span class="str">""</span>, {
@@ -108,9 +108,9 @@ client:<span class="fn">PostAsync</span>(<span class="str">"/scores"</span>, { u
 
     <h2>See also</h2>
     <p>
-      <a href="./harpy.html">← Harpy</a> &nbsp;&middot;&nbsp;
-      <a href="./harpy-config.html">Configuration</a> | base URL and headers &nbsp;&middot;&nbsp;
-      <a href="./harpy-retry.html">Retry &amp; Backoff</a> | automatic resilience &nbsp;&middot;&nbsp;
+      <a href="./rttp.html">← RTTP</a> &nbsp;&middot;&nbsp;
+      <a href="./rttp-config.html">Configuration</a> | base URL and headers &nbsp;&middot;&nbsp;
+      <a href="./rttp-retry.html">Retry &amp; Backoff</a> | automatic resilience &nbsp;&middot;&nbsp;
       <a href="./promise.html">Promise</a> | chainable async API
     </p>
 

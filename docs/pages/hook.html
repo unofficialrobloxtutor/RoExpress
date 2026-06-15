@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hook | RoExpress Docs</title>
+  <meta name="description" content="RoExpress Hook — priority-ordered event dispatcher wrapping every Roblox built-in signal plus a custom event bus. Subscribe, once, off, fire.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow">Shared API</div>
+    <h1>Hook</h1>
+    <p class="lead">Priority-ordered event dispatcher for every Roblox built-in signal plus a custom event bus. Multiple systems can subscribe to the same event and run in a guaranteed order — no more arbitrary connection ordering.</p>
+
+    <div class="import-block">
+      <span>Import</span>
+      <code><span class="kw">local</span> Hook <span class="op">=</span> RoExpress.Hook</code>
+      <button class="cb" onclick="cp(this)" style="position:relative;top:0;right:0">copy</button>
+    </div>
+
+    <div class="dir-grid">
+
+      <a class="dir-card" href="./hook-subscribe.html">
+        <div class="dir-pills">
+          <span class="rtag">core</span>
+        </div>
+        <div class="dir-title">Subscribing</div>
+        <div class="dir-desc">Register handlers with a priority number or named tier. Named handlers can be removed later. Run once and auto-remove with Hook.Once.</div>
+        <div class="dir-foot">
+          <span class="dir-methods">Hook() · Hook.Once · Hook.Off · Hook.Clear · Hook.Has</span>
+          <span class="dir-arrow">→</span>
+        </div>
+      </a>
+
+      <a class="dir-card" href="./hook-priority.html">
+        <div class="dir-pills">
+          <span class="rtag">concept</span>
+        </div>
+        <div class="dir-title">Priority System</div>
+        <div class="dir-desc">Lower number runs first. Named aliases — first, high, normal, low, last — map to 0–100. Multiple handlers at the same priority run in registration order.</div>
+        <div class="dir-foot">
+          <span class="dir-methods">0 → 25 → 50 → 75 → 100</span>
+          <span class="dir-arrow">→</span>
+        </div>
+      </a>
+
+      <a class="dir-card" href="./hook-signals.html">
+        <div class="dir-pills">
+          <span class="rtag">reference</span>
+        </div>
+        <div class="dir-title">Signal Catalog</div>
+        <div class="dir-desc">All ~60 mapped Roblox signals across Players, RunService, UserInputService, MarketplaceService, CollectionService, and more.</div>
+        <div class="dir-foot">
+          <span class="dir-methods">PlayerAdded · Heartbeat · InputBegan · TagAdded:tag · …</span>
+          <span class="dir-arrow">→</span>
+        </div>
+      </a>
+
+      <a class="dir-card" href="./hook-custom.html">
+        <div class="dir-pills">
+          <span class="rtag">events</span>
+        </div>
+        <div class="dir-title">Custom Events</div>
+        <div class="dir-desc">Any key not in the signal catalog is a custom event. Fire it from anywhere, subscribe from anywhere — same priority and id system as built-in signals.</div>
+        <div class="dir-foot">
+          <span class="dir-methods">Hook.Fire · Hook() · Hook.Has</span>
+          <span class="dir-arrow">→</span>
+        </div>
+      </a>
+
+    </div>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./bridge.html">Bridge</a> | server-side internal event bus &nbsp;·&nbsp;
+      <a href="./listener.html">Listener</a> | client-side server push subscriptions &nbsp;·&nbsp;
+      <a href="./app.html">App</a> | route middleware (different pipeline)
+    </p>
+
+  </section></main></div>
+</body>
+</html>

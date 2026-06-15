@@ -20,7 +20,7 @@
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "RoExpress",
-    "version": "2.4.0",
+    "version": "2.5.0",
     "description": "The first complete networking stack for Roblox | typed routing, middleware, server push, binary streaming, outbound HTTP, exploit detection, and compression in one framework.",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Roblox",
@@ -28,7 +28,7 @@
     "url": "https://roexpress.dev",
     "codeRepository": "https://github.com/unofficialrobloxtutor/RoExpress",
     "license": "https://opensource.org/licenses/MIT",
-    "dateModified": "2026-06-09",
+    "dateModified": "2026-06-15",
     "author": { "@type": "Person", "name": "DeathToTheStadium" },
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
   }
@@ -53,7 +53,7 @@
         <h1>RoExpress | <em>the complete networking stack</em> for Roblox</h1>
         <p class="lead">The first Roblox framework that covers every layer of networking in one place: inbound routing with typed params and middleware, reliable server push, tick-rate binary streaming, outbound HTTP to external APIs, built-in exploit detection, per-player rate limiting, and Deflate compression. Stop patching together RemoteEvents. Start with a stack that is already complete.</p>
 
-        <div class="cl new"><strong>v2.4 is here.</strong> Deflate compression (LZ77 + Huffman), automatic retry with exponential backoff, Stream generic channels, and fully typed <code>GetApp()</code> / <code>GetNetwork()</code> accessors.</div>
+        <div class="cl new"><strong>v2.5 is here.</strong> Fully typed <code>RoExpress("App")</code> call form with autocomplete, <code>Types</code> module, lazy loading, pre-baked remotes, Bridge v2 (On/Once/Emit/Clear + connection objects), Maid lifecycle manager, and Debounce cooldown wrappers.</div>
 
         <h2>Module tree</h2>
         <div class="mt"><span class="mt-r">RoExpress</span>
@@ -64,6 +64,7 @@
 <span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Broadcast</span>     <span class="mt-d">server  | unreliable fire-and-forget</span>
 <span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Listener</span>      <span class="mt-d">client  | broadcast + reliable push subscriptions</span>
 <span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Bridge</span>        <span class="mt-d">shared  | internal server-side event bus</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Hook</span>          <span class="mt-d">shared  | priority-ordered event dispatcher for all Roblox signals</span>
 <span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Tamper</span>        <span class="mt-d">server  | passive exploit detection &amp; strike system</span>
 <span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Codec</span>         <span class="mt-d">shared  | Deflate compression (LZ77 + Huffman)</span>
 <span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Port</span>          <span class="mt-d">server  | named isolated pipelines</span>
@@ -74,7 +75,8 @@
 <span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">TypeCoercer</span>   <span class="mt-d">shared  | Roblox type serialisation utility</span>
 <span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Promise</span>       <span class="mt-d">client  | chainable async Network API</span>
 <span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Benchmark</span>     <span class="mt-d">client  | round-trip latency measurement</span>
-<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Harpy</span>         <span class="mt-d">server  | outbound HTTP client (base URL, headers, retry)</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">RTTP</span>          <span class="mt-d">server  | outbound HTTP client (base URL, headers, retry)</span>
+<span class="mt-m">&#9500;&#9472;&#9472;</span> <span class="mt-n">Cross</span>         <span class="mt-d">server  | cross-server messaging and shared memory</span>
 <span class="mt-m">&#9492;&#9472;&#9472;</span> <span class="mt-n">Base64</span>        <span class="mt-d">shared  | encode/decode utility</span></div>
 
         <h2 id="installation">Installation</h2>
@@ -85,7 +87,7 @@
 
         <p>Or with Wally:</p>
         <pre><button class="cb" onclick="cp(this)">copy</button><code>[dependencies]
-RoExpress = "unofficialrobloxtutor/roexpress@2.4.0"</code></pre>
+RoExpress = "unofficialrobloxtutor/roexpress@2.5.0"</code></pre>
         <pre><button class="cb" onclick="cp(this)">copy</button><code>wally install</code></pre>
 
         <h2 id="quickstart">Quick start</h2>
@@ -154,8 +156,10 @@ listener:<span class="fn">On</span>(<span class="str">"round.end"</span>, <span 
             <tr><td><code>RoExpress("Listener")</code></td>   <td>Client</td><td>Listener wired to the main channel</td></tr>
             <tr><td><code>RoExpress.Stream</code></td>        <td>Both</td>  <td>Stream factory</td></tr>
             <tr><td><code>RoExpress.Bridge</code></td>        <td>Both</td>  <td>Bridge singleton</td></tr>
+            <tr><td><code>RoExpress.Hook</code></td>          <td>Both</td>  <td>Hook singleton — priority-ordered event dispatcher</td></tr>
             <tr><td><code>RoExpress.Codec</code></td>         <td>Both</td>  <td>Codec module</td></tr>
-            <tr><td><code>RoExpress.Harpy</code></td>         <td>Server</td><td>Harpy factory (call <code>.New(config)</code>)</td></tr>
+            <tr><td><code>RoExpress.RTTP</code></td>          <td>Server</td><td>RTTP factory (call <code>.New(config)</code>)</td></tr>
+            <tr><td><code>RoExpress.Cross</code></td>         <td>Server</td><td>Cross singleton — cross-server messaging &amp; shared memory</td></tr>
             <tr><td><code>RoExpress.Tamper</code></td>        <td>Server</td><td>Tamper singleton</td></tr>
           </tbody>
         </table>
@@ -180,7 +184,8 @@ listener:<span class="fn">On</span>(<span class="str">"round.end"</span>, <span 
         <table class="tbl">
           <thead><tr><th>Version</th><th>Status</th><th>What shipped</th></tr></thead>
           <tbody>
-            <tr><td>2.4.0</td><td><span class="pill p-new">current</span></td><td>Deflate compression &middot; Automatic retry &middot; Stream generic channels &middot; Typed accessors</td></tr>
+            <tr><td>2.5.0</td><td><span class="pill p-new">current</span></td><td>Types module &middot; Lazy loading &middot; Bridge v2 (On/Once/Emit) &middot; Maid &middot; Debounce &middot; Typed call form</td></tr>
+            <tr><td>2.4.0</td><td>shipped</td><td>Deflate compression &middot; Automatic retry &middot; Stream generic channels &middot; Typed accessors</td></tr>
             <tr><td>2.3.0</td><td>shipped</td><td>PUT &amp; DELETE &middot; Compact handler args &middot; Codec LZ77 upgrade &middot; TypeCoercer: UDim, Rect, UDim2</td></tr>
             <tr><td>2.2.3</td><td>shipped</td><td>Issue #6 fix | listener:Once race condition under rapid events</td></tr>
             <tr><td>2.2.0</td><td>shipped</td><td>TypeCoercer &middot; Promise &middot; Server Push &middot; Tamper &middot; TokenBucket Grant</td></tr>
@@ -211,7 +216,7 @@ listener:<span class="fn">On</span>(<span class="str">"round.end"</span>, <span 
             {tag:'api',     title:'Stream',            desc:'Schema-defined binary channels with delta compression.',                 url:P+'stream.html'},
             {tag:'api',     title:'Stream: Server',    desc:'All six send methods, rate limiting, delta compression explained.',      url:P+'guide-stream-server.html'},
             {tag:'api',     title:'Stream: Client',    desc:'Sending, throttling, subscribing, and one-shot receives.',              url:P+'guide-stream-client.html'},
-            {tag:'api',     title:'Harpy',             desc:'Outbound HTTP client with base URL, headers, and automatic retry.',     url:P+'harpy.html'},
+            {tag:'api',     title:'RTTP',              desc:'Outbound HTTP client with base URL, headers, and automatic retry.',     url:P+'rttp.html'},
             {tag:'api',     title:'TokenBucket',       desc:'RFC 2697 rate limiter — consume, grant, and grant-all per player.',     url:P+'tokenbucket.html'},
             {tag:'api',     title:'Router',            desc:'Typed params, wildcards, globs, and constraints on any route.',         url:P+'router.html'},
             {tag:'api',     title:'Codec',             desc:'Deflate compression (LZ77 + Huffman) opt-in per route.',               url:P+'codec.html'},

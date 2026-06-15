@@ -34,14 +34,17 @@ No other Roblox networking library covers all of these layers. Previous librarie
 
 ## Current Version
 
-2.4.0 — released 2026-06-09
+2.5.0 — released 2026-06-15
 
-## What's new in v2.4
+## What's new in v2.5
 
-- **Deflate compression**: Codec upgraded from LZ77 to full Deflate (LZ77 sliding window + Huffman entropy coding). Better compression ratios on repetitive payloads, same opt-in API ({ compress = true }).
-- **Automatic retry**: Network requests automatically retry with exponential backoff (1s → 2s → 4s) on failure. Configurable max attempts globally or per-request. Transparent to the caller.
-- **Stream — generic channels**: Stream rebuilt as schema-defined typed channels. Declare field names and types; Stream handles buffer pack/unpack automatically. Works for any high-frequency state (positions, economy, weather) — not only FPS shooters. Delta compression built in.
-- **Typed accessors**: RoExpress.GetApp() and RoExpress.GetNetwork() return fully-typed instances. The existing RoExpress("App") / RoExpress("Network") call style still works and returns `any`.
+- **Typed call form**: `RoExpress("App")` now returns `RoExpress.App`, not `any`. Autocomplete suggests all valid module names as string literals. Route handler `(req, res)` parameters are fully inferred with no manual annotation.
+- **Types module**: New `src/Types.luau` — explicit public types for every module. `RoExpressCall` is an overloaded intersection type that powers the typed `__call` metamethod.
+- **Lazy loading**: Root module uses `__index` + `rawset` cache — modules load on first access. Pre-baked RemoteEvents stored as package children eliminate any client/server timing race.
+- **Bridge v2**: `Bind` → `On`, `BindOnce` → `Once`, `Fire` → `Emit`, `UnbindAll` → `Clear`. `On` and `Once` return `BridgeConnection` objects with `:Disconnect()` — anonymous handlers are now cleanable without holding function references. `Unbind` removed.
+- **Maid**: New lifecycle cleanup utility. Groups connections, threads, instances, and teardown functions — destroys all at once. Generic `Add<T>` preserves type for chaining. Duck-typed cleanup handles RBXScriptConnection, BridgeConnection, any `:Destroy()` table, threads, and plain functions. Works on server and client.
+- **Debounce**: New cooldown wrapper utility. `Debounce.fn(fn, cooldown)` for a global shared timer. `Debounce.key(fn, cooldown)` for independent per-first-argument timers (per-player pattern). Returns `true`/`false` indicating whether the call went through.
+- **GetApp() / GetNetwork() removed**: The call form is now fully typed — these helpers are no longer needed.
 
 ## Modules
 
@@ -77,7 +80,7 @@ No other Roblox networking library covers all of these layers. Previous librarie
 Wally (recommended):
 ```toml
 [dependencies]
-RoExpress = "unofficialrobloxtutor/roexpress@2.4.0"
+RoExpress = "unofficialrobloxtutor/roexpress@2.5.0"
 ```
 
 Then: `wally install`

@@ -40,7 +40,7 @@
         ${nl(P + 'installation.html', 'installation', 'Installation')}
         ${nl(P + 'accessors.html',    'accessors',    'Module Accessors')}
         ${nl(P + 'pipeline.html',     'pipeline',     'Request Pipeline')}
-        ${nl(P + 'roadmap.html',      'roadmap',      'Roadmap' + nb('2.4+', 'background:#b45309;color:#fef3c7'))}
+        ${nl(P + 'roadmap.html',      'roadmap',      'Roadmap' + nb('2.5+', 'background:#b45309;color:#fef3c7'))}
       </div>
     </div>
     <div class="ns">
@@ -51,7 +51,8 @@
         ${nl(P + 'push.html',      'push',      'Push')}
         ${nl(P + 'port.html',      'port',      'Port')}
         ${nl(P + 'tamper.html',    'tamper',    'Tamper')}
-        ${nl(P + 'harpy.html',     'harpy',     'Harpy')}
+        ${nl(P + 'rttp.html',      'rttp',      'RTTP')}
+        ${nl(P + 'cross.html',     'cross',     'Cross')}
       </div>
     </div>
     <div class="ns">
@@ -79,6 +80,9 @@
         ${nl(P + 'router.html',      'router',      'Router')}
         ${nl(P + 'codec.html',       'codec',       'Codec')}
         ${nl(P + 'bridge.html',      'bridge',      'Bridge')}
+        ${nl(P + 'hook.html',        'hook',        'Hook')}
+        ${nl(P + 'maid.html',        'maid',        'Maid')}
+        ${nl(P + 'debounce.html',    'debounce',    'Debounce')}
         ${nl(P + 'typecoercer.html', 'typecoercer', 'TypeCoercer')}
         ${nl(P + 'tokenbucket.html', 'tokenbucket', 'TokenBucket')}
         ${nl(P + 'base64.html',      'base64',      'Base64')}
@@ -157,7 +161,7 @@
         <circle cx="204" cy="222" r="7" fill="#0d0d1f"/>
       </svg>
       <span class="logo-name">RoExpress</span>
-      <span class="logo-ver">v2.4</span>
+      <span class="logo-ver">v2.5</span>
     </a>
     <div id="sw">
       <span class="sico">⌕</span>
@@ -179,19 +183,23 @@
     { s:'app',         url:P+'app.html',                    t:'api',     n:'App',                  x:'get post put delete use unuse push pushall req res send error status compress' },
     { s:'broadcast',   url:P+'broadcast.html',              t:'api',     n:'Broadcast',            x:'emit emitall emitto unreliable 900 bytes' },
     { s:'tamper',      url:P+'tamper.html',                 t:'api',     n:'Tamper',               x:'exploit detection strike autokick version spoof malformed payload rate flood' },
-    { s:'harpy',       url:P+'harpy.html',                  t:'api',     n:'Harpy',                x:'http outbound httpclient requestasync get post put delete webhook retry backoff base url headers' },
+    { s:'rttp',        url:P+'rttp.html',                   t:'api',     n:'RTTP',                 x:'http outbound rttp httpclient requestasync get post put delete webhook retry backoff base url headers' },
     { s:'network',     url:P+'network.html',                t:'api',     n:'Network',              x:'get post put delete cancel timeout networkresponse callback promise async' },
     { s:'listener',    url:P+'listener.html',               t:'api',     n:'Listener',             x:'on once off use unuse push broadcast dual channel reliable unreliable' },
     { s:'benchmark',   url:P+'benchmark.html',              t:'api',     n:'Benchmark',            x:'run print compare latency p95 p99 throughput rtt warmup' },
     { s:'router',      url:P+'router.html',                 t:'api',     n:'Router',               x:'typed param wildcard glob constraint number boolean vector2 vector3 cframe captures' },
     { s:'push',        url:P+'push.html',                   t:'api',     n:'Server Push',          x:'push pushall pushto reliable server initiated listener event' },
     { s:'codec',       url:P+'codec.html',                  t:'api',     n:'Codec',                x:'lz77 lzh deflate compress decompress iscompressed buffer' },
-    { s:'bridge',      url:P+'bridge.html',                 t:'api',     n:'Bridge',               x:'bind unbind fire has wait waituntil waitfirst yield coroutine bus' },
+    { s:'bridge',      url:P+'bridge.html',                 t:'api',     n:'Bridge',               x:'on once emit clear has wait waituntil waitfirst yield coroutine bus connection disconnect' },
+    { s:'maid',        url:P+'maid.html',                   t:'api',     n:'Maid',                 x:'maid cleanup lifecycle add remove clear destroy connection thread instance teardown' },
+    { s:'debounce',    url:P+'debounce.html',               t:'api',     n:'Debounce',             x:'debounce cooldown throttle fn key per-player rate limit wrap function' },
     { s:'port',        url:P+'port.html',                   t:'api',     n:'Ports',                x:'listen port isolated pipeline named remoteevent combat inventory' },
     { s:'stream',      url:P+'stream.html',                 t:'api',     n:'Stream',               x:'schema channel binary buffer vector3 cframe delta compression sequence unreliable' },
     { s:'typecoercer', url:P+'typecoercer.html',            t:'api',     n:'TypeCoercer',          x:'coerce number int boolean vector2 vector3 cframe color3 enum instance param' },
     { s:'promise',     url:P+'promise.html',                t:'api',     n:'Promise',              x:'then catch finally resolve reject async chain getasync postasync' },
     { s:'tokenbucket', url:P+'tokenbucket.html',            t:'api',     n:'TokenBucket',          x:'consume hastokens grant grantall reset destroy max refill rate limit' },
+    { s:'cross',       url:P+'cross.html',                  t:'api',     n:'Cross',                x:'cross server messaging messagingservice memorystore publish subscribe registry servers shared state ban announce global counter' },
+    { s:'hook',        url:P+'hook.html',                   t:'api',     n:'Hook',                 x:'hook signal event priority dispatcher playeradded heartbeat inputbegan custom fire once off clear has per-player runservice userinputservice collectionservice tagadded' },
     { s:'base64',      url:P+'base64.html',                 t:'api',     n:'Base64',               x:'encode decode encodetable decodetable json' },
     { s:'types',       url:P+'types.html',                  t:'ref',     n:'Types',                x:'payload request response networkresponse routehandler middlewarehandler' },
     { s:'ex-killfeed', url:P+'ex-killfeed.html',            t:'example', n:'Kill Feed',            x:'push broadcast bridge compress typed params wildcard' },
@@ -220,7 +228,7 @@
     { s:'support',     url:P+'support.html',                t:'community',n:'Support',             x:'support donate sponsor patreon' },
     { s:'comparison',  url:P+'comparison.html',             t:'ref',     n:'Comparison',           x:'comparison remote event remotefunction other frameworks versus' },
     { s:'story',       url:P+'story.html',                  t:'ref',     n:'The Story',            x:'story history origin why made motivation design' },
-    { s:'updates',     url:P+'updates.html',                t:'ref',     n:'Updates',              x:'updates changelog v2.4 v2.3 release notes' },
+    { s:'updates',     url:P+'updates.html',                t:'ref',     n:'Updates',              x:'updates changelog v2.5 v2.4 v2.3 release notes' },
     { s:'changelog',   url:P+'changelog.html',              t:'ref',     n:'Changelog',            x:'changelog version history added changed removed breaking' },
     { s:'reference',   url:P+'reference.html',              t:'ref',     n:'API Reference',        x:'reference overview api index types pipeline' },
     { s:'examples-gun',      url:P+'examples-gun.html',       t:'example', n:'Gun Framework',        x:'gun shoot hit damage replication health player combat port stream' },

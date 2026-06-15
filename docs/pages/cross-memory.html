@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cross — Shared Memory | RoExpress Docs</title>
+  <meta name="description" content="Cross.Memory — shared key-value store across all servers via MemoryStoreService. Set, get, remove, and atomic update.">
+  <meta name="author" content="DeathToTheStadium">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#8b78ff">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 120 148 148'><rect x='80' y='120' width='148' height='148' rx='30' fill='%23a594ff'/><rect x='104' y='158' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='217' width='100' height='9' rx='4.5' fill='%230d0d1f'/><rect x='104' y='158' width='9' height='68' rx='4.5' fill='%230d0d1f'/><rect x='152' y='167' width='9' height='30' rx='4.5' fill='%230d0d1f'/><circle cx='156' cy='162' r='7' fill='%230d0d1f'/><circle cx='156' cy='222' r='7' fill='%230d0d1f'/><circle cx='204' cy='162' r='7' fill='%230d0d1f'/><circle cx='204' cy='222' r='7' fill='%230d0d1f'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../public/css/styles.css">
+  <script src="../nav.js"></script>
+</head>
+<body data-theme="dark">
+  <div id="overlay" onclick="toggleSidebar()"></div>
+  <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+  <header id="hdr"></header>
+  <div id="lay"><nav id="sb"></nav><main id="ct"><section class="doc">
+
+    <div class="eyebrow"><a href="./cross.html">Cross</a> → Shared Memory</div>
+    <h1>Shared Memory</h1>
+    <p class="lead">A key-value store visible to every server simultaneously, backed by <strong>MemoryStoreService</strong>. All values are automatically JSON-encoded so you can store tables directly. Keys expire after a configurable TTL (default 1 hour).</p>
+
+    <div class="cl info">All Memory methods <strong>yield</strong> — they make network calls to Roblox's MemoryStore infrastructure. Call them inside <code>task.spawn</code> or a coroutine if you don't want to block the calling thread.</div>
+
+    <h2>Cross.Memory.Set()</h2>
+    <div class="sig">Cross.Memory.Set(<span class="tp">key</span>, value, expiry?)</div>
+    <p>Write a value. <code>expiry</code> is in seconds — defaults to 3 600 (1 hour). Max 45 days.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Cross <span class="op">=</span> RoExpress.Cross
+
+<span class="cm">-- store a table</span>
+Cross.Memory.<span class="fn">Set</span>(<span class="str">"event.config"</span>, { map <span class="op">=</span> <span class="str">"Forest"</span>, duration <span class="op">=</span> <span class="num">120</span> })
+
+<span class="cm">-- store a number, expire in 5 minutes</span>
+Cross.Memory.<span class="fn">Set</span>(<span class="str">"stats.kills"</span>, <span class="num">0</span>, <span class="num">300</span>)
+
+<span class="cm">-- store a flag</span>
+Cross.Memory.<span class="fn">Set</span>(<span class="str">"maintenance"</span>, <span class="kw">true</span>)</code></pre>
+
+    <h2>Cross.Memory.Get()</h2>
+    <div class="sig">Cross.Memory.Get(<span class="tp">key</span>) → value</div>
+    <p>Read a value. Returns <code>nil</code> if the key doesn't exist or has expired.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code"><span class="kw">local</span> config <span class="op">=</span> Cross.Memory.<span class="fn">Get</span>(<span class="str">"event.config"</span>)
+<span class="kw">if</span> config <span class="kw">then</span>
+    <span class="fn">LoadMap</span>(config.map)
+<span class="kw">end</span>
+
+<span class="kw">local</span> kills <span class="op">=</span> Cross.Memory.<span class="fn">Get</span>(<span class="str">"stats.kills"</span>) <span class="kw">or</span> <span class="num">0</span></code></pre>
+
+    <h2>Cross.Memory.Update()</h2>
+    <div class="sig">Cross.Memory.Update(<span class="tp">key</span>, transform, expiry?)</div>
+    <p>Atomic read-modify-write. <code>transform</code> receives the current value (or <code>nil</code> if the key is new) and returns the next value. Returning <code>nil</code> from transform deletes the key. This is the correct way to increment counters or append to lists — using Get/Set is not atomic.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code"><span class="cm">-- safe global kill counter</span>
+Cross.Memory.<span class="fn">Update</span>(<span class="str">"stats.kills"</span>, <span class="kw">function</span>(current)
+    <span class="kw">return</span> (current <span class="kw">or</span> <span class="num">0</span>) + <span class="num">1</span>
+<span class="kw">end</span>)
+
+<span class="cm">-- append to a list (cap at 100 entries)</span>
+Cross.Memory.<span class="fn">Update</span>(<span class="str">"recentKills"</span>, <span class="kw">function</span>(list)
+    list <span class="op">=</span> list <span class="kw">or</span> {}
+    table.<span class="fn">insert</span>(list, { killer <span class="op">=</span> <span class="str">"Player1"</span>, time <span class="op">=</span> os.<span class="fn">time</span>() })
+    <span class="kw">if</span> #list <span class="op">></span> <span class="num">100</span> <span class="kw">then</span>
+        table.<span class="fn">remove</span>(list, <span class="num">1</span>)
+    <span class="kw">end</span>
+    <span class="kw">return</span> list
+<span class="kw">end</span>, <span class="num">3600</span>)
+
+<span class="cm">-- delete a key by returning nil</span>
+Cross.Memory.<span class="fn">Update</span>(<span class="str">"maintenance"</span>, <span class="kw">function</span>() <span class="kw">return nil</span> <span class="kw">end</span>)</code></pre>
+
+    <div class="cl warn"><strong>Use Update for shared counters</strong>, not Get → Set. If two servers call <code>Get</code>, increment, and <code>Set</code> at the same time, one write is lost. <code>Update</code> is atomic — Roblox guarantees only one transform runs at a time per key.</div>
+
+    <h2>Cross.Memory.Remove()</h2>
+    <div class="sig">Cross.Memory.Remove(<span class="tp">key</span>)</div>
+    <p>Delete a key immediately. Equivalent to <code>Update</code> returning <code>nil</code> but slightly cheaper.</p>
+
+    <pre><button class="cb" onclick="cp(this)">copy</button><code">Cross.Memory.<span class="fn">Remove</span>(<span class="str">"event.config"</span>)
+Cross.Memory.<span class="fn">Remove</span>(<span class="str">"maintenance"</span>)</code></pre>
+
+    <h2>Key naming</h2>
+    <p>All Cross.Memory keys share one MemoryStore hash map (<code>"rx:mem"</code>). Use dot-separated namespaces to avoid collisions between different systems:</p>
+    <table class="tbl">
+      <thead><tr><th>Pattern</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td><code>module.key</code></td><td><code>"stats.kills"</code>, <code>"stats.deaths"</code></td></tr>
+        <tr><td><code>event.id</code></td><td><code>"event.active"</code>, <code>"event.map"</code></td></tr>
+        <tr><td><code>player.userId</code></td><td><code>"ban.12345"</code></td></tr>
+      </tbody>
+    </table>
+
+    <h2>See also</h2>
+    <p>
+      <a href="./cross.html">← Cross</a> &nbsp;·&nbsp;
+      <a href="./cross-publish.html">Messaging</a> | real-time events across servers &nbsp;·&nbsp;
+      <a href="./cross-registry.html">Server Registry</a> | discover live servers
+    </p>
+
+  </section></main></div>
+</body>
+</html>

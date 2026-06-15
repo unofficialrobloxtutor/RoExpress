@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Changelog | RoExpress Docs</title>
-  <meta name="description" content="RoExpress changelog: full version history from v2.0 to v2.4. Added features, breaking changes, and migration notes for every release.">
-  <meta name="keywords" content="roblox, luau, roexpress, changelog, version, release notes, v2.4, v2.3, v2.2, v2.1, v2.0, breaking changes">
+  <meta name="description" content="RoExpress changelog: full version history from v2.0 to v2.5. Added features, breaking changes, and migration notes for every release.">
+  <meta name="keywords" content="roblox, luau, roexpress, changelog, version, release notes, v2.5, v2.4, v2.3, v2.2, v2.1, v2.0, breaking changes">
   <meta name="author" content="DeathToTheStadium">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://roexpress.dev/docs/changelog/">
@@ -34,7 +34,52 @@
         <h1>Changelog</h1>
         <p class="lead">Full version history. Entries marked <span class="pill p-breaking">breaking</span> require code changes when upgrading. See the <a href="./guides-migration.html">Migration guide</a> for step-by-step instructions.</p>
 
-        <h2>v2.4.0 <span class="pill p-ok">current</span></h2>
+        <h2>v2.5.0 <span class="pill p-ok">current</span></h2>
+        <h3>Typing | Added</h3>
+        <ul>
+          <li><code>Types.luau</code> | new standalone module — explicit public types for every module, no private field leakage</li>
+          <li><code>RoExpressCall</code> overloaded intersection type — <code>RoExpress("App")</code> now returns <code>RoExpress.App</code>, not <code>any</code></li>
+          <li>Autocomplete for module name strings in the call form | Luau suggests all valid module names</li>
+          <li>Route handler <code>(req, res)</code> parameters fully inferred — no manual annotation required</li>
+          <li>All exported types forwarded from <code>Types.luau</code> via the root module</li>
+        </ul>
+        <h3>Init | Changed</h3>
+        <ul>
+          <li>Lazy loading via <code>__index</code> + <code>rawset</code> cache — modules load on first access, not on require</li>
+          <li>Pre-baked <code>RemoteEvent</code> and <code>UnreliableRemoteEvent</code> stored as package children — no timing race between server and client</li>
+          <li><code>GetApp()</code> and <code>GetNetwork()</code> removed — call form is now fully typed and covers all use cases</li>
+        </ul>
+        <h3>Bridge | Changed <span class="pill p-breaking">breaking</span></h3>
+        <ul>
+          <li><code>Bind</code> → <code>On</code> | now returns a <code>BridgeConnection</code> object with <code>:Disconnect()</code></li>
+          <li><code>BindOnce</code> → <code>Once</code> | same connection object, fires handler at most once</li>
+          <li><code>Fire</code> → <code>Emit</code></li>
+          <li><code>UnbindAll</code> → <code>Clear</code></li>
+          <li><code>Unbind</code> removed — use the connection returned by <code>On</code> / <code>Once</code> instead</li>
+          <li><code>Has</code>, <code>Wait</code>, <code>WaitUntil</code>, <code>WaitFirst</code>, <code>Destroy</code> retained unchanged</li>
+        </ul>
+        <h3>Maid | Added</h3>
+        <ul>
+          <li>New <code>Maid</code> module — lifecycle cleanup utility, works everywhere (server and client)</li>
+          <li><code>RoExpress("Maid")</code> returns a fresh instance each call</li>
+          <li><code>Add&lt;T&gt;(item)</code> returns <code>item</code> unchanged — store and track in one expression</li>
+          <li>Duck-typed cleanup: <code>RBXScriptConnection</code>, <code>BridgeConnection</code>, any <code>:Destroy()</code> table, threads, and plain functions</li>
+          <li>Nesting supported — a child Maid added to a parent Maid is cleaned up when the parent is destroyed</li>
+        </ul>
+        <h3>Debounce | Added</h3>
+        <ul>
+          <li>New <code>Debounce</code> module — cooldown wrappers for functions</li>
+          <li><code>Debounce.fn(fn, cooldown)</code> | global shared cooldown timer</li>
+          <li><code>Debounce.key(fn, cooldown)</code> | independent per-first-argument cooldown (standard per-player pattern)</li>
+          <li>Returns <code>true</code> when the call went through, <code>false</code> when blocked by cooldown</li>
+        </ul>
+        <h3>Installer | Changed</h3>
+        <ul>
+          <li><code>RemoteEvent</code> and <code>UnreliableRemoteEvent</code> now created as children of the RoExpress ModuleScript</li>
+          <li><code>Maid</code>, <code>Debounce</code>, and <code>Types</code> added to installer flat module list (28 total)</li>
+        </ul>
+
+        <h2>v2.4.0</h2>
         <h3>Stream | Added</h3>
         <ul>
           <li><code>Stream:Schema(fields)</code> | compile-time binary layout, fixed offsets, delta-compression</li>

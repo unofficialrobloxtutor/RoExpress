@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------
 --  <> Title:       RoExpress.Stream.Channel
---  <> Version:     2.4
+--  <> Version:     2.5
 --  <> Date:        09/06/2026
 --  <> Author:      DeathToTheStadium
 --  <> Description: Stream channel instance.

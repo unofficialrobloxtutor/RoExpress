@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------
 --  <> Title:       RoExpress.Benchmark
---  <> Version:     2.4
+--  <> Version:     2.5
 --  <> Date:        10/06/2026
 --  <> Author:      DeathToTheStadium
 --  <> Description: Round-trip benchmarking for RoExpress routes and
