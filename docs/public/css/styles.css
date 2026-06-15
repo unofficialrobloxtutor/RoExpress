@@ -97,14 +97,14 @@ a:hover{text-decoration:underline}
 code{font-family:var(--font);font-size:12px;background:var(--code-bg);border:1px solid var(--border);padding:1px 5px;border-radius:3px;color:var(--accent2)}
 
 /* code blocks */
-pre{background:var(--code-bg);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;overflow-x:auto;margin:16px 0;position:relative}
+pre{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:18px 20px;overflow-x:auto;margin:16px 0;position:relative}
 pre code{background:none;border:none;padding:0;font-size:12.5px;color:var(--text);line-height:1.72}
 .cb{position:absolute;top:10px;right:10px;background:var(--bg3);border:1px solid var(--border2);color:var(--text3);font-family:var(--font);font-size:10px;padding:3px 8px;border-radius:4px;cursor:pointer;transition:color var(--ease),background var(--ease)}
 .cb:hover{color:var(--text);background:var(--border)}
 .cb.ok{color:var(--green)}
 
 /* syntax highlight */
-.kw{color:#c792ea}.fn{color:#82aaff}.str{color:#c3e88d}.cm{color:var(--text3);font-style:italic}.num{color:#f78c6c}.op{color:#89ddff}.tp{color:#ffcb6b}
+.kw{color:#c792ea}.fn{color:#82aaff}.str{color:#c3e88d}.cm{color:#6a7f8c;font-style:italic}.num{color:#f78c6c}.op{color:#89ddff}.tp{color:#ffcb6b}
 
 /* tables */
 .tbl{width:100%;border-collapse:collapse;margin:14px 0 26px;font-size:12.5px}
