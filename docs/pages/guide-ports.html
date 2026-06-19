@@ -49,21 +49,22 @@
         <div class="cl warn"><strong>RemoteEvent limit.</strong> Roblox enforces a cap on RemoteEvents per place. Don't create a Port per route. A Port is for an entire system | combat, shop, admin | not for each individual action.</div>
 
         <h2>Structure</h2>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- server</span>
-<span class="kw">local</span> Port   <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Port"</span>)
-<span class="kw">local</span> combat <span class="op">=</span> Port.<span class="fn">New</span>(<span class="str">"combat"</span>)   <span class="cm">-- own RemoteEvent</span>
-<span class="kw">local</span> shop   <span class="op">=</span> Port.<span class="fn">New</span>(<span class="str">"shop"</span>)     <span class="cm">-- own RemoteEvent</span>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- server — ports are created via app:Listen</span>
+<span class="kw">local</span> app <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"App"</span>)
 
-combat:<span class="fn">Post</span>(<span class="str">"hit"</span>, hitHandler)
-combat:<span class="fn">Post</span>(<span class="str">"reload"</span>, reloadHandler)
+app:<span class="fn">Listen</span>(<span class="str">"combat"</span>, <span class="kw">function</span>(port)   <span class="cm">-- creates own RemoteEvent</span>
+    port:<span class="fn">Post</span>(<span class="str">"hit"</span>, hitHandler)
+    port:<span class="fn">Post</span>(<span class="str">"reload"</span>, reloadHandler)
+<span class="kw">end</span>)
 
-shop:<span class="fn">Get</span>(<span class="str">"catalogue"</span>, catalogueHandler)
-shop:<span class="fn">Post</span>(<span class="str">"buy"</span>, buyHandler)
+app:<span class="fn">Listen</span>(<span class="str">"shop"</span>, <span class="kw">function</span>(port)     <span class="cm">-- creates own RemoteEvent</span>
+    port:<span class="fn">Get</span>(<span class="str">"catalogue"</span>, catalogueHandler)
+    port:<span class="fn">Post</span>(<span class="str">"buy"</span>, buyHandler)
+<span class="kw">end</span>, { Max <span class="op">=</span> <span class="num">20</span>, Refill <span class="op">=</span> <span class="num">5</span> })       <span class="cm">-- optional rate-limit override</span>
 
-<span class="cm">-- client</span>
-<span class="kw">local</span> Port      <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Port"</span>)
-<span class="kw">local</span> combatNet <span class="op">=</span> Port.<span class="fn">Connect</span>(<span class="str">"combat"</span>)
-<span class="kw">local</span> shopNet   <span class="op">=</span> Port.<span class="fn">Connect</span>(<span class="str">"shop"</span>)
+<span class="cm">-- client — connect via RoExpress("Network", portName)</span>
+<span class="kw">local</span> combatNet <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Network"</span>, <span class="str">"combat"</span>)
+<span class="kw">local</span> shopNet   <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Network"</span>, <span class="str">"shop"</span>)
 
 combatNet:<span class="fn">Post</span>(<span class="str">"hit"</span>, hitData)
 shopNet:<span class="fn">Get</span>(<span class="str">"catalogue"</span>, <span class="kw">nil</span>, <span class="kw">function</span>(res) <span class="cm">...</span> <span class="kw">end</span>)</code></pre>

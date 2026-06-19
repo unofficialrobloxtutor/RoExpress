@@ -35,7 +35,7 @@
 res:<span class="fn">Send</span>()              <span class="cm">-- sends nil with 200 (e.g. after a PUT)</span></code></pre>
 
         <div class="sig"><span class="pill p-err">500</span> res:<span class="fn">Error</span>(message)</div>
-        <p>Send a 500 error response with a message string. The client receives the message in <code>res.error</code>.</p>
+        <p>Send a 500 error response with a message string. The client receives the message in <code>res.message</code>.</p>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">if not</span> valid <span class="kw">then</span>
     res:<span class="fn">Error</span>(<span class="str">"item not found"</span>)
     <span class="kw">return</span>

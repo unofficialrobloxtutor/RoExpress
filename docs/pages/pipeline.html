@@ -32,12 +32,12 @@
       <section class="doc">
         <div class="eyebrow">Reference</div>
         <h1>Request Pipeline</h1>
-        <p class="lead">Every client request passes through the same five-stage pipeline before reaching your handler. Understanding the order clarifies why certain status codes are returned.</p>
+        <p class="lead">Every client request passes through the same seven-stage pipeline before reaching your handler. Understanding the order clarifies why certain status codes are returned.</p>
 
         <div class="pipe">
           <div class="ps">
             <div class="pn">1</div>
-            <div class="pl"><strong>Version check</strong> <span class="pc">| mismatch → silent reject + Tamper strike</span></div>
+            <div class="pl"><strong>Version check</strong> <span class="pill">400</span> <span class="pc">| mismatch → 400 + Tamper strike</span></div>
           </div>
           <div class="ps">
             <div class="pn">2</div>
@@ -45,23 +45,32 @@
           </div>
           <div class="ps">
             <div class="pn">3</div>
-            <div class="pl"><strong>Middleware</strong> <span class="pill">403</span> <span class="pill">500</span> <span class="pc">| return false → 403 · unhandled error → 500</span></div>
+            <div class="pl"><strong>Payload validation</strong> <span class="pc">| malformed structure → silent drop + Tamper strike</span></div>
           </div>
           <div class="ps">
             <div class="pn">4</div>
-            <div class="pl"><strong>Route matching</strong> <span class="pill">404</span> <span class="pill">400</span> <span class="pc">| no match → 404 · coercion failure → 400</span></div>
+            <div class="pl"><strong>Middleware</strong> <span class="pill">403</span> <span class="pill">500</span> <span class="pc">| return false → 403 · unhandled error → 500</span></div>
           </div>
           <div class="ps">
             <div class="pn">5</div>
+            <div class="pl"><strong>Route matching</strong> <span class="pill">404</span> <span class="pc">| no match → 404 + Tamper strike</span></div>
+          </div>
+          <div class="ps">
+            <div class="pn">6</div>
+            <div class="pl"><strong>Typed param coercion</strong> <span class="pill">400</span> <span class="pc">| coercion failure → 400 or OnParamError handler</span></div>
+          </div>
+          <div class="ps">
+            <div class="pn">7</div>
             <div class="pl"><strong>Handler dispatch</strong> <span class="pill">500</span> <span class="pc">| unhandled error → 500 · no Send() → implicit 200</span></div>
           </div>
         </div>
 
         <h2>Expanded detail</h2>
-        <p><strong>Version check:</strong> The payload is validated against the expected RoExpress protocol version. A version mismatch is recorded as a <a href="./tamper.html">Tamper</a> strike and the request is rejected silently | no response is sent to the client.</p>
+        <p><strong>Version check:</strong> The payload is validated against the expected RoExpress protocol version. A version mismatch sends a <span class="pill p-warn">400</span> error response to the client and records a <a href="./tamper.html">Tamper</a> strike.</p>
         <p><strong>TokenBucket:</strong> The player's token bucket is checked. If empty, the request is rejected immediately with 429. Tokens refill continuously at the configured <code>refillRate</code> per second.</p>
         <p><strong>Middleware:</strong> Each registered middleware runs in registration order. Return <code>false</code> to send 403 and stop processing. An unhandled error sends 500.</p>
-        <p><strong>Route matching:</strong> The Router finds the best matching pattern. No match → 404 (also a Tamper signal). Typed param coercion failure → 400, or your custom <code>app:OnParamError()</code> handler.</p>
+        <p><strong>Route matching:</strong> The Router finds the best matching pattern. No match → 404 and a Tamper signal.</p>
+        <p><strong>Typed param coercion:</strong> After a successful route match, typed parameters in the path are coerced. Failure → 400, or your custom <code>app:OnParamError()</code> handler.</p>
         <p><strong>Handler dispatch:</strong> Your handler is called. Unhandled errors send 500. If the handler exits without <code>res:Send()</code> or <code>res:Error()</code>, the response is finalized as a 200 with nil data.</p>
 
         <h2>Status codes reference</h2>
@@ -69,7 +78,7 @@
           <thead><tr><th>Code</th><th>Stage</th><th>Cause</th></tr></thead>
           <tbody>
             <tr><td><span class="pill p-ok">200</span></td><td>Handler</td><td><code>res:Send(data)</code> or implicit empty response</td></tr>
-            <tr><td><span class="pill p-warn">400</span></td><td>Route matching</td><td>Typed param coercion failure</td></tr>
+            <tr><td><span class="pill p-warn">400</span></td><td>Version check or Route matching</td><td>Version mismatch or typed param coercion failure</td></tr>
             <tr><td><span class="pill p-err">403</span></td><td>Middleware</td><td>Middleware returned <code>false</code></td></tr>
             <tr><td><span class="pill p-warn">404</span></td><td>Route matching</td><td>No route matched the request path</td></tr>
             <tr><td><span class="pill p-warn">429</span></td><td>TokenBucket</td><td>Player's token bucket is empty</td></tr>

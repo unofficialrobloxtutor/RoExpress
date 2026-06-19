@@ -36,47 +36,52 @@
         <div class="cl info"><strong>When to use this.</strong> Route payloads and DataStore only support plain Lua types. TypeCoercer lets you pass a <code>Vector3</code> or <code>CFrame</code> by encoding it as a string, then decode it back on the other side.</div>
 
         <h2>Basic round-trip</h2>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> TC <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress.TypeCoercer)
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> TC <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"TypeCoercer"</span>)
 
 <span class="kw">local</span> v <span class="op">=</span> Vector3.<span class="fn">new</span>(<span class="num">10</span>, <span class="num">5</span>, <span class="num">3</span>)
-<span class="kw">local</span> s <span class="op">=</span> TC.<span class="fn">ToString</span>(v)       <span class="cm">-- "Vector3|10|5|3"</span>
-<span class="kw">local</span> r <span class="op">=</span> TC.<span class="fn">FromString</span>(s)     <span class="cm">-- Vector3.new(10, 5, 3)</span>
-<span class="fn">print</span>(r <span class="op">==</span> v)                    <span class="cm">-- true</span></code></pre>
+<span class="kw">local</span> s <span class="op">=</span> TC.<span class="fn">ToString</span>(v)                    <span class="cm">-- "10,5,3"</span>
+<span class="kw">local</span> ok, r <span class="op">=</span> TC.<span class="fn">FromString</span>(s, <span class="str">"vector3"</span>)  <span class="cm">-- true, Vector3.new(10, 5, 3)</span>
+<span class="fn">print</span>(ok, r <span class="op">==</span> v)                            <span class="cm">-- true  true</span></code></pre>
 
         <h2>Sending a CFrame over a route</h2>
         <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="cm">-- client: encode before sending</span>
 network:<span class="fn">Post</span>(<span class="str">"char/position"</span>, {
-    cframe = TC.<span class="fn">ToString</span>(char:<span class="fn">GetPivot</span>())
+    cframe = TC.<span class="fn">ToString</span>(char:<span class="fn">GetPivot</span>())   <span class="cm">-- "x,y,z,rx,ry,rz"</span>
 })
 
 <span class="cm">-- server: decode in handler</span>
 app:<span class="fn">Post</span>(<span class="str">"char/position"</span>, <span class="kw">function</span>(Player, Payload, req, res)
-    <span class="kw">local</span> cf <span class="op">=</span> TC.<span class="fn">FromString</span>(req.data.cframe)
-    <span class="cm">-- cf is a CFrame</span>
+    <span class="kw">local</span> ok, cf <span class="op">=</span> TC.<span class="fn">FromString</span>(req.data.cframe, <span class="str">"cframe"</span>)
+    <span class="kw">if</span> ok <span class="kw">then</span>
+        <span class="cm">-- cf is a CFrame</span>
+    <span class="kw">end</span>
 <span class="kw">end</span>)</code></pre>
 
         <h2>Instances</h2>
-        <p>To serialize an Instance reference, register the root first so TypeCoercer can resolve paths.</p>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code>TC.<span class="fn">RegisterInstanceRoot</span>(game)     <span class="cm">-- server</span>
-TC.<span class="fn">RegisterInstanceRoot</span>(game)     <span class="cm">-- client</span>
+        <p>To serialize an Instance reference, register a named root so TypeCoercer can search for it by ClassName and Name.</p>
+        <pre><button class="cb" onclick="cp(this)">copy</button><code>TC.<span class="fn">RegisterInstanceRoot</span>(<span class="str">"Workspace"</span>, workspace)  <span class="cm">-- server &amp; client</span>
+TC.<span class="fn">RegisterInstanceRoot</span>(<span class="str">"Players"</span>,   game:<span class="fn">GetService</span>(<span class="str">"Players"</span>))
 
 <span class="kw">local</span> part <span class="op">=</span> workspace:<span class="fn">FindFirstChild</span>(<span class="str">"Baseplate"</span>)
-<span class="kw">local</span> str  <span class="op">=</span> TC.<span class="fn">ToString</span>(part)    <span class="cm">-- "Instance|Workspace.Baseplate"</span>
-<span class="kw">local</span> back <span class="op">=</span> TC.<span class="fn">FromString</span>(str)   <span class="cm">-- the Baseplate Part</span></code></pre>
+<span class="kw">local</span> str  <span class="op">=</span> TC.<span class="fn">ToString</span>(part)                          <span class="cm">-- "Part:Baseplate"</span>
+<span class="kw">local</span> ok, back <span class="op">=</span> TC.<span class="fn">FromString</span>(str, <span class="str">"Instance"</span>)       <span class="cm">-- the Baseplate Part</span></code></pre>
+
+        <div class="cl info"><strong>Wire format.</strong> All types are encoded as comma-delimited values with no type prefix. <code>ToString</code> always produces a plain string; <code>FromString</code> requires the expected type name so it knows how to parse it.</div>
 
         <h2>Supported types</h2>
         <table class="tbl">
-          <thead><tr><th>Roblox type</th><th>Encoded prefix</th></tr></thead>
+          <thead><tr><th>Roblox type</th><th>Wire format</th></tr></thead>
           <tbody>
-            <tr><td>Vector3</td><td><code>Vector3|x|y|z</code></td></tr>
-            <tr><td>Vector2</td><td><code>Vector2|x|y</code></td></tr>
-            <tr><td>CFrame</td><td><code>CFrame|x|y|z|r00…r22</code></td></tr>
-            <tr><td>Color3</td><td><code>Color3|r|g|b</code></td></tr>
-            <tr><td>UDim2</td><td><code>UDim2|xs|xo|ys|yo</code></td></tr>
-            <tr><td>UDim</td><td><code>UDim|scale|offset</code></td></tr>
-            <tr><td>Rect</td><td><code>Rect|minX|minY|maxX|maxY</code></td></tr>
-            <tr><td>Instance</td><td><code>Instance|full.path</code></td></tr>
-            <tr><td>number, string, boolean</td><td>Passed through unchanged</td></tr>
+            <tr><td>Vector3</td><td><code>x,y,z</code></td></tr>
+            <tr><td>Vector2</td><td><code>x,y</code></td></tr>
+            <tr><td>CFrame</td><td><code>x,y,z,rx,ry,rz</code> (position + Euler angles in degrees)</td></tr>
+            <tr><td>Color3</td><td><code>r,g,b</code> (0–255 integers)</td></tr>
+            <tr><td>UDim2</td><td><code>xs,xo,ys,yo</code></td></tr>
+            <tr><td>UDim</td><td><code>scale,offset</code></td></tr>
+            <tr><td>Rect</td><td><code>minX,minY,maxX,maxY</code></td></tr>
+            <tr><td>Instance</td><td><code>ClassName:Name</code> (searches registered roots)</td></tr>
+            <tr><td>EnumItem</td><td><code>Enum.TypeName.ValueName</code></td></tr>
+            <tr><td>number, string, boolean, int</td><td>Passed through as plain string</td></tr>
           </tbody>
         </table>
 

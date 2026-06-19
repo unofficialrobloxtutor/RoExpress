@@ -34,15 +34,22 @@
         <p class="lead">Tamper tracks malformed requests automatically and lets you issue manual strikes for game-logic violations. Kick players when they exceed a configurable threshold.</p>
 
         <h2>Setup</h2>
-        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Tamper <span class="op">=</span> <span class="fn">require</span>(game.ReplicatedStorage.RoExpress.Tamper)
+        <pre><button class="cb" onclick="cp(this)">copy</button><code><span class="kw">local</span> Tamper <span class="op">=</span> <span class="fn">RoExpress</span>(<span class="str">"Tamper"</span>)
 
-Tamper:<span class="fn">Configure</span>({
-    threshold  <span class="op">=</span> <span class="num">5</span>,        <span class="cm">-- strikes before kick</span>
-    window     <span class="op">=</span> <span class="num">60</span>,       <span class="cm">-- rolling window in seconds</span>
-    kickMsg    <span class="op">=</span> <span class="str">"Exploiting is not permitted."</span>,
-    onStrike   <span class="op">=</span> <span class="kw">function</span>(player, reason, count)
-        <span class="fn">print</span>(player.Name, <span class="str">"strike"</span>, count, reason)
-    <span class="kw">end</span>,
+<span class="cm">-- Subscribe to all strike events (immediate and pattern)</span>
+Tamper.<span class="fn">On</span>(<span class="kw">function</span>(report)
+    <span class="fn">print</span>(report.player.Name, <span class="str">"strike #"</span> <span class="op">..</span> report.strikes, report.reason)
+<span class="kw">end</span>)
+
+<span class="cm">-- Optional: auto-kick when a player hits 5 strikes</span>
+Tamper.<span class="fn">AutoKick</span>(<span class="num">5</span>, <span class="str">"Exploiting is not permitted."</span>)
+
+<span class="cm">-- Optional: tune pattern detection thresholds</span>
+Tamper.<span class="fn">SetThresholds</span>({
+    rateFloodWindow <span class="op">=</span> <span class="num">60</span>,  <span class="cm">-- seconds</span>
+    rateFloodCount  <span class="op">=</span> <span class="num">5</span>,   <span class="cm">-- 429s within window triggers pattern strike</span>
+    routeScanCount  <span class="op">=</span> <span class="num">8</span>,   <span class="cm">-- distinct unknown routes</span>
+    paramFloodCount <span class="op">=</span> <span class="num">5</span>,   <span class="cm">-- repeated param failures on same route</span>
 })</code></pre>
 
         <h2>Automatic strikes</h2>

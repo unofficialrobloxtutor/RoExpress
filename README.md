@@ -335,10 +335,10 @@ local network = RoExpress("Network")
 #### Callbacks
 
 ```lua
-network:Get(route, data?, callback?, timeout?)
-network:Post(route, data, callback?, timeout?)
-network:Put(route, data, callback?, timeout?)
-network:Delete(route, data?, callback?, timeout?)
+network:Get(route, data?, callback?, timeout?, retries?)
+network:Post(route, data, callback?, timeout?, retries?)
+network:Put(route, data, callback?, timeout?, retries?)
+network:Delete(route, data?, callback?, timeout?, retries?)
 ```
 
 Callbacks and timeout are optional. Omit the callback to block the current thread until the response arrives. All return a `requestId`.
@@ -346,10 +346,10 @@ Callbacks and timeout are optional. Omit the callback to block the current threa
 #### Promises
 
 ```lua
-network:GetAsync(route, data?, timeout?)    -- returns Promise
-network:PostAsync(route, data, timeout?)    -- returns Promise
-network:PutAsync(route, data, timeout?)     -- returns Promise
-network:DeleteAsync(route, data?, timeout?) -- returns Promise
+network:GetAsync(route, data?, timeout?, retries?)    -- returns Promise
+network:PostAsync(route, data, timeout?, retries?)    -- returns Promise
+network:PutAsync(route, data, timeout?, retries?)     -- returns Promise
+network:DeleteAsync(route, data?, timeout?, retries?) -- returns Promise
 ```
 
 ```lua
@@ -373,9 +373,12 @@ network:GetAsync("leaderboard/top")
 #### Other
 
 ```lua
-network:Cancel(requestId)   -- cancel pending request, returns boolean
+network:Configure({ maxRetries = 3, backoff = 1 })  -- global retry config (default: 3 retries, 1s backoff)
+network:Cancel(requestId)                            -- cancel pending request, returns boolean
 network:Destroy()
 ```
+
+Retries use exponential backoff starting at `backoff` seconds (1s → 2s → 4s). Retryable status codes: `408`, `429`, `500`. Non-retryable: `400`, `403`, `404`. The `retries?` parameter on each method overrides the global config per-request.
 
 ---
 
@@ -416,11 +419,16 @@ Handles both unreliable broadcast and reliable server push through one API.
 ```lua
 local bridge = RoExpress("Bridge")  -- same instance everywhere in this context
 
-bridge.Bind(name, handler)          -- register handler on channel
-bridge.Unbind(name, handler)        -- remove specific handler
-bridge.UnbindAll(name?)             -- clear one channel or all
-bridge.Fire(name, data?)            -- fire to all handlers
+bridge.On(name, handler)            -- subscribe; returns Connection
+bridge.Once(name, handler)          -- fires once then auto-disconnects; returns Connection
+bridge.Emit(name, data?)            -- fire to all handlers on the channel
 bridge.Has(name)                    -- returns true if channel has handlers
+bridge.Clear(name?)                 -- clear one channel or all channels
+bridge.Destroy()                    -- full teardown
+
+-- connections — disconnect a specific handler without clearing the whole channel
+local conn = bridge.On("kill", handler)
+conn:Disconnect()
 
 -- yieldable variants
 bridge.Wait(name, timeout?)                           -- yields until channel fires
@@ -469,7 +477,8 @@ local Codec = require(script.Parent.Codec)
 
 Codec.Compress(data)        -- any → LZ77 base64 string  (compat alias)
 Codec.Deflate(data)         -- any → LZH (Deflate) base64 string
-Codec.Decompress(str)       -- base64 string → any  (auto-detects LZ77 vs LZH via magic bytes)
+Codec.Inflate(str)          -- base64 string → any  (auto-detects LZ77 vs LZH via magic bytes)
+Codec.Decompress(str)       -- alias for Inflate
 Codec.IsCompressed(str)     -- → boolean
 ```
 
@@ -500,7 +509,7 @@ All channels are multiplexed over two shared remotes (`StreamUnreliable` / `Stre
 
 ```lua
 -- Shared — define the same channels on server and client
-local move = Stream.Channel("playerMove", Stream.Schema({
+local move = Stream.Channel("playerMove", Stream.Schema.New({
     { "pos",   "Vector3" },
     { "vel",   "Vector3" },
     { "state", { "flags", "jumping", "sprinting" } },
@@ -582,6 +591,7 @@ unsub()  -- unsubscribe at any time
 | `Rect` | 16 B | |
 | `NumberRange` | 8 B | |
 | `Ray` | 24 B | Origin + Direction as Vector3 pairs |
+| `Region3` | 24 B | AABB min/max corners as Vector3 pairs |
 | `PhysicalProperties` | 20 B | All 5 fields as f32 |
 | `{ "flags", ... }` | 1 B | Up to 8 named booleans packed into one byte |
 | `{ "enum", EnumType }` | 2 B | EnumItem → u16 value |
@@ -592,7 +602,7 @@ Only changed fields are sent. Requires a **fixed-size schema** (no `string` fiel
 
 ```lua
 -- Fixed-size — eligible for delta
-local posSchema = Stream.Schema({
+local posSchema = Stream.Schema.New({
     { "pos",   "Vector3" },
     { "state", { "flags", "jumping", "sprinting" } },
 })
@@ -701,17 +711,21 @@ Client fires request
 
 ## Typed Accessors
 
-For full Luau type inference without an explicit annotation, use the typed accessor functions instead of `RoExpress("ModuleName")`:
+> **Prerequisite:** Advanced typing features require the new Luau type solver. In Roblox Studio, go to **Studio Settings → Studio → Script Editor** and set **LuauTypeCheckMode** to `Strict` (or `Default`) and enable **UseNewLuauTypeChecker**. Without this, type inference and exported types will not resolve correctly.
+
+For full Luau type inference, annotate the variable explicitly using the exported types:
 
 ```lua
--- Server — inferred as App.Type
-local app = RoExpress.GetApp()
+local RoExpress = require(path.RoExpress)
 
--- Client — inferred as Network.Type
-local net = RoExpress.GetNetwork()
+-- Server
+local app: RoExpress.App = RoExpress("App")
+
+-- Client
+local net: RoExpress.Network = RoExpress("Network")
 ```
 
-Both return the same cached instance as `RoExpress("App")` / `RoExpress("Network")`. The `__call` and `__index` forms still work — they just return `any`.
+The call form `RoExpress("ModuleName")` returns `any` without an annotation. Adding the type annotation gives the Luau solver full inference over every method and field.
 
 ---
 
@@ -720,12 +734,12 @@ Both return the same cached instance as `RoExpress("App")` / `RoExpress("Network
 ```lua
 local RoExpress = require(path.RoExpress)
 
--- Envelope types (forwarded from App / Network — always in sync)
-type Payload         = RoExpress.Payload
-type Request         = RoExpress.Request
-type Response        = RoExpress.Response
-type NetworkPayload  = RoExpress.NetworkPayload
-type NetworkResponse = RoExpress.NetworkResponse
+-- Envelope types
+type Payload           = RoExpress.Payload
+type Request           = RoExpress.Request
+type Response          = RoExpress.Response
+type NetworkPayload    = RoExpress.NetworkPayload
+type NetworkResponse   = RoExpress.NetworkResponse
 type BroadcastEnvelope = RoExpress.BroadcastEnvelope
 
 -- Handler signatures
@@ -733,26 +747,39 @@ type RouteHandlerCompact = RoExpress.RouteHandlerCompact  -- (req, res) -> ()
 type RouteHandlerLegacy  = RoExpress.RouteHandlerLegacy   -- (Player, Payload, req, res) -> ()
 type RouteHandler        = RoExpress.RouteHandler         -- union of both
 type MiddlewareHandler   = RoExpress.MiddlewareHandler
-type BroadcastHandler    = RoExpress.BroadcastHandler
+type ParamErrorHandler   = RoExpress.ParamErrorHandler
 type NetworkCallback     = RoExpress.NetworkCallback
 
--- Module instance types (App/Network/Port are the instantiated shapes after .New())
-type App         = RoExpress.App
-type Network     = RoExpress.Network
-type Port        = RoExpress.Port
-type Broadcast   = RoExpress.Broadcast
-type Listener    = RoExpress.Listener
-type Router      = RoExpress.Router
-type Codec       = RoExpress.Codec
-type Bridge      = RoExpress.Bridge
-type Tamper      = RoExpress.Tamper
-type Stream      = RoExpress.Stream
-type TokenBucket = RoExpress.TokenBucket
+-- Module instance types
+type App             = RoExpress.App
+type Network         = RoExpress.Network
+type Port            = RoExpress.Port
+type Broadcast       = RoExpress.Broadcast
+type Listener        = RoExpress.Listener
+type Bridge          = RoExpress.Bridge
+type BridgeConnection= RoExpress.BridgeConnection
+type Hook            = RoExpress.Hook
+type Tamper          = RoExpress.Tamper
+type TokenBucket     = RoExpress.TokenBucket
+type RTTP            = RoExpress.RTTP
+type RTTPInstance    = RoExpress.RTTPInstance
+type Cross           = RoExpress.Cross
+type Promise         = RoExpress.Promise
+type Maid            = RoExpress.Maid
+type Debounce        = RoExpress.Debounce
 
--- Router sub-types
-type ParamType   = RoExpress.ParamType
-type SegmentKind = RoExpress.SegmentKind
-type MatchResult = RoExpress.MatchResult
+-- Tamper sub-types
+type TamperReport    = RoExpress.TamperReport
+type TamperRecord    = RoExpress.TamperRecord
+type TamperReason    = RoExpress.TamperReason
+type TamperSeverity  = RoExpress.TamperSeverity
+
+-- Misc
+type Method          = RoExpress.Method
+type RouteOptions    = RoExpress.RouteOptions
+type HookPriority    = RoExpress.HookPriority
+type HookOptions     = RoExpress.HookOptions
+type TokenBucketSettings = RoExpress.TokenBucketSettings
 ```
 
 ---
