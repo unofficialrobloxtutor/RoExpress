@@ -5,6 +5,51 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.5.0] — 2026-06-21
+
+### Added — Typing
+
+- `Types.luau` — new standalone module with explicit public types for every RoExpress module and no private field leakage
+- `RoExpressCall` overloaded intersection type — `RoExpress("App")` now returns `RoExpress.App`, not `any`
+- Autocomplete for module name strings in the call form | Luau suggests all valid module names
+- Route handler `(req, res)` parameters fully inferred — no manual annotation required
+- All exported public types forwarded from `Types.luau` via the root module
+
+### Changed — Init
+
+- Lazy loading via `__index` + `rawset` cache — modules load on first access instead of on require
+- Pre-baked `RemoteEvent` and `UnreliableRemoteEvent` stored as package children — no timing race between server and client
+- `GetApp()` and `GetNetwork()` removed — call form is now fully typed and covers all use cases
+
+### Changed — Bridge (Breaking)
+
+- `Bind` → `On` | now returns a `BridgeConnection` object with `:Disconnect()`
+- `BindOnce` → `Once` | same connection object, fires handler at most once
+- `Fire` → `Emit`
+- `UnbindAll` → `Clear`
+- `Unbind` removed — use the connection returned by `On` / `Once` instead
+- `Has`, `Wait`, `WaitUntil`, `WaitFirst`, `Destroy` retained unchanged
+
+### Added — Maid
+
+- New `Maid` module — lifecycle cleanup utility, works everywhere (server and client)
+- `RoExpress("Maid")` returns a fresh instance each call
+- `Add<T>(item)` returns `item` unchanged — store and track in one expression
+- Duck-typed cleanup: `RBXScriptConnection`, `BridgeConnection`, any `:Destroy()` table, threads, and plain functions
+- Nested Maids supported — a child Maid added to a parent Maid is cleaned up when the parent is destroyed
+
+### Added — Debounce
+
+- New `Debounce` module — cooldown wrappers for functions
+- `Debounce.fn(fn, cooldown)` | global shared cooldown timer
+- `Debounce.key(fn, cooldown)` | independent per-first-argument cooldown (standard per-player pattern)
+- Returns `true` when the call went through, `false` when blocked by cooldown
+
+### Changed — Installer
+
+- `RemoteEvent` and `UnreliableRemoteEvent` now created as children of the RoExpress ModuleScript
+- `Maid`, `Debounce`, and `Types` added to installer flat module list (28 total)
+
 ## [2.4.0] — 2026-06-09
 
 ### Added — Stream (Breaking — old API fully replaced)
