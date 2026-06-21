@@ -66,4 +66,13 @@ function Debounce.key<K, T...>(fn: (key: K, T...) -> (), cooldown: number): (key
 	end
 end
 
+function Debounce.default<T...>(fn: (Debounce: boolean,T...) -> ()): (T...) -> boolean
+	local deb = false
+	return function(...: T...): boolean
+		deb = not deb
+		fn(deb,...)
+		return true
+	end
+end
+
 return Debounce

@@ -524,6 +524,7 @@ export type Maid = {
 export type Debounce = {
 	fn  : <T...>(fn: (T...) -> (), cooldown: number) -> (T...) -> boolean,
 	key : <K, T...>(fn: (key: K, T...) -> (), cooldown: number) -> (key: K, T...) -> boolean,
+	default : <T...>(fn: (Debounce: boolean, T...) -> ()) -> (T...) -> boolean,
 }
 
 -- ── BroadcastEnvelope (internal wire format) ───────────────────────────
